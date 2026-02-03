@@ -1,26 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaChevronRight } from 'react-icons/fa';
-import servicesDataRaw from '../../../data/services.json';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaChevronRight, FaSpinner } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
+import {
+    useGetServicesQuery,
+    useGetServiceByIdQuery,
+    useCreateServiceMutation,
+    useUpdateServiceMutation,
+    useDeleteServiceMutation,
+} from '../../../lib/store/api/servicesApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-interface Service {
-    id: string;
+interface ServiceFormData {
     title: string;
     tagline: string;
     description: string;
     overview: string;
     icon: string;
     image: string;
-    features: string[];
-    deliverables: string[];
-    process: string[];
-    techStack: string[];
-    benefits: string[];
-    idealFor: string[];
+    features: string;
+    deliverables: string;
+    process: string;
+    techStack: string;
+    benefits: string;
+    idealFor: string;
     cta: string;
     seo: {
         metaTitle: string;
@@ -28,72 +35,100 @@ interface Service {
     };
     pricingHint: string;
     featured: boolean;
-    [key: string]: any;
 }
 
+const initialFormData: ServiceFormData = {
+    title: '',
+    tagline: '',
+    description: '',
+    overview: '',
+    icon: 'FaBox',
+    image: '',
+    features: '',
+    deliverables: '',
+    process: '',
+    techStack: '',
+    benefits: '',
+    idealFor: '',
+    cta: 'Learn More',
+    seo: { metaTitle: '', metaDescription: '' },
+    pricingHint: '',
+    featured: false,
+};
+
 export default function ServicesPage() {
-    const [services, setServices] = useState<Service[]>(servicesDataRaw as Service[]);
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [editingService, setEditingService] = useState<Service | null>(null);
-    const [viewingService, setViewingService] = useState<Service | null>(null);
-    const [formData, setFormData] = useState<Partial<Service>>({});
+    const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+    const [viewingServiceId, setViewingServiceId] = useState<string | null>(null);
+    const [viewingService, setViewingService] = useState<any>(null);
+    const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
+    const [iconFile, setIconFile] = useState<File | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
+    // RTK Query hooks
+    const { data: servicesResponse, isLoading, isError, error } = useGetServicesQuery();
+    const { data: serviceDetailResponse } = useGetServiceByIdQuery(viewingServiceId!, {
+        skip: !viewingServiceId
+    });
+    const [createService, { isLoading: isCreating }] = useCreateServiceMutation();
+    const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation();
+    const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
+
+    const services = servicesResponse?.data || [];
+
     const filteredServices = services.filter(service =>
-        service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        service.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (service.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (service.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleOpenModal = (service: Service | null = null) => {
+    const handleOpenModal = (service: any = null) => {
         if (service) {
-            setEditingService(service);
+            setEditingServiceId(service._id);
             setFormData({
-                ...service,
-                features: service.features?.join('\n') as any,
-                deliverables: service.deliverables?.join('\n') as any,
-                process: service.process?.join('\n') as any,
-                techStack: service.techStack?.join('\n') as any,
-                benefits: service.benefits?.join('\n') as any,
-                idealFor: service.idealFor?.join('\n') as any,
+                title: service.title || '',
+                tagline: service.tagline || '',
+                description: service.description || '',
+                overview: service.overview || '',
+                icon: service.icon || 'FaBox',
+                image: service.image || '',
+                features: service.features?.join('\n') || '',
+                deliverables: service.deliverables?.join('\n') || '',
+                process: service.process?.join('\n') || '',
+                techStack: service.techStack?.join('\n') || '',
+                benefits: service.benefits?.join('\n') || '',
+                idealFor: service.idealFor?.join('\n') || '',
+                cta: service.cta || 'Learn More',
+                seo: {
+                    metaTitle: service.seo?.metaTitle || '',
+                    metaDescription: service.seo?.metaDescription || '',
+                },
+                pricingHint: service.pricingHint || '',
+                featured: service.featured || false,
             });
         } else {
-            setEditingService(null);
-            setFormData({
-                id: `service-${Date.now()}`,
-                title: '',
-                tagline: '',
-                description: '',
-                overview: '',
-                icon: 'FaBox',
-                image: '',
-                features: '' as any,
-                deliverables: '' as any,
-                process: '' as any,
-                techStack: '' as any,
-                benefits: '' as any,
-                idealFor: '' as any,
-                cta: 'Learn More',
-                seo: { metaTitle: '', metaDescription: '' },
-                featured: false,
-                pricingHint: ''
-            });
+            setEditingServiceId(null);
+            setFormData(initialFormData);
         }
+        setIconFile(null);
         setIsModalOpen(true);
     };
 
-    const handleOpenDetail = (service: Service) => {
-        setViewingService(service);
+    const handleOpenDetail = (serviceId: string) => {
+        setViewingServiceId(serviceId);
         setIsDetailOpen(true);
     };
 
     const handleCloseModals = () => {
         setIsModalOpen(false);
         setIsDetailOpen(false);
-        setEditingService(null);
+        setEditingServiceId(null);
+        setViewingServiceId(null);
         setViewingService(null);
-        setFormData({});
+        setFormData(initialFormData);
+        setIconFile(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -111,26 +146,60 @@ export default function ServicesPage() {
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setIconFile(e.target.files[0]);
+        }
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Convert multiline strings back to arrays
-        const processedData = {
-            ...formData,
-            features: (formData.features as any)?.split('\n').filter((i: string) => i.trim()),
-            deliverables: (formData.deliverables as any)?.split('\n').filter((i: string) => i.trim()),
-            process: (formData.process as any)?.split('\n').filter((i: string) => i.trim()),
-            techStack: (formData.techStack as any)?.split('\n').filter((i: string) => i.trim()),
-            benefits: (formData.benefits as any)?.split('\n').filter((i: string) => i.trim()),
-            idealFor: (formData.idealFor as any)?.split('\n').filter((i: string) => i.trim()),
-        };
-
-        if (editingService) {
-            setServices(prev => prev.map(s => s.id === editingService.id ? { ...s, ...processedData } as Service : s));
-        } else {
-            setServices(prev => [...prev, processedData as Service]);
+        // Build FormData for file uploads
+        const formDataToSend = new FormData();
+        formDataToSend.append('title', formData.title);
+        formDataToSend.append('tagline', formData.tagline);
+        formDataToSend.append('description', formData.description);
+        formDataToSend.append('overview', formData.overview);
+        // formDataToSend.append('icon', formData.icon); // Icon is now handled via file upload
+        if (iconFile) {
+            formDataToSend.append('icon', iconFile);
         }
-        handleCloseModals();
+        formDataToSend.append('cta', formData.cta);
+        formDataToSend.append('pricingHint', formData.pricingHint);
+        formDataToSend.append('featured', String(formData.featured));
+
+        // Arrays
+        const features = formData.features.split('\n').filter(i => i.trim());
+        const deliverables = formData.deliverables.split('\n').filter(i => i.trim());
+        const process = formData.process.split('\n').filter(i => i.trim());
+        const techStack = formData.techStack.split('\n').filter(i => i.trim());
+        const benefits = formData.benefits.split('\n').filter(i => i.trim());
+        const idealFor = formData.idealFor.split('\n').filter(i => i.trim());
+
+        features.forEach(item => formDataToSend.append('features[]', item));
+        deliverables.forEach(item => formDataToSend.append('deliverables[]', item));
+        process.forEach(item => formDataToSend.append('process[]', item));
+        techStack.forEach(item => formDataToSend.append('techStack[]', item));
+        benefits.forEach(item => formDataToSend.append('benefits[]', item));
+        idealFor.forEach(item => formDataToSend.append('idealFor[]', item));
+
+        // SEO
+        formDataToSend.append('seo[metaTitle]', formData.seo.metaTitle);
+        formDataToSend.append('seo[metaDescription]', formData.seo.metaDescription);
+
+        try {
+            if (editingServiceId) {
+                await updateService({ id: editingServiceId, data: formDataToSend }).unwrap();
+                dispatch(showSuccessNotification('Service updated successfully'));
+            } else {
+                await createService(formDataToSend).unwrap();
+                dispatch(showSuccessNotification('Service created successfully'));
+            }
+            handleCloseModals();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save service'));
+        }
     };
 
     const handleDelete = (id: string, title: string) => {
@@ -138,11 +207,37 @@ export default function ServicesPage() {
             title: 'Delete Service',
             message: 'This action will permanently delete this service from the system. This cannot be undone.',
             itemName: title,
-            onConfirm: () => {
-                setServices(prev => prev.filter(s => s.id !== id));
+            onConfirm: async () => {
+                try {
+                    await deleteService(id).unwrap();
+                    dispatch(showSuccessNotification('Service deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete service'));
+                }
             }
         });
     };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Services">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading services...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="Services">
+                <div className="admin-error">
+                    <p>Failed to load services. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout pageTitle="Services">
@@ -189,8 +284,8 @@ export default function ServicesPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredServices.map((service) => (
-                                <tr key={service.id}>
+                            {filteredServices.map((service, index) => (
+                                <tr key={service._id || `service-${index}`}>
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{service.title}</span>
@@ -209,19 +304,31 @@ export default function ServicesPage() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(service)} title="View Detail">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(service._id)} title="View Detail">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(service)} title="Edit">
                                                 <FaEdit />
                                             </button>
-                                            <button className="table-action-btn delete" onClick={() => handleDelete(service.id, service.title)} title="Delete">
+                                            <button
+                                                className="table-action-btn delete"
+                                                onClick={() => handleDelete(service._id, service.title)}
+                                                title="Delete"
+                                                disabled={isDeleting}
+                                            >
                                                 <FaTrash />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
+                            {filteredServices.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No services found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -230,45 +337,50 @@ export default function ServicesPage() {
             {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card">
+                    <div className="modal-content admin-card" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{editingService ? 'Edit Service' : 'Add Service'}</h3>
+                            <h3 className="admin-card-title">{editingServiceId ? 'Edit Service' : 'Add Service'}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
                             <div className="admin-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">Title</label>
-                                    <input name="title" className="form-input" value={formData.title || ''} onChange={handleInputChange} required />
+                                    <input name="title" className="form-input" value={formData.title} onChange={handleInputChange} required />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Tagline</label>
-                                    <input name="tagline" className="form-input" value={formData.tagline || ''} onChange={handleInputChange} />
+                                    <input name="tagline" className="form-input" value={formData.tagline} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Description (Short)</label>
-                                    <textarea name="description" className="form-input" value={formData.description || ''} onChange={handleInputChange} required rows={2} />
+                                    <textarea name="description" className="form-input" value={formData.description} onChange={handleInputChange} required rows={2} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Overview (Long)</label>
-                                    <textarea name="overview" className="form-input" value={formData.overview || ''} onChange={handleInputChange} rows={4} />
+                                    <textarea name="overview" className="form-input" value={formData.overview} onChange={handleInputChange} rows={4} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Pricing Hint</label>
-                                    <input name="pricingHint" className="form-input" value={formData.pricingHint || ''} onChange={handleInputChange} placeholder="e.g. Custom Pricing" />
+                                    <input name="pricingHint" className="form-input" value={formData.pricingHint} onChange={handleInputChange} placeholder="e.g. Custom Pricing" />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">CTA Button Text</label>
-                                    <input name="cta" className="form-input" value={formData.cta || ''} onChange={handleInputChange} />
+                                    <input name="cta" className="form-input" value={formData.cta} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Icon (FontAwesome Name)</label>
-                                    <input name="icon" className="form-input" value={formData.icon || ''} onChange={handleInputChange} placeholder="e.g. FaCode" />
+                                    <label className="form-label">Icon (Upload File)</label>
+                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                    {formData.icon && !iconFile && (
+                                        <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            Current: {formData.icon}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Featured</label>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '42px' }}>
-                                        <input type="checkbox" name="featured" checked={!!formData.featured} onChange={handleInputChange} />
+                                        <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
                                         <span>Show on homepage</span>
                                     </div>
                                 </div>
@@ -284,7 +396,13 @@ export default function ServicesPage() {
                                 ].map((field) => (
                                     <div key={field.name} className="form-group">
                                         <label className="form-label">{field.label}</label>
-                                        <textarea name={field.name} className="form-input" value={formData[field.name as keyof Service] as any || ''} onChange={handleInputChange} rows={4} />
+                                        <textarea
+                                            name={field.name}
+                                            className="form-input"
+                                            value={formData[field.name as keyof ServiceFormData] as string}
+                                            onChange={handleInputChange}
+                                            rows={4}
+                                        />
                                     </div>
                                 ))}
 
@@ -294,18 +412,19 @@ export default function ServicesPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Meta Title</label>
-                                    <input name="seo.metaTitle" className="form-input" value={formData.seo?.metaTitle || ''} onChange={handleInputChange} />
+                                    <input name="seo.metaTitle" className="form-input" value={formData.seo.metaTitle} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Meta Description</label>
-                                    <textarea name="seo.metaDescription" className="form-input" value={formData.seo?.metaDescription || ''} onChange={handleInputChange} rows={2} />
+                                    <textarea name="seo.metaDescription" className="form-input" value={formData.seo.metaDescription} onChange={handleInputChange} rows={2} />
                                 </div>
                             </div>
 
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
-                                <button type="submit" className="btn btn-primary">
-                                    <FaSave /> Save Changes
+                                <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
+                                    {(isCreating || isUpdating) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save Changes
                                 </button>
                             </div>
                         </form>
@@ -314,43 +433,50 @@ export default function ServicesPage() {
             )}
 
             {/* Detail View Modal */}
-            {isDetailOpen && viewingService && (
+            {isDetailOpen && serviceDetailResponse?.data && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card detail-view">
+                    <div className="modal-content admin-card detail-view" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">Service Details: {viewingService.title}</h3>
+                            <h3 className="admin-card-title">Service Details: {serviceDetailResponse.data.title}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <div style={{ padding: '2rem' }}>
                             <div className="detail-grid">
                                 <div className="detail-section">
                                     <h5>Basic Info</h5>
-                                    <p><strong>Tagline:</strong> {viewingService.tagline}</p>
-                                    <p><strong>Pricing:</strong> {viewingService.pricingHint}</p>
-                                    <p><strong>CTA:</strong> {viewingService.cta}</p>
-                                    <p><strong>Icon:</strong> {viewingService.icon}</p>
+                                    <p><strong>Tagline:</strong> {serviceDetailResponse.data.tagline}</p>
+                                    <p><strong>Pricing:</strong> {serviceDetailResponse.data.pricingHint}</p>
+                                    <p><strong>CTA:</strong> {serviceDetailResponse.data.cta}</p>
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <strong>Icon:</strong>
+                                        {serviceDetailResponse.data.icon && (serviceDetailResponse.data.icon.startsWith('http') || serviceDetailResponse.data.icon.startsWith('/') || serviceDetailResponse.data.icon.match(/\.(jpeg|jpg|gif|png|svg)$/)) ? (
+                                            <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${serviceDetailResponse.data.icon.startsWith('/') ? '' : '/'}${serviceDetailResponse.data.icon}`} alt="Service Icon" style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', marginTop: '0.5rem' }} />
+                                        ) : (
+                                            <span style={{ marginLeft: '0.5rem' }}>{serviceDetailResponse.data.icon}</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="detail-section">
                                     <h5>Description</h5>
-                                    <p>{viewingService.description}</p>
+                                    <p>{serviceDetailResponse.data.description}</p>
                                     <h5 style={{ marginTop: '1rem' }}>Overview</h5>
-                                    <p style={{ fontSize: '0.875rem' }}>{viewingService.overview}</p>
+                                    <p style={{ fontSize: '0.875rem' }}>{serviceDetailResponse.data.overview}</p>
                                 </div>
                             </div>
 
                             <div className="detail-lists-grid">
                                 {[
-                                    { label: 'Features', data: viewingService.features },
-                                    { label: 'Deliverables', data: viewingService.deliverables },
-                                    { label: 'Process', data: viewingService.process },
-                                    { label: 'Tech Stack', data: viewingService.techStack },
-                                    { label: 'Benefits', data: viewingService.benefits },
-                                    { label: 'Ideal For', data: viewingService.idealFor },
-                                ].map((list) => list.data && (
+                                    { label: 'Features', data: serviceDetailResponse.data.features },
+                                    { label: 'Deliverables', data: serviceDetailResponse.data.deliverables },
+                                    { label: 'Process', data: serviceDetailResponse.data.process },
+                                    { label: 'Tech Stack', data: serviceDetailResponse.data.techStack },
+                                    { label: 'Benefits', data: serviceDetailResponse.data.benefits },
+                                    { label: 'Ideal For', data: serviceDetailResponse.data.idealFor },
+                                ].map((list) => list.data && list.data.length > 0 && (
                                     <div key={list.label} className="detail-list-item">
                                         <h6>{list.label}</h6>
                                         <ul>
-                                            {list.data.map((item, idx) => <li key={idx}><FaChevronRight size={10} /> {item}</li>)}
+                                            {list.data.map((item: string, idx: number) => <li key={`${list.label}-${idx}`}><FaChevronRight size={10} /> {item}</li>)}
                                         </ul>
                                     </div>
                                 ))}
@@ -358,106 +484,13 @@ export default function ServicesPage() {
 
                             <div className="detail-section" style={{ marginTop: '1.5rem', background: 'var(--primary)', padding: '1rem', borderRadius: '8px' }}>
                                 <h6 style={{ marginBottom: '0.5rem' }}>SEO Information</h6>
-                                <p style={{ fontSize: '0.8125rem' }}><strong>Title:</strong> {viewingService.seo?.metaTitle}</p>
-                                <p style={{ fontSize: '0.8125rem' }}><strong>Description:</strong> {viewingService.seo?.metaDescription}</p>
+                                <p style={{ fontSize: '0.8125rem' }}><strong>Title:</strong> {serviceDetailResponse.data.seo?.metaTitle}</p>
+                                <p style={{ fontSize: '0.8125rem' }}><strong>Description:</strong> {serviceDetailResponse.data.seo?.metaDescription}</p>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-
-            <style jsx>{`
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.6);
-                    backdrop-filter: blur(4px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1000;
-                    padding: 2rem;
-                }
-                .modal-content {
-                    width: 100%;
-                    max-width: 900px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    background: var(--primary-light);
-                    box-shadow: var(--shadow-lg);
-                }
-                .detail-view {
-                    max-width: 1000px;
-                }
-                .form-group {
-                    margin-bottom: 1.25rem;
-                }
-                .form-label {
-                    display: block;
-                    margin-bottom: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-primary);
-                }
-                .modal-content .form-input,
-                .modal-content .form-textarea {
-                    background: var(--primary);
-                    border: 1px solid var(--glass-border);
-                    color: var(--text-primary);
-                }
-                
-                .detail-grid {
-                    display: grid;
-                    gap: 2rem;
-                    margin-bottom: 2rem;
-                }
-
-                @media (min-width: 640px) {
-                    .detail-grid {
-                        grid-template-columns: 1fr 2fr;
-                    }
-                }
-                .detail-section h5 {
-                    color: var(--accent-start);
-                    margin-bottom: 0.75rem;
-                    font-size: 0.9375rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                }
-                .detail-section p {
-                    margin-bottom: 0.5rem;
-                    font-size: 0.9375rem;
-                    color: var(--text-secondary);
-                    line-height: 1.6;
-                }
-                .detail-lists-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                    gap: 1.5rem;
-                }
-                .detail-list-item h6 {
-                    font-weight: 600;
-                    margin-bottom: 0.75rem;
-                    color: var(--text-primary);
-                    border-bottom: 1px solid var(--glass-border);
-                    padding-bottom: 0.25rem;
-                }
-                .detail-list-item ul {
-                    list-style: none;
-                    padding: 0;
-                }
-                .detail-list-item li {
-                    font-size: 0.8125rem;
-                    color: var(--text-muted);
-                    margin-bottom: 0.375rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                }
-            `}</style>
 
             {/* Delete Confirmation Modal */}
             <DeleteConfirmModal {...deleteConfirm.modalProps} />

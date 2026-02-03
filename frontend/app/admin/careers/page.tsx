@@ -2,121 +2,199 @@
 
 import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaChevronRight, FaLink } from 'react-icons/fa';
-import careersDataRaw from '../../../data/career.json';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaBriefcase, FaMapMarkerAlt, FaSpinner } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
+import {
+    useGetCareersQuery,
+    useGetCareerByIdQuery,
+    useCreateCareerMutation,
+    useUpdateCareerMutation,
+    useDeleteCareerMutation,
+} from '../../../lib/store/api/careersApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-interface Career {
-    id: string;
+interface CareerFormData {
     title: string;
     department: string;
     location: string;
-    experience: string;
     type: string;
+    experience: string;
     description: string;
-    requirements: string[];
-    benefits: string[];
-    applyLink: string;
-    [key: string]: any;
+    requirements: string;
+    responsibilities: string;
+    benefits: string;
+    isActive: boolean;
+    featured: boolean;
 }
 
+const initialFormData: CareerFormData = {
+    title: '',
+    department: '',
+    location: '',
+    type: 'full-time',
+    experience: '',
+    description: '',
+    requirements: '',
+    responsibilities: '',
+    benefits: '',
+    isActive: true,
+    featured: false,
+};
+
+const jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
+const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'Operations', 'HR', 'Finance', 'Other'];
+
 export default function CareersPage() {
-    const [careers, setCareers] = useState<Career[]>(careersDataRaw as unknown as Career[]);
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
+    const [departmentFilter, setDepartmentFilter] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [editingCareer, setEditingCareer] = useState<Career | null>(null);
-    const [viewingCareer, setViewingCareer] = useState<Career | null>(null);
-    const [formData, setFormData] = useState<Partial<Career>>({});
+    const [editingCareerId, setEditingCareerId] = useState<string | null>(null);
+    const [viewingCareerId, setViewingCareerId] = useState<string | null>(null);
+    const [formData, setFormData] = useState<CareerFormData>(initialFormData);
     const deleteConfirm = useDeleteConfirm();
 
-    const filteredCareers = careers.filter(career =>
-        career.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        career.department.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // RTK Query hooks
+    const { data: careersResponse, isLoading, isError } = useGetCareersQuery();
+    const { data: careerDetailResponse } = useGetCareerByIdQuery(viewingCareerId!, {
+        skip: !viewingCareerId
+    });
+    const [createCareer, { isLoading: isCreating }] = useCreateCareerMutation();
+    const [updateCareer, { isLoading: isUpdating }] = useUpdateCareerMutation();
+    const [deleteCareer, { isLoading: isDeleting }] = useDeleteCareerMutation();
 
-    const handleOpenModal = (career: Career | null = null) => {
+    const careers = careersResponse?.data || [];
+
+    const filteredCareers = careers.filter(career => {
+        const matchesSearch = (career.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (career.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesDepartment = !departmentFilter || career.department === departmentFilter;
+        return matchesSearch && matchesDepartment;
+    });
+
+    const handleOpenModal = (career: any = null) => {
         if (career) {
-            setEditingCareer(career);
+            setEditingCareerId(career._id);
             setFormData({
-                ...career,
-                requirements: career.requirements?.join('\n') as any,
-                benefits: career.benefits?.join('\n') as any,
+                title: career.title || '',
+                department: career.department || '',
+                location: career.location || '',
+                type: career.type || 'full-time',
+                experience: career.experience || '',
+                description: career.description || '',
+                requirements: career.requirements?.join('\n') || '',
+                responsibilities: career.responsibilities?.join('\n') || '',
+                benefits: career.benefits?.join('\n') || '',
+                isActive: career.isActive ?? true,
+                featured: career.featured || false,
             });
         } else {
-            setEditingCareer(null);
-            setFormData({
-                id: `job-${Date.now()}`,
-                title: '',
-                department: 'Engineering',
-                location: '',
-                experience: '',
-                type: 'Full-time',
-                description: '',
-                requirements: '' as any,
-                benefits: '' as any,
-                applyLink: ''
-            });
+            setEditingCareerId(null);
+            setFormData(initialFormData);
         }
         setIsModalOpen(true);
     };
 
-    const handleOpenDetail = (career: Career) => {
-        setViewingCareer(career);
+    const handleOpenDetail = (careerId: string) => {
+        setViewingCareerId(careerId);
         setIsDetailOpen(true);
     };
 
     const handleCloseModals = () => {
         setIsModalOpen(false);
         setIsDetailOpen(false);
-        setEditingCareer(null);
-        setViewingCareer(null);
-        setFormData({});
+        setEditingCareerId(null);
+        setViewingCareerId(null);
+        setFormData(initialFormData);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+        setFormData(prev => ({ ...prev, [name]: val }));
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const processedData = {
-            ...formData,
-            requirements: (formData.requirements as any)?.split('\n').filter((i: string) => i.trim()),
-            benefits: (formData.benefits as any)?.split('\n').filter((i: string) => i.trim()),
+        const dataToSend = {
+            title: formData.title,
+            department: formData.department,
+            location: formData.location,
+            type: formData.type as 'full-time' | 'part-time' | 'contract' | 'internship' | 'remote',
+            experience: formData.experience,
+            description: formData.description,
+            requirements: formData.requirements.split('\n').filter(i => i.trim()),
+            responsibilities: formData.responsibilities.split('\n').filter(i => i.trim()),
+            benefits: formData.benefits.split('\n').filter(i => i.trim()),
+            isActive: formData.isActive,
+            featured: formData.featured,
         };
 
-        if (editingCareer) {
-            setCareers(prev => prev.map(c => c.id === editingCareer.id ? { ...c, ...processedData } as Career : c));
-        } else {
-            setCareers(prev => [...prev, processedData as Career]);
+        try {
+            if (editingCareerId) {
+                await updateCareer({ id: editingCareerId, data: dataToSend }).unwrap();
+                dispatch(showSuccessNotification('Career position updated successfully'));
+            } else {
+                await createCareer(dataToSend).unwrap();
+                dispatch(showSuccessNotification('Career position created successfully'));
+            }
+            handleCloseModals();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save career position'));
         }
-        handleCloseModals();
     };
 
     const handleDelete = (id: string, title: string) => {
         deleteConfirm.showDeleteConfirm({
-            title: 'Delete Job Posting',
-            message: 'This action will permanently delete this job posting. This cannot be undone.',
+            title: 'Delete Career Position',
+            message: 'This action will permanently delete this job listing. This cannot be undone.',
             itemName: title,
-            onConfirm: () => {
-                setCareers(prev => prev.filter(c => c.id !== id));
+            onConfirm: async () => {
+                try {
+                    await deleteCareer(id).unwrap();
+                    dispatch(showSuccessNotification('Career position deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete career position'));
+                }
             }
         });
     };
 
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Careers">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading careers...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="Careers">
+                <div className="admin-error">
+                    <p>Failed to load careers. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
     return (
         <AdminLayout pageTitle="Careers">
+            {/* Header Actions */}
             <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
                         <input
                             type="text"
                             className="form-input"
-                            placeholder="Search jobs..."
+                            placeholder="Search careers..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{ paddingLeft: '2.5rem' }}
@@ -130,15 +208,28 @@ export default function CareersPage() {
                         }} />
                     </div>
 
+                    <select
+                        className="form-input"
+                        value={departmentFilter}
+                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        style={{ width: 'auto', minWidth: '150px' }}
+                    >
+                        <option value="">All Departments</option>
+                        {departments.map(dept => (
+                            <option key={dept} value={dept}>{dept}</option>
+                        ))}
+                    </select>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ marginLeft: 'auto' }}>
-                        <FaPlus /> Add Job Posting
+                        <FaPlus /> Add Position
                     </button>
                 </div>
             </div>
 
+            {/* Careers Table */}
             <div className="admin-card">
                 <div className="admin-card-header">
-                    <h3 className="admin-card-title">Open Positions ({filteredCareers.length})</h3>
+                    <h3 className="admin-card-title">All Positions ({filteredCareers.length})</h3>
                 </div>
                 <div className="admin-table-wrapper">
                     <table className="admin-table">
@@ -148,181 +239,209 @@ export default function CareersPage() {
                                 <th>Department</th>
                                 <th>Location</th>
                                 <th>Type</th>
+                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredCareers.map((career) => (
-                                <tr key={career.id}>
+                            {filteredCareers.map((career, index) => (
+                                <tr key={career._id || `career-${index}`}>
                                     <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{career.title}</span>
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{career.experience} exp</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div className="position-icon">
+                                                <FaBriefcase />
+                                            </div>
+                                            <div>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{career.title}</span>
+                                                {career.featured && <span className="featured-tag">Featured</span>}
+                                            </div>
                                         </div>
                                     </td>
-                                    <td>{career.department}</td>
-                                    <td>{career.location}</td>
+                                    <td>{career.department || 'N/A'}</td>
                                     <td>
-                                        <span className="status-badge active" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-                                            {career.type}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <FaMapMarkerAlt size={12} style={{ color: 'var(--text-muted)' }} />
+                                            {career.location || 'Remote'}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="type-badge">{career.type?.replace('-', ' ')}</span>
+                                    </td>
+                                    <td>
+                                        <span className={`status-badge ${career.isActive ? 'active' : 'inactive'}`}>
+                                            {career.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career)} title="View Detail">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career._id)} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(career)} title="Edit">
                                                 <FaEdit />
                                             </button>
-                                            <button className="table-action-btn delete" onClick={() => handleDelete(career.id, career.title)} title="Delete">
+                                            <button
+                                                className="table-action-btn delete"
+                                                onClick={() => handleDelete(career._id, career.title)}
+                                                title="Delete"
+                                                disabled={isDeleting}
+                                            >
                                                 <FaTrash />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
+                            {filteredCareers.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No career positions found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Modal & Detail components follow same style as ServicesPage */}
+            {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card">
+                    <div className="modal-content" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{editingCareer ? 'Edit Job' : 'Add Job'}</h3>
+                            <h3 className="admin-card-title">{editingCareerId ? 'Edit Position' : 'Add Position'}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
                             <div className="admin-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">Job Title</label>
-                                    <input name="title" className="form-input" value={formData.title || ''} onChange={handleInputChange} required />
+                                    <input name="title" className="form-input" value={formData.title} onChange={handleInputChange} required />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Department</label>
-                                    <select name="department" className="form-input" value={formData.department || ''} onChange={handleInputChange}>
-                                        <option value="Engineering">Engineering</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Marketing">Marketing</option>
-                                        <option value="Sales">Sales</option>
+                                    <select name="department" className="form-input" value={formData.department} onChange={handleInputChange}>
+                                        <option value="">Select Department</option>
+                                        {departments.map(dept => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Location</label>
-                                    <input name="location" className="form-input" value={formData.location || ''} onChange={handleInputChange} placeholder="e.g. Remote or City" />
+                                    <input name="location" className="form-input" value={formData.location} onChange={handleInputChange} placeholder="e.g. New York, Remote" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Experience</label>
-                                    <input name="experience" className="form-input" value={formData.experience || ''} onChange={handleInputChange} placeholder="e.g. 2+ Years" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Employment Type</label>
-                                    <select name="type" className="form-input" value={formData.type || ''} onChange={handleInputChange}>
-                                        <option value="Full-time">Full-time</option>
-                                        <option value="Part-time">Part-time</option>
-                                        <option value="Contract">Contract</option>
-                                        <option value="Internship">Internship</option>
+                                    <label className="form-label">Job Type</label>
+                                    <select name="type" className="form-input" value={formData.type} onChange={handleInputChange}>
+                                        {jobTypes.map(type => (
+                                            <option key={type} value={type}>{type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Apply Link</label>
-                                    <input name="applyLink" className="form-input" value={formData.applyLink || ''} onChange={handleInputChange} />
+                                    <label className="form-label">Experience Required</label>
+                                    <input name="experience" className="form-input" value={formData.experience} onChange={handleInputChange} placeholder="e.g. 3-5 years" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status</label>
+                                    <div style={{ display: 'flex', gap: '1.5rem', height: '42px', alignItems: 'center' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleInputChange} />
+                                            Active
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
+                                            Featured
+                                        </label>
+                                    </div>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Description</label>
-                                    <textarea name="description" className="form-input" value={formData.description || ''} onChange={handleInputChange} rows={3} />
+                                    <label className="form-label">Job Description</label>
+                                    <textarea name="description" className="form-input" value={formData.description} onChange={handleInputChange} required rows={4} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Requirements (One per line)</label>
-                                    <textarea name="requirements" className="form-input" value={formData.requirements as any || ''} onChange={handleInputChange} rows={5} />
+                                    <label className="form-label">Requirements (one per line)</label>
+                                    <textarea name="requirements" className="form-input" value={formData.requirements} onChange={handleInputChange} rows={5} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Benefits (One per line)</label>
-                                    <textarea name="benefits" className="form-input" value={formData.benefits as any || ''} onChange={handleInputChange} rows={5} />
+                                    <label className="form-label">Responsibilities (one per line)</label>
+                                    <textarea name="responsibilities" className="form-input" value={formData.responsibilities} onChange={handleInputChange} rows={5} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Benefits (one per line)</label>
+                                    <textarea name="benefits" className="form-input" value={formData.benefits} onChange={handleInputChange} rows={3} />
                                 </div>
                             </div>
+
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
-                                <button type="submit" className="btn btn-primary"><FaSave /> Save Changes</button>
+                                <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
+                                    {(isCreating || isUpdating) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {isDetailOpen && viewingCareer && (
+            {/* Detail View Modal */}
+            {isDetailOpen && careerDetailResponse?.data && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card" style={{ maxWidth: '800px' }}>
+                    <div className="modal-content detail-view" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{viewingCareer.title}</h3>
+                            <h3 className="admin-card-title">{careerDetailResponse.data.title}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <div style={{ padding: '2rem' }}>
-                            <div className="admin-grid-2" style={{ marginBottom: '1.5rem' }}>
-                                <div>
-                                    <p><strong>Department:</strong> {viewingCareer.department}</p>
-                                    <p><strong>Location:</strong> {viewingCareer.location}</p>
-                                    <p><strong>Type:</strong> {viewingCareer.type}</p>
-                                </div>
-                                <div>
-                                    <p><strong>Experience:</strong> {viewingCareer.experience}</p>
-                                    <p><strong>Apply URL:</strong> <a href={viewingCareer.applyLink} target="_blank" style={{ color: 'var(--accent-start)' }}>Link <FaLink size={12} /></a></p>
-                                </div>
+                            <div className="detail-meta">
+                                <span><FaBriefcase /> {careerDetailResponse.data.department}</span>
+                                <span><FaMapMarkerAlt /> {careerDetailResponse.data.location || 'Remote'}</span>
+                                <span className="type-badge">{careerDetailResponse.data.type?.replace('-', ' ')}</span>
+                                <span className={`status-badge ${careerDetailResponse.data.isActive ? 'active' : 'inactive'}`}>
+                                    {careerDetailResponse.data.isActive ? 'Active' : 'Inactive'}
+                                </span>
                             </div>
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <h5 style={{ color: 'var(--accent-start)', marginBottom: '0.5rem' }}>Description</h5>
-                                <p style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}>{viewingCareer.description}</p>
+                            <div className="detail-section">
+                                <h5>Description</h5>
+                                <p>{careerDetailResponse.data.description}</p>
                             </div>
-                            <div className="admin-grid-2">
-                                <div className="detail-list-item">
-                                    <h6>Requirements</h6>
-                                    <ul>{viewingCareer.requirements?.map((r, i) => <li key={i}><FaChevronRight size={10} /> {r}</li>)}</ul>
+                            {careerDetailResponse.data.requirements && careerDetailResponse.data.requirements.length > 0 && (
+                                <div className="detail-section">
+                                    <h5>Requirements</h5>
+                                    <ul>
+                                        {careerDetailResponse.data.requirements.map((req: string, idx: number) => (
+                                            <li key={idx}>{req}</li>
+                                        ))}
+                                    </ul>
                                 </div>
-                                <div className="detail-list-item">
-                                    <h6>Benefits</h6>
-                                    <ul>{viewingCareer.benefits?.map((b, i) => <li key={i}><FaChevronRight size={10} /> {b}</li>)}</ul>
+                            )}
+                            {careerDetailResponse.data.responsibilities && careerDetailResponse.data.responsibilities.length > 0 && (
+                                <div className="detail-section">
+                                    <h5>Responsibilities</h5>
+                                    <ul>
+                                        {careerDetailResponse.data.responsibilities.map((resp: string, idx: number) => (
+                                            <li key={idx}>{resp}</li>
+                                        ))}
+                                    </ul>
                                 </div>
-                            </div>
+                            )}
+                            {careerDetailResponse.data.benefits && careerDetailResponse.data.benefits.length > 0 && (
+                                <div className="detail-section">
+                                    <h5>Benefits</h5>
+                                    <ul>
+                                        {careerDetailResponse.data.benefits.map((benefit: string, idx: number) => (
+                                            <li key={idx}>{benefit}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            <style jsx>{`
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.6);
-                    backdrop-filter: blur(4px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1000;
-                    padding: 2rem;
-                }
-                .modal-content {
-                    width: 100%;
-                    max-width: 900px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    background: var(--primary-light);
-                    box-shadow: var(--shadow-lg);
-                }
-                .form-group { margin-bottom: 1.25rem; }
-                .form-label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; font-weight: 500; color: var(--text-primary); }
-                .modal-content .form-input { background: var(--primary); border: 1px solid var(--glass-border); color: var(--text-primary); width: 100%; padding: 0.75rem; border-radius: 8px; }
-                .detail-list-item h6 { font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary); border-bottom: 1px solid var(--glass-border); padding-bottom: 0.25rem; }
-                .detail-list-item ul { list-style: none; padding: 0; }
-                .detail-list-item li { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.5rem; }
-            `}</style>
-
-            {/* Delete Confirmation Modal */}
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>
     );

@@ -11,6 +11,8 @@ import Footer from "../components/layout/Footer";
 import SmoothScroll from "../components/layout/SmoothScroll";
 import FloatingButtons from "../components/layout/FloatingButtons";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { StoreProvider } from "../lib/store/StoreProvider";
+import ToastContainer from "../components/ui/ToastContainer";
 
 // Optimized font loading using next/font
 // This automaticallysubsets the font and serves it from your domain
@@ -61,15 +63,18 @@ export default function RootLayout({
                 />
             </head>
             <body className={inter.className}>
-                <ThemeProvider>
-                    <SmoothScroll />
-                    <FloatingButtons />
-                    <Navbar />
-                    <main style={{ minHeight: '100vh' }}>
-                        {children}
-                    </main>
-                    <Footer />
-                </ThemeProvider>
+                <StoreProvider>
+                    <ThemeProvider>
+                        <SmoothScroll />
+                        <FloatingButtons />
+                        <ToastContainer />
+                        <Navbar />
+                        <main style={{ minHeight: '100vh' }}>
+                            {children}
+                        </main>
+                        <Footer />
+                    </ThemeProvider>
+                </StoreProvider>
             </body>
         </html>
     );

@@ -159,6 +159,10 @@ const UserSchema = new Schema<IUserDocument>(
                 delete ret.__v;
                 delete ret.password;
 
+                // Flatten common fields for frontend
+                ret.name = ret.displayName || `${ret.firstName} ${ret.lastName}`;
+                ret.lastLogin = ret.security?.lastLogin;
+
                 if (ret.metadata) {
                     delete ret.metadata.verificationToken;
                     delete ret.metadata.resetPasswordToken;
@@ -189,6 +193,9 @@ UserSchema.virtual('fullName').get(function () {
 UserSchema.pre('save', async function (next) {
     // Generate display name if not provided
     if (this.isNew && !this.displayName) {
+        this.displayName = `${this.firstName} ${this.lastName}`;
+    } else if ((this.isModified('firstName') || this.isModified('lastName')) && !this.isModified('displayName')) {
+        // Update display name if name fields change and display name wasn't manually updated
         this.displayName = `${this.firstName} ${this.lastName}`;
     }
 

@@ -2,81 +2,237 @@
 
 import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaFilter, FaEye, FaTimes, FaEnvelope, FaCalendarAlt, FaUserTag, FaShieldAlt } from 'react-icons/fa';
-import usersJsonData from '../../../data/users.json';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaEnvelope, FaShieldAlt, FaSpinner } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
+import {
+    useGetUsersQuery,
+    useGetUserByIdQuery,
+    useCreateUserMutation,
+    useUpdateUserMutation,
+    useDeleteUserMutation,
+    useChangePasswordMutation,
+} from '../../../lib/store/api/usersApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-// Transform users from JSON to display format
-const transformUsers = () => {
-    return usersJsonData.users.map(user => {
-        const formatDate = (dateString: string) => {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        };
+interface UserFormData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: string;
+    status: string;
+    phone: string;
+    company: string;
+    location: string;
+    department: string;
+    position: string;
+    bio: string;
+}
 
-        return {
-            id: user.id,
-            name: user.displayName,
-            email: user.email,
-            status: user.status,
-            role: (usersJsonData.roles as any)[user.role]?.name || user.role,
-            roleKey: user.role,
-            joined: formatDate(user.metadata.createdAt),
-            lastLogin: user.security.lastLogin ? formatDate(user.security.lastLogin) : 'Never',
-            bio: (user.profile as any).bio || 'No bio provided.',
-            avatar: (user as any).avatar
-        };
-    });
+const initialFormData: UserFormData = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    role: 'client',
+    status: 'active',
+    phone: '',
+    company: '',
+    location: '',
+    department: '',
+    position: '',
+    bio: '',
 };
 
-const initialUsers = transformUsers();
+const roles = ['super_admin', 'admin', 'editor', 'client'];
+const statuses = ['active', 'inactive', 'suspended'];
 
 export default function UsersPage() {
-    const [users, setUsers] = useState(initialUsers);
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [viewingUser, setViewingUser] = useState<any | null>(null);
+    const [roleFilter, setRoleFilter] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [editingUserId, setEditingUserId] = useState<string | null>(null);
+    const [viewingUser, setViewingUser] = useState<any>(null);
+    const [formData, setFormData] = useState<UserFormData>(initialFormData);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
     const deleteConfirm = useDeleteConfirm();
 
+    // RTK Query hooks
+    const { data: usersResponse, isLoading, isError } = useGetUsersQuery();
+    const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+    const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+    const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+
+    const users = usersResponse?.data || [];
+
     const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesSearch = (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (user.email || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRole = !roleFilter || user.role === roleFilter;
+        return matchesSearch && matchesRole;
     });
 
-    const handleOpenDetail = (user: any) => {
-        setViewingUser(user);
+    const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+    const { data: userDetailResponse } = useGetUserByIdQuery(viewingUserId!, {
+        skip: !viewingUserId
+    });
+    // const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation(); // Not used directly anymore
+
+    const editingUser = editingUserId ? users.find((u: any) => u._id === editingUserId) : null;
+
+    const handleOpenModal = (user: any = null) => {
+        if (user) {
+            setEditingUserId(user.id);
+            setFormData({
+                firstName: user.firstName || (user.name ? user.name.split(' ')[0] : ''),
+                lastName: user.lastName || (user.name ? user.name.split(' ').slice(1).join(' ') : ''),
+                email: user.email || '',
+                password: '',
+                role: user.role || 'client',
+                status: user.status || 'active',
+                phone: user.phone || user.profile?.phone || '',
+                company: user.profile?.company || '',
+                location: user.profile?.location || '',
+                department: user.profile?.department || '',
+                position: user.profile?.position || '',
+                bio: user.profile?.bio || '',
+            });
+        } else {
+            setEditingUserId(null);
+            setFormData(initialFormData);
+        }
+        setAvatarFile(null);
+        setIsModalOpen(true);
+    };
+
+    const handleOpenDetail = (userId: string) => {
+        setViewingUserId(userId);
         setIsDetailOpen(true);
     };
 
-    const handleCloseDetail = () => {
-        setViewingUser(null);
+    const handleCloseModals = () => {
+        setIsModalOpen(false);
         setIsDetailOpen(false);
+        setEditingUserId(null);
+        setViewingUserId(null);
+        setViewingUser(null);
+        setFormData(initialFormData);
+        setAvatarFile(null);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setAvatarFile(e.target.files[0]);
+        }
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const formDataToSend = new FormData();
+        formDataToSend.append('firstName', formData.firstName);
+        formDataToSend.append('lastName', formData.lastName);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('role', formData.role);
+        formDataToSend.append('status', formData.status);
+        formDataToSend.append('phone', formData.phone);
+        formDataToSend.append('company', formData.company);
+        formDataToSend.append('location', formData.location);
+        formDataToSend.append('department', formData.department);
+        formDataToSend.append('position', formData.position);
+        formDataToSend.append('bio', formData.bio);
+
+        if (avatarFile) {
+            formDataToSend.append('avatar', avatarFile);
+        }
+        // For create user, password is required in the main payload
+        if (!editingUserId && formData.password) {
+            formDataToSend.append('password', formData.password);
+        }
+
+
+        try {
+            if (editingUserId) {
+                if (formData.password) {
+                    formDataToSend.append('password', formData.password);
+                }
+
+                await updateUser({ id: editingUserId, data: formDataToSend }).unwrap();
+
+                if (formData.password) {
+                    dispatch(showSuccessNotification(`Email sent to ${formData.email} for password reset`));
+                } else {
+                    dispatch(showSuccessNotification('User updated successfully'));
+                }
+            } else {
+                await createUser(formDataToSend).unwrap();
+                dispatch(showSuccessNotification('Email is user created sent for password reset'));
+            }
+            handleCloseModals();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save user'));
+        }
     };
 
     const handleDelete = (id: string, name: string) => {
         deleteConfirm.showDeleteConfirm({
             title: 'Delete User',
-            message: 'This action will permanently delete this user from the system. This cannot be undone.',
+            message: 'This action will permanently delete this user account. This cannot be undone.',
             itemName: name,
-            onConfirm: () => {
-                setUsers(prev => prev.filter(u => u.id !== id));
+            onConfirm: async () => {
+                try {
+                    await deleteUser(id).unwrap();
+                    dispatch(showSuccessNotification('User deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete user'));
+                }
             }
         });
     };
 
-    const statusOptions = Object.keys(usersJsonData.statuses);
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Users">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading users...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="Users">
+                <div className="admin-error">
+                    <p>Failed to load users. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout pageTitle="Users">
-            {/* Filters */}
+            {/* Header Actions */}
             <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
@@ -97,24 +253,19 @@ export default function UsersPage() {
                         }} />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaFilter style={{ color: 'var(--text-muted)' }} />
-                        <select
-                            className="form-input"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            style={{ width: 'auto', padding: '0.75rem 1rem' }}
-                        >
-                            <option value="all">All Status</option>
-                            {statusOptions.map(status => (
-                                <option key={status} value={status}>
-                                    {(usersJsonData.statuses as any)[status].label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <select
+                        className="form-input"
+                        value={roleFilter}
+                        onChange={(e) => setRoleFilter(e.target.value)}
+                        style={{ width: 'auto', minWidth: '130px' }}
+                    >
+                        <option value="">All Roles</option>
+                        {roles.map(role => (
+                            <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                        ))}
+                    </select>
 
-                    <button className="btn btn-primary" style={{ marginLeft: 'auto' }}>
+                    <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ marginLeft: 'auto' }}>
                         <FaPlus /> Add User
                     </button>
                 </div>
@@ -130,116 +281,301 @@ export default function UsersPage() {
                         <thead>
                             <tr>
                                 <th>User</th>
-                                <th>Status</th>
+                                <th>Email</th>
                                 <th>Role</th>
-                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredUsers.map((user) => (
-                                <tr key={user.id}>
+                            {filteredUsers.map((user, index) => (
+                                <tr key={user.id || `user-${index}`}>
                                     <td>
-                                        <div className="table-user">
-                                            <div className="table-user-avatar">
-                                                {user.name.split(' ').map((n: string) => n[0]).join('')}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div className="user-avatar">
+                                                {user.avatar ? (
+                                                    <img
+                                                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}`}
+                                                        alt={user.name}
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'
+                                                )}
                                             </div>
-                                            <div className="table-user-info">
-                                                <span className="table-user-name">{user.name}</span>
-                                                <span className="table-user-email">{user.email}</span>
-                                            </div>
+                                            <span style={{ fontWeight: 500 }}>{user.name || 'Unknown'}</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`status-badge ${user.status}`}>
-                                            {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <FaEnvelope size={12} style={{ color: 'var(--text-muted)' }} />
+                                            {user.email}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className={`role-badge ${user.role}`}>
+                                            <FaShieldAlt size={10} /> {user.role}
                                         </span>
                                     </td>
                                     <td>
-                                        <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{user.role}</span>
+                                        <span className={`status-badge ${user.status}`}>
+                                            {user.status}
+                                        </span>
                                     </td>
-                                    <td>{user.joined}</td>
+                                    <td>{formatDate(user.lastLogin || '')}</td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(user)} title="View Detail">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(user.id)} title="View">
                                                 <FaEye />
                                             </button>
-                                            <button className="table-action-btn" title="Edit">
+                                            <button className="table-action-btn" onClick={() => handleOpenModal(user)} title="Edit">
                                                 <FaEdit />
                                             </button>
-                                            <button className="table-action-btn delete" onClick={() => handleDelete(user.id, user.name)} title="Delete">
+                                            <button
+                                                className="table-action-btn delete"
+                                                onClick={() => handleDelete(user.id, user.name || 'Unknown')}
+                                                title="Delete"
+                                                disabled={isDeleting}
+                                            >
                                                 <FaTrash />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
+                            {filteredUsers.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No users found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* User Detail Modal */}
-            {isDetailOpen && viewingUser && (
+            {/* Create/Edit Modal */}
+            {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card" style={{ maxWidth: '500px' }}>
+                    <div className="modal-content" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">User Profile</h3>
-                            <button className="table-action-btn" onClick={handleCloseDetail}><FaTimes /></button>
+                            <h3 className="admin-card-title">{editingUserId ? 'Edit User' : 'Add User'}</h3>
+                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
-                        <div style={{ padding: '2rem', textAlign: 'center' }}>
-                            <div className="table-user-avatar" style={{ width: '80px', height: '80px', margin: '0 auto 1rem', fontSize: '2rem' }}>
-                                {viewingUser.name.split(' ').map((n: string) => n[0]).join('')}
-                            </div>
-                            <h4 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{viewingUser.name}</h4>
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                                <span className={`status-badge ${viewingUser.status}`}>{viewingUser.status}</span>
-                                <span className="status-badge active" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>{viewingUser.role}</span>
+                        <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
+                            <div className="admin-grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">First Name</label>
+                                    <input name="firstName" className="form-input" value={formData.firstName} onChange={handleInputChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Last Name</label>
+                                    <input name="lastName" className="form-input" value={formData.lastName} onChange={handleInputChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Email</label>
+                                    <input name="email" type="email" className="form-input" value={formData.email} onChange={handleInputChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{editingUserId ? 'New Password (leave blank to keep)' : 'Password'}</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            name="password"
+                                            type={showPassword ? "text" : "password"}
+                                            className="form-input"
+                                            value={formData.password}
+                                            onChange={handleInputChange}
+                                            required={!editingUserId}
+                                            style={{ paddingRight: '2.5rem' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{
+                                                position: 'absolute',
+                                                right: '0.75rem',
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                background: 'none',
+                                                border: 'none',
+                                                cursor: 'pointer',
+                                                color: 'var(--text-muted)'
+                                            }}
+                                        >
+                                            <FaEye />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Phone</label>
+                                    <input name="phone" className="form-input" value={formData.phone} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Company</label>
+                                    <input name="company" className="form-input" value={formData.company} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Location</label>
+                                    <input name="location" className="form-input" value={formData.location} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Department</label>
+                                    <input name="department" className="form-input" value={formData.department} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Position</label>
+                                    <input name="position" className="form-input" value={formData.position} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Bio</label>
+                                    <textarea name="bio" className="form-input" value={formData.bio} onChange={handleInputChange as any} rows={3} style={{ resize: 'vertical' }} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Role</label>
+                                    <select name="role" className="form-input" value={formData.role} onChange={handleInputChange}>
+                                        {roles.map(role => (
+                                            <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status</label>
+                                    <select name="status" className="form-input" value={formData.status} onChange={handleInputChange}>
+                                        {statuses.map(status => (
+                                            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Avatar</label>
+                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                        {/* Current Avatar */}
+                                        {editingUser && editingUser.avatar && !avatarFile && (
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)', marginBottom: '0.25rem' }}>
+                                                    <img
+                                                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${editingUser.avatar.startsWith('/') ? '' : '/'}${editingUser.avatar}`}
+                                                        alt="Current"
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                </div>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Current</span>
+                                            </div>
+                                        )}
+                                        {/* New Avatar Preview */}
+                                        {avatarFile && (
+                                            <div style={{ textAlign: 'center' }}>
+                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--primary-color)', marginBottom: '0.25rem' }}>
+                                                    <img
+                                                        src={URL.createObjectURL(avatarFile)}
+                                                        alt="New"
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                    />
+                                                </div>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--primary-color)' }}>New</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                </div>
                             </div>
 
-                            <div style={{ marginTop: '2rem', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'var(--primary)', borderRadius: '8px' }}>
-                                    <FaEnvelope color="var(--accent-start)" />
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Email Address</label>
-                                        <span style={{ fontSize: '0.9375rem' }}>{viewingUser.email}</span>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'var(--primary)', borderRadius: '8px' }}>
-                                    <FaCalendarAlt color="var(--accent-start)" />
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Member Since</label>
-                                        <span style={{ fontSize: '0.9375rem' }}>{viewingUser.joined}</span>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'var(--primary)', borderRadius: '8px' }}>
-                                    <FaShieldAlt color="var(--accent-start)" />
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Last Login</label>
-                                        <span style={{ fontSize: '0.9375rem' }}>{viewingUser.lastLogin}</span>
-                                    </div>
-                                </div>
-                                <div style={{ padding: '0.75rem', background: 'var(--primary)', borderRadius: '8px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Bio</label>
-                                    <p style={{ fontSize: '0.875rem', lineHeight: 1.5, color: 'var(--text-secondary)' }}>{viewingUser.bio}</p>
-                                </div>
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
+                                    {(isCreating || isUpdating) ? <div className="spinner-sm"></div> : <FaSave />}
+                                    {' '}Save Changes
+                                </button>
                             </div>
-
-                            <div style={{ marginTop: '2rem' }}>
-                                <button className="btn btn-primary" style={{ width: '100%' }}>Send Message</button>
-                            </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmModal {...deleteConfirm.modalProps} />
+            {/* Detail View Modal */}
+            {
+                isDetailOpen && userDetailResponse?.data && (
+                    <div className="modal-overlay">
+                        <div className="modal-content" data-lenis-prevent>
+                            <div className="admin-card-header">
+                                <h3 className="admin-card-title">User Details</h3>
+                                <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
+                            </div>
+                            <div style={{ padding: '2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+                                    <div className="detail-avatar">
+                                        {userDetailResponse.data.avatar ? (
+                                            <img
+                                                src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${userDetailResponse.data.avatar.startsWith('/') ? '' : '/'}${userDetailResponse.data.avatar}`}
+                                                alt={userDetailResponse.data.name}
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            userDetailResponse.data.name ? userDetailResponse.data.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 style={{ margin: 0 }}>{userDetailResponse.data.name || 'Unknown'}</h4>
+                                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)' }}>{userDetailResponse.data.email || 'N/A'}</p>
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                            <span className={`role-badge ${userDetailResponse.data.role}`}>
+                                                <FaShieldAlt size={10} /> {userDetailResponse.data.role}
+                                            </span>
+                                            <span className={`status-badge ${userDetailResponse.data.status}`}>
+                                                {userDetailResponse.data.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="detail-grid">
+                                    <div className="detail-item">
+                                        <label>Phone</label>
+                                        <span>{userDetailResponse.data.phone || userDetailResponse.data.profile?.phone || 'N/A'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Company</label>
+                                        <span>{userDetailResponse.data.profile?.company || 'N/A'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Location</label>
+                                        <span>{userDetailResponse.data.profile?.location || 'N/A'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Department</label>
+                                        <span>{userDetailResponse.data.profile?.department || 'N/A'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Position</label>
+                                        <span>{userDetailResponse.data.profile?.position || 'N/A'}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Last Login</label>
+                                        <span>{formatDate(userDetailResponse.data.lastLogin || userDetailResponse.data.security?.lastLogin)}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Created</label>
+                                        <span>{formatDate(userDetailResponse.data.createdAt)}</span>
+                                    </div>
+                                    <div className="detail-item">
+                                        <label>Updated</label>
+                                        <span>{formatDate(userDetailResponse.data.updatedAt)}</span>
+                                    </div>
+                                    {userDetailResponse.data.profile?.bio && (
+                                        <div className="detail-item" style={{ gridColumn: 'span 2' }}>
+                                            <label>Bio</label>
+                                            <p style={{ margin: 0, lineHeight: 1.5 }}>{userDetailResponse.data.profile.bio}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
-            <style jsx>{`
-                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 2rem; }
-                .modal-content { width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; background: var(--primary-light); box-shadow: var(--shadow-lg); }
-            `}</style>
+            <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>
     );
 }

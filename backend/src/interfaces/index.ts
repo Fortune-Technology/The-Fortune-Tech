@@ -410,6 +410,7 @@ export interface CreateUserDTO {
 export interface UpdateUserDTO extends Partial<Omit<CreateUserDTO, 'password'>> {
     currentPassword?: string;
     newPassword?: string;
+    password?: string; // For admin overrides
 }
 
 // =============================================================================

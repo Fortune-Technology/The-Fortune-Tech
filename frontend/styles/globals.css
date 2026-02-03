@@ -106,12 +106,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
+  background: #bbb;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #888;
 }
 
 /* Focus styles */

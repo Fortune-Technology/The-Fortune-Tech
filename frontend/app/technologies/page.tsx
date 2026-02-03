@@ -2,25 +2,9 @@
 
 import { useState } from 'react';
 import PageHeader from '../../components/ui/PageHeader';
-import techData from '../../data/technologies.json';
 import { getIcon } from '../../lib/icons';
-import { FaCode, FaServer, FaDatabase, FaCloud, FaStar, FaCheckCircle } from 'react-icons/fa';
-
-interface TechItem {
-  name: string;
-  icon: string;
-  expertiseLevel: string;
-  experienceYears: number;
-  useCases: string[];
-  featured: boolean;
-}
-
-interface TechCategory {
-  category: string;
-  slug: string;
-  description: string;
-  items: TechItem[];
-}
+import { FaCode, FaServer, FaDatabase, FaCloud, FaStar, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { useGetTechnologiesQuery } from '../../lib/store/api/technologiesApi';
 
 // Category icons mapping
 const categoryIcons: { [key: string]: React.ComponentType } = {
@@ -49,14 +33,78 @@ const expertiseColors: { [key: string]: string } = {
 export default function TechnologiesPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const technologies = techData as TechCategory[];
+
+  const { data: technologiesResponse, isLoading, isError } = useGetTechnologiesQuery();
+  const technologies = technologiesResponse?.data || [];
 
   // Calculate stats
-  const totalTech = technologies.reduce((acc, cat) => acc + cat.items.length, 0);
+  const totalTech = technologies.reduce((acc, cat) => acc + (cat.items?.length || 0), 0);
   const expertCount = technologies.reduce((acc, cat) =>
-    acc + cat.items.filter(item => item.expertiseLevel === 'Expert' || item.expertiseLevel === 'Advanced').length, 0
+    acc + (cat.items || []).filter(item => item.expertiseLevel === 'Expert' || item.expertiseLevel === 'Advanced').length, 0
   );
-  const totalYears = Math.max(...technologies.flatMap(cat => cat.items.map(item => item.experienceYears)));
+
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader
+          title="Our Tech Stack"
+          subtitle="We leverage cutting-edge technologies to build powerful, scalable solutions"
+        />
+        <section className="section">
+          <div className="container">
+            <div className="loading-state">
+              <FaSpinner className="spinner" />
+              <p>Loading technologies...</p>
+            </div>
+          </div>
+        </section>
+        <style jsx>{`
+                    .loading-state {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 4rem;
+                        gap: 1rem;
+                        color: var(--text-muted);
+                    }
+                    .spinner {
+                        font-size: 2rem;
+                        animation: spin 1s linear infinite;
+                    }
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                `}</style>
+      </>
+    );
+  }
+
+  if (isError || technologies.length === 0) {
+    return (
+      <>
+        <PageHeader
+          title="Our Tech Stack"
+          subtitle="We leverage cutting-edge technologies to build powerful, scalable solutions"
+        />
+        <section className="section">
+          <div className="container">
+            <div className="error-state">
+              <p>Unable to load technologies. Please try again later.</p>
+            </div>
+          </div>
+        </section>
+        <style jsx>{`
+                    .error-state {
+                        text-align: center;
+                        padding: 4rem;
+                        color: var(--text-muted);
+                    }
+                `}</style>
+      </>
+    );
+  }
 
   return (
     <>
@@ -71,9 +119,9 @@ export default function TechnologiesPage() {
           <div className="tech-tabs-container">
             <div className="tech-tabs">
               {technologies.map((category, index) => {
-                const CategoryIcon = categoryIcons[category.category] || FaCode;
+                const CategoryIcon = categoryIcons[category.name] || FaCode;
                 const isActive = activeTab === index;
-                const colors = categoryColors[category.category];
+                const colors = categoryColors[category.name];
 
                 return (
                   <button
@@ -81,15 +129,15 @@ export default function TechnologiesPage() {
                     className={`tech-tab ${isActive ? 'active' : ''}`}
                     onClick={() => setActiveTab(index)}
                     style={{
-                      '--tab-color': colors?.primary,
-                      '--tab-glow': colors?.glow,
+                      '--tab-color': colors?.primary || '#8b5cf6',
+                      '--tab-glow': colors?.glow || 'rgba(139, 92, 246, 0.2)',
                     } as React.CSSProperties}
                   >
                     <span className="tech-tab-icon">
                       <CategoryIcon />
                     </span>
-                    <span className="tech-tab-label">{category.category}</span>
-                    <span className="tech-tab-count">{category.items.length}</span>
+                    <span className="tech-tab-label">{category.name}</span>
+                    <span className="tech-tab-count">{category.items?.length || 0}</span>
                     {isActive && <span className="tech-tab-indicator" />}
                   </button>
                 );
@@ -100,7 +148,7 @@ export default function TechnologiesPage() {
             <div className="tech-content">
               {technologies.map((category, index) => {
                 if (activeTab !== index) return null;
-                const colors = categoryColors[category.category];
+                const colors = categoryColors[category.name];
 
                 return (
                   <div key={index} className="tech-content-inner">
@@ -113,8 +161,8 @@ export default function TechnologiesPage() {
 
                     {/* Technology Cards */}
                     <div className="tech-cards-grid-new">
-                      {category.items.map((item, idx) => {
-                        const Icon = getIcon(item.icon);
+                      {(category.items || []).map((item, idx) => {
+                        const Icon = getIcon(item.icon || '');
                         const isHovered = hoveredCard === idx;
 
                         return (
@@ -124,8 +172,8 @@ export default function TechnologiesPage() {
                             onMouseEnter={() => setHoveredCard(idx)}
                             onMouseLeave={() => setHoveredCard(null)}
                             style={{
-                              '--card-color': colors?.primary,
-                              '--card-glow': colors?.glow,
+                              '--card-color': colors?.primary || '#8b5cf6',
+                              '--card-glow': colors?.glow || 'rgba(139, 92, 246, 0.2)',
                               animationDelay: `${idx * 0.1}s`,
                             } as React.CSSProperties}
                           >
@@ -151,24 +199,24 @@ export default function TechnologiesPage() {
                             <div
                               className="expertise-level-badge"
                               style={{
-                                '--expertise-color': expertiseColors[item.expertiseLevel]
+                                '--expertise-color': expertiseColors[item.expertiseLevel || 'Intermediate']
                               } as React.CSSProperties}
                             >
                               {item.expertiseLevel}
                             </div>
 
-
-
                             {/* Use Cases */}
-                            <div className="use-cases-list">
-                              <h5 className="use-cases-title">Use Cases</h5>
-                              {item.useCases.map((useCase, i) => (
-                                <div key={i} className="use-case-item">
-                                  <FaCheckCircle className="use-case-icon" />
-                                  <span>{useCase}</span>
-                                </div>
-                              ))}
-                            </div>
+                            {item.useCases && item.useCases.length > 0 && (
+                              <div className="use-cases-list">
+                                <h5 className="use-cases-title">Use Cases</h5>
+                                {item.useCases.map((useCase, i) => (
+                                  <div key={i} className="use-case-item">
+                                    <FaCheckCircle className="use-case-icon" />
+                                    <span>{useCase}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
 
                             <div className="tech-card-shine" />
                           </div>

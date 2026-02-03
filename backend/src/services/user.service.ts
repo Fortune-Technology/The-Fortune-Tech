@@ -4,6 +4,7 @@ import { CreateUserDTO, UpdateUserDTO, PaginatedResult } from '../interfaces';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors';
 import { parseArrayFromString, calculatePagination } from '../utils/helpers';
 import { USER_STATUSES } from '../constants';
+import { sendEmail } from '../utils/email';
 
 interface UserQuery {
     page?: number;
@@ -80,6 +81,23 @@ export class UserService {
         });
 
         await user.save();
+
+        // Send welcome email
+        try {
+            await sendEmail(
+                user.email,
+                'Welcome to The Fortune Tech',
+                `<h3>Welcome, ${user.firstName}!</h3>
+                <p>Your account has been created successfully.</p>
+                <p><strong>Login Credentials:</strong></p>
+                <p>Email: ${user.email}</p>
+                <p>Password: ${data.password}</p>
+                <p>Please login and change your password immediately.</p>`
+            );
+        } catch (error) {
+            console.error('Failed to send welcome email', error);
+        }
+
         return user;
     }
 
@@ -107,6 +125,22 @@ export class UserService {
         if (data.position !== undefined) user.profile.position = data.position;
         if (data.company !== undefined) user.profile.company = data.company;
 
+        if (data.password) {
+            user.password = data.password;
+            try {
+                await sendEmail(
+                    user.email,
+                    'Your Password Has Been Reset',
+                    `<h3>Hello ${user.firstName},</h3>
+                    <p>An administrator has reset your password.</p>
+                    <p><strong>New Password:</strong> ${data.password}</p>
+                    <p>Please login and change your password immediately.</p>`
+                );
+            } catch (error) {
+                console.error('Failed to send password reset email', error);
+            }
+        }
+
         await user.save();
         return user;
     }
@@ -130,6 +164,18 @@ export class UserService {
 
         user.password = newPassword;
         await user.save();
+
+        try {
+            await sendEmail(
+                user.email,
+                'Your Password Has Been Changed',
+                `<h3>Hello ${user.firstName},</h3>
+                <p>Your password was successfully changed.</p>
+                <p>If you did not make this change, please contact support immediately.</p>`
+            );
+        } catch (error) {
+            console.error('Failed to send password change email', error);
+        }
     }
 
     static async delete(idOrEmail: string): Promise<void> {

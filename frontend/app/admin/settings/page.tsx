@@ -1,43 +1,103 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaSave, FaGlobe, FaBuilding, FaShareAlt, FaSearch, FaCogs } from 'react-icons/fa';
-import websiteConfigRaw from '../../../data/website-config.json';
+import { FaSave, FaGlobe, FaBuilding, FaShareAlt, FaSearch, FaCogs, FaSpinner } from 'react-icons/fa';
+import { useGetSettingsQuery, useUpdateSettingsMutation, Settings } from '../../../lib/store/api/settingsApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
 export default function SettingsPage() {
-    const [config, setConfig] = useState(websiteConfigRaw);
+    const dispatch = useAppDispatch();
     const [activeTab, setActiveTab] = useState('site');
-    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState<Record<string, any>>({});
+
+    // RTK Query hooks
+    const { data: settingsResponse, isLoading } = useGetSettingsQuery();
+    const [updateSettings, { isLoading: isSaving }] = useUpdateSettingsMutation();
+
+    useEffect(() => {
+        if (settingsResponse?.data) {
+            const settings = settingsResponse.data;
+            setFormData({
+                site: {
+                    siteName: settings.siteName || '',
+                    siteDescription: settings.siteDescription || '',
+                    logo: settings.logo || '',
+                    favicon: settings.favicon || '',
+                },
+                company: {
+                    email: settings.email || '',
+                    phone: settings.phone || '',
+                    address: settings.address || '',
+                },
+                social: {
+                    facebook: settings.socialMedia?.facebook || '',
+                    twitter: settings.socialMedia?.twitter || '',
+                    instagram: settings.socialMedia?.instagram || '',
+                    linkedin: settings.socialMedia?.linkedin || '',
+                    github: settings.socialMedia?.github || '',
+                    youtube: settings.socialMedia?.youtube || '',
+                },
+                seo: {
+                    defaultTitle: settings.seo?.defaultTitle || '',
+                    defaultDescription: settings.seo?.defaultDescription || '',
+                    keywords: settings.seo?.keywords?.join(', ') || '',
+                    ogImage: settings.seo?.ogImage || '',
+                },
+                features: {
+                    maintenanceMode: settings.maintenance?.enabled || false,
+                    maintenanceMessage: settings.maintenance?.message || '',
+                    googleAnalytics: settings.analytics?.googleAnalyticsId || '',
+                    facebookPixel: settings.analytics?.facebookPixelId || '',
+                },
+            });
+        }
+    }, [settingsResponse]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsSaving(false);
-        alert('Settings saved successfully (Mock)');
+
+        // Transform form data back to Settings structure
+        const dataToSend: Partial<Settings> = {
+            siteName: formData.site?.siteName,
+            siteDescription: formData.site?.siteDescription,
+            logo: formData.site?.logo,
+            favicon: formData.site?.favicon,
+            email: formData.company?.email,
+            phone: formData.company?.phone,
+            address: formData.company?.address,
+            socialMedia: formData.social,
+            seo: {
+                defaultTitle: formData.seo?.defaultTitle,
+                defaultDescription: formData.seo?.defaultDescription,
+                keywords: formData.seo?.keywords?.split(',').map((k: string) => k.trim()).filter((k: string) => k),
+                ogImage: formData.seo?.ogImage,
+            },
+            analytics: {
+                googleAnalyticsId: formData.features?.googleAnalytics,
+                facebookPixelId: formData.features?.facebookPixel,
+            },
+            maintenance: {
+                enabled: formData.features?.maintenanceMode,
+                message: formData.features?.maintenanceMessage,
+            },
+        };
+
+        try {
+            await updateSettings(dataToSend).unwrap();
+            dispatch(showSuccessNotification('Settings saved successfully'));
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save settings'));
+        }
     };
 
     const handleInputChange = (section: string, field: string, value: any) => {
-        setConfig(prev => ({
+        setFormData(prev => ({
             ...prev,
             [section]: {
-                ...((prev as any)[section]),
+                ...prev[section],
                 [field]: value
-            }
-        }));
-    };
-
-    const handleNestedInputChange = (section: string, subSection: string, field: string, value: any) => {
-        setConfig(prev => ({
-            ...prev,
-            [section]: {
-                ...((prev as any)[section]),
-                [subSection]: {
-                    ...((prev as any)[section][subSection]),
-                    [field]: value
-                }
             }
         }));
     };
@@ -52,11 +112,6 @@ export default function SettingsPage() {
 
     const renderField = (section: string, key: string, value: any, label: string) => {
         const type = typeof value;
-
-        if (type === 'object' && value !== null && !Array.isArray(value)) {
-            // Nested object - simplified for this demo by only showing top-level fields
-            return null;
-        }
 
         return (
             <div key={key} className="form-group">
@@ -81,6 +136,23 @@ export default function SettingsPage() {
             </div>
         );
     };
+
+    const formatLabel = (key: string) => {
+        return key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Settings">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading settings...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout pageTitle="Settings">
@@ -107,79 +179,22 @@ export default function SettingsPage() {
 
                     <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
                         <div className="admin-form-grid">
-                            {Object.entries((config as any)[activeTab]).map(([key, value]) => {
-                                // Basic dynamic field generation
-                                // Convert camelCase or snake_case to Title Case for labels
-                                const label = key
-                                    .replace(/([A-Z])/g, ' $1')
-                                    .replace(/^./, str => str.toUpperCase());
-
+                            {formData[activeTab] && Object.entries(formData[activeTab]).map(([key, value]) => {
+                                const label = formatLabel(key);
                                 return renderField(activeTab, key, value, label);
                             })}
                         </div>
 
                         <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                             <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                                <FaSave /> {isSaving ? 'Saving...' : 'Save Settings'}
+                                {isSaving ? <FaSpinner className="spinner" /> : <FaSave />}
+                                {' '}{isSaving ? 'Saving...' : 'Save Settings'}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <style jsx>{`
-                .settings-container {
-                    display: grid;
-                    grid-template-columns: 1fr;
-                    gap: 1.5rem;
-                }
-                .settings-sidebar {
-                    padding: 0.5rem;
-                    display: flex;
-                    gap: 0.5rem;
-                    overflow-x: auto;
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    border-radius: var(--radius-lg);
-                    scrollbar-width: none;
-                }
-                .settings-sidebar::-webkit-scrollbar {
-                    display: none;
-                }
-                .settings-tab-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    padding: 0.75rem 1.25rem;
-                    border: none;
-                    background: none;
-                    color: var(--text-muted);
-                    border-radius: var(--radius-md);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 0.9375rem;
-                    white-space: nowrap;
-                }
-                .settings-tab-btn:hover {
-                    background: var(--glass-hover);
-                    color: var(--text-primary);
-                }
-                .settings-tab-btn.active {
-                    background: var(--accent-gradient);
-                    color: white;
-                    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-                }
-                .form-group {
-                    margin-bottom: 1.25rem;
-                }
-                .form-label {
-                    display: block;
-                    margin-bottom: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-secondary);
-                }
-            `}</style>
         </AdminLayout>
     );
 }

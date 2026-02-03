@@ -1,0 +1,345 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import AdminLayout from '../../../components/admin/AdminLayout';
+import {
+    FaSave, FaLock, FaUser, FaEnvelope, FaPhone,
+    FaCamera, FaSpinner, FaShieldAlt
+} from 'react-icons/fa';
+import { useGetCurrentUserQuery } from '../../../lib/store/api/authApi';
+import {
+    useUpdateUserMutation,
+    useChangePasswordMutation
+} from '../../../lib/store/api/usersApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import {
+    showSuccessNotification,
+    showErrorNotification
+} from '../../../lib/store/slices/notificationSlice';
+import Image from 'next/image';
+
+export default function ProfilePage() {
+    const dispatch = useAppDispatch();
+
+    // Fetch current user
+    const { data: userResponse, isLoading: isUserLoading, refetch } = useGetCurrentUserQuery();
+    const user = userResponse?.data;
+
+    // Mutations
+    const [updateProfile, { isLoading: isUpdating }] = useUpdateUserMutation();
+    const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+
+    // Form States
+    const [profileData, setProfileData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        displayName: '',
+    });
+
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+    });
+
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+    // Initialize form with user data
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                firstName: user.firstName || '',
+                lastName: user.lastName || '',
+                email: user.email || '',
+                phone: (user as any).phone || '',
+                displayName: user.displayName || '',
+            });
+            if (user.avatar) {
+                setAvatarPreview(user.avatar);
+            }
+        }
+    }, [user]);
+
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setProfileData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+
+        const formData = new FormData();
+        formData.append('firstName', profileData.firstName);
+        formData.append('lastName', profileData.lastName);
+        formData.append('email', profileData.email);
+        formData.append('phone', profileData.phone);
+        formData.append('displayName', profileData.displayName);
+        formData.append('name', `${profileData.firstName} ${profileData.lastName}`.trim());
+
+        if (avatarFile) {
+            formData.append('avatar', avatarFile);
+        }
+
+        try {
+            await updateProfile({ id: user.id, data: formData }).unwrap();
+            dispatch(showSuccessNotification('Profile updated successfully'));
+            refetch();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to update profile'));
+        }
+    };
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) return;
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            dispatch(showErrorNotification('New passwords do not match'));
+            return;
+        }
+
+        try {
+            await changePassword({
+                id: user.id,
+                data: {
+                    currentPassword: passwordData.currentPassword,
+                    newPassword: passwordData.newPassword
+                }
+            }).unwrap();
+            dispatch(showSuccessNotification('Password changed successfully'));
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+            });
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to change password'));
+        }
+    };
+
+    if (isUserLoading) {
+        return (
+            <AdminLayout pageTitle="Profile Settings">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading profile...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    return (
+        <AdminLayout pageTitle="Profile Settings">
+            <div className="profile-container">
+                <div className="admin-grid-2">
+                    {/* Column 1: Profile Information */}
+                    <div className="admin-card">
+                        <div className="admin-card-header">
+                            <h3 className="admin-card-title">
+                                <FaUser style={{ marginRight: '0.5rem' }} /> Personal Information
+                            </h3>
+                        </div>
+                        <div className="admin-card-body">
+                            <form onSubmit={handleUpdateProfile}>
+                                <div className="avatar-upload-section">
+                                    <div className="avatar-preview-wrapper">
+                                        {avatarPreview ? (
+                                            <Image src={avatarPreview} alt="Avatar" width={100} height={100} className="profile-avatar-large" />
+                                        ) : (
+                                            <div className="avatar-placeholder-large">
+                                                {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
+                                            </div>
+                                        )}
+                                        <label htmlFor="avatar-upload" className="avatar-edit-badge">
+                                            <FaCamera />
+                                            <input
+                                                id="avatar-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleAvatarChange}
+                                                hidden
+                                            />
+                                        </label>
+                                    </div>
+                                    <div className="avatar-info">
+                                        <h4>{user?.displayName || 'User Profile'}</h4>
+                                        <p>{user?.role?.toUpperCase()} • {user?.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className="admin-grid-2">
+                                    <div className="form-group">
+                                        <label className="form-label">First Name</label>
+                                        <div className="form-input-wrapper">
+                                            <input
+                                                name="firstName"
+                                                className="form-input form-input-with-icon"
+                                                value={profileData.firstName}
+                                                onChange={handleProfileChange}
+                                                required
+                                            />
+                                            <FaUser className="form-input-icon" />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Last Name</label>
+                                        <div className="form-input-wrapper">
+                                            <input
+                                                name="lastName"
+                                                className="form-input form-input-with-icon"
+                                                value={profileData.lastName}
+                                                onChange={handleProfileChange}
+                                                required
+                                            />
+                                            <FaUser className="form-input-icon" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Display Name</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="displayName"
+                                            className="form-input form-input-with-icon"
+                                            value={profileData.displayName}
+                                            onChange={handleProfileChange}
+                                            placeholder="Public name shown in terminal"
+                                        />
+                                        <FaUser className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Email Address</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="email"
+                                            type="email"
+                                            className="form-input form-input-with-icon"
+                                            value={profileData.email}
+                                            required
+                                            disabled
+                                            title="Email cannot be changed"
+                                        />
+                                        <FaEnvelope className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Phone Number</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="phone"
+                                            className="form-input"
+                                            value={profileData.phone}
+                                            onChange={handleProfileChange}
+                                            placeholder="+1 234 567 890"
+                                        />
+                                        <FaPhone className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="btn btn-primary w-full" disabled={isUpdating}>
+                                    {isUpdating ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save Profile Changes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {/* Column 2: Security / Password */}
+                    <div className="admin-card">
+                        <div className="admin-card-header">
+                            <h3 className="admin-card-title">
+                                <FaShieldAlt style={{ marginRight: '0.5rem' }} /> Security & Password
+                            </h3>
+                        </div>
+                        <div className="admin-card-body">
+                            <div className="security-intro">
+                                <p>Ensure your account is using a long, random password to stay secure.</p>
+                            </div>
+
+                            <form onSubmit={handleChangePassword}>
+                                <div className="form-group">
+                                    <label className="form-label">Current Password</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="currentPassword"
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.currentPassword}
+                                            onChange={handlePasswordChange}
+                                            required
+                                        />
+                                        <FaLock className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <hr className="form-divider" />
+
+                                <div className="form-group">
+                                    <label className="form-label">New Password</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="newPassword"
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.newPassword}
+                                            onChange={handlePasswordChange}
+                                            required
+                                            minLength={8}
+                                        />
+                                        <FaLock className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Confirm New Password</label>
+                                    <div className="form-input-wrapper">
+                                        <input
+                                            name="confirmPassword"
+                                            type="password"
+                                            className="form-input"
+                                            value={passwordData.confirmPassword}
+                                            onChange={handlePasswordChange}
+                                            required
+                                        />
+                                        <FaLock className="form-input-icon" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="btn btn-primary w-full" disabled={isChangingPassword}>
+                                    {isChangingPassword ? <FaSpinner className="spinner" /> : <FaLock />}
+                                    {' '}Update Password
+                                </button>
+                            </form>
+
+                            <div className="security-footer-info">
+                                <p>Your password must be at least 8 characters long and include a mix of letters, numbers and symbols.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </AdminLayout>
+    );
+}

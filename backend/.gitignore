@@ -29,4 +29,4 @@ logs/
 package-lock.json
 # stem_platform_postman_collection.json
 
-/uploads/*
+public/uploads/*

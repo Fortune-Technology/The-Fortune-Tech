@@ -1,156 +1,242 @@
 'use client';
 
-import { useState, Suspense, lazy, useEffect } from 'react';
+import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaSave, FaPlus, FaTrash, FaEdit, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaGlobe, FaSpinner, FaFileAlt, FaCheck, FaTimes as FaTimesSolid } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
-import cmsDataRaw from '../../../data/cms.json';
+import {
+    useGetCMSPagesQuery,
+    useGetCMSPageByIdQuery,
+    useCreateCMSPageMutation,
+    useUpdateCMSPageMutation,
+    useDeleteCMSPageMutation,
+    usePublishCMSPageMutation,
+    useUnpublishCMSPageMutation,
+} from '../../../lib/store/api/cmsApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-const RichTextEditor = lazy(() => import('../../../components/ui/RichTextEditor'));
-
-interface CMSPage {
-    id: string;
+interface CMSFormData {
     title: string;
     slug: string;
-    status: 'published' | 'draft';
-    metaTitle: string;
-    metaDescription: string;
     content: string;
-    createdAt: string;
-    updatedAt: string;
+    excerpt: string;
+    type: string;
+    status: string;
+    featured: boolean;
+    seo: {
+        metaTitle: string;
+        metaDescription: string;
+        keywords: string;
+    };
 }
 
-export default function CMSPage() {
-    // Transform old data structure to new structure
-    const transformOldData = () => {
-        return cmsDataRaw.pages.map((page: any) => ({
-            id: page.id,
-            title: page.title,
-            slug: page.id,
-            status: 'published' as const,
-            metaTitle: page.title,
-            metaDescription: `Learn about ${page.title}`,
-            content: page.content.map((section: any) =>
-                `<h2>${section.heading}</h2>${section.html}`
-            ).join('\n'),
-            createdAt: page.lastUpdated,
-            updatedAt: page.lastUpdated
-        }));
-    };
+const initialFormData: CMSFormData = {
+    title: '',
+    slug: '',
+    content: '',
+    excerpt: '',
+    type: 'page',
+    status: 'draft',
+    featured: false,
+    seo: { metaTitle: '', metaDescription: '', keywords: '' },
+};
 
-    const [cmsPages, setCmsPages] = useState<CMSPage[]>(transformOldData());
+const pageTypes = ['page', 'blog', 'case-study', 'documentation'];
+const statuses = ['draft', 'published', 'archived'];
+
+export default function CMSPage() {
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingPage, setEditingPage] = useState<CMSPage | null>(null);
-    const [formData, setFormData] = useState<Partial<CMSPage>>({});
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [editingPageId, setEditingPageId] = useState<string | null>(null);
+    const [viewingPageId, setViewingPageId] = useState<string | null>(null);
+    const [formData, setFormData] = useState<CMSFormData>(initialFormData);
     const deleteConfirm = useDeleteConfirm();
 
-    // Lock body scroll when modal is open
-    useEffect(() => {
-        if (isModalOpen) {
-            // Store current scroll position
-            const scrollY = window.scrollY;
+    // RTK Query hooks
+    const { data: cmsResponse, isLoading, isError } = useGetCMSPagesQuery();
+    const { data: pageDetailResponse } = useGetCMSPageByIdQuery(viewingPageId!, {
+        skip: !viewingPageId
+    });
+    const [createPage, { isLoading: isCreating }] = useCreateCMSPageMutation();
+    const [updatePage, { isLoading: isUpdating }] = useUpdateCMSPageMutation();
+    const [deletePage, { isLoading: isDeleting }] = useDeleteCMSPageMutation();
+    const [publishPage, { isLoading: isPublishing }] = usePublishCMSPageMutation();
+    const [unpublishPage, { isLoading: isUnpublishing }] = useUnpublishCMSPageMutation();
 
-            // Disable body scroll
-            document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.top = `-${scrollY}px`;
-            document.body.style.width = '100%';
+    const pages = cmsResponse?.data || [];
 
-            return () => {
-                // Re-enable body scroll
-                document.body.style.overflow = '';
-                document.body.style.position = '';
-                document.body.style.top = '';
-                document.body.style.width = '';
-
-                // Restore scroll position
-                window.scrollTo(0, scrollY);
-            };
-        }
-    }, [isModalOpen]);
-
-    const filteredPages = cmsPages.filter(page => {
-        const matchesSearch = page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            page.slug.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === 'all' || page.status === statusFilter;
+    const filteredPages = pages.filter(page => {
+        const matchesSearch = (page.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (page.slug || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = !statusFilter || page.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
 
-    const handleOpenModal = (page: CMSPage | null = null) => {
+    const generateSlug = (title: string) => {
+        return title.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    };
+
+    const handleOpenModal = (page: any = null) => {
         if (page) {
-            setEditingPage(page);
-            setFormData({ ...page });
-        } else {
-            setEditingPage(null);
-            const now = new Date().toISOString().split('T')[0];
+            setEditingPageId(page._id);
             setFormData({
-                id: `page-${Date.now()}`,
-                title: '',
-                slug: '',
-                status: 'draft',
-                metaTitle: '',
-                metaDescription: '',
-                content: '',
-                createdAt: now,
-                updatedAt: now
+                title: page.title || '',
+                slug: page.slug || '',
+                content: page.content || '',
+                excerpt: page.excerpt || '',
+                type: page.type || 'page',
+                status: page.status || 'draft',
+                featured: page.featured || false,
+                seo: {
+                    metaTitle: page.seo?.metaTitle || '',
+                    metaDescription: page.seo?.metaDescription || '',
+                    keywords: page.seo?.keywords?.join(', ') || '',
+                },
             });
+        } else {
+            setEditingPageId(null);
+            setFormData(initialFormData);
         }
         setIsModalOpen(true);
     };
 
-    const handleCloseModal = () => {
+    const handleOpenDetail = (pageId: string) => {
+        setViewingPageId(pageId);
+        setIsDetailOpen(true);
+    };
+
+    const handleCloseModals = () => {
         setIsModalOpen(false);
-        setEditingPage(null);
-        setFormData({});
+        setIsDetailOpen(false);
+        setEditingPageId(null);
+        setViewingPageId(null);
+        setFormData(initialFormData);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+        if (name.startsWith('seo.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                seo: { ...prev.seo, [field]: val } as any,
+            }));
+        } else if (name === 'title' && !editingPageId) {
+            // Auto-generate slug for new pages
+            setFormData(prev => ({
+                ...prev,
+                title: value,
+                slug: generateSlug(value),
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: val }));
+        }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const now = new Date().toISOString().split('T')[0];
-        const updatedData = {
-            ...formData,
-            updatedAt: now
-        } as CMSPage;
+        const dataToSend = {
+            title: formData.title,
+            slug: formData.slug,
+            content: formData.content,
+            excerpt: formData.excerpt,
+            type: formData.type as 'page' | 'blog' | 'case-study' | 'documentation',
+            status: formData.status as 'draft' | 'published' | 'archived',
+            featured: formData.featured,
+            seo: {
+                metaTitle: formData.seo.metaTitle,
+                metaDescription: formData.seo.metaDescription,
+                keywords: formData.seo.keywords.split(',').map(k => k.trim()).filter(k => k),
+            },
+        };
 
-        if (editingPage) {
-            setCmsPages(prev => prev.map(p => p.id === editingPage.id ? updatedData : p));
-        } else {
-            setCmsPages(prev => [...prev, updatedData]);
+        try {
+            if (editingPageId) {
+                await updatePage({ id: editingPageId, data: dataToSend }).unwrap();
+                dispatch(showSuccessNotification('Page updated successfully'));
+            } else {
+                await createPage(dataToSend).unwrap();
+                dispatch(showSuccessNotification('Page created successfully'));
+            }
+            handleCloseModals();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save page'));
         }
-
-        alert('Page saved! In production, this would update the cms.json file.');
-        handleCloseModal();
     };
 
     const handleDelete = (id: string, title: string) => {
         deleteConfirm.showDeleteConfirm({
             title: 'Delete Page',
-            message: 'This action will permanently delete this CMS page. This cannot be undone.',
+            message: 'This action will permanently delete this page. This cannot be undone.',
             itemName: title,
-            onConfirm: () => {
-                setCmsPages(prev => prev.filter(p => p.id !== id));
+            onConfirm: async () => {
+                try {
+                    await deletePage(id).unwrap();
+                    dispatch(showSuccessNotification('Page deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete page'));
+                }
             }
         });
     };
 
+    const handlePublishToggle = async (page: any) => {
+        try {
+            if (page.status === 'published') {
+                await unpublishPage(page._id).unwrap();
+                dispatch(showSuccessNotification('Page unpublished'));
+            } else {
+                await publishPage(page._id).unwrap();
+                dispatch(showSuccessNotification('Page published successfully'));
+            }
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to update page status'));
+        }
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="CMS Pages">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading pages...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="CMS Pages">
+                <div className="admin-error">
+                    <p>Failed to load pages. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
     return (
         <AdminLayout pageTitle="CMS Pages">
-            <div style={{ marginBottom: '1rem' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9375rem' }}>
-                    Manage static content pages and policies
-                </p>
-            </div>
-
-            {/* Search & Filters */}
+            {/* Header Actions */}
             <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
@@ -175,297 +261,217 @@ export default function CMSPage() {
                         className="form-input"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        style={{ width: 'auto', padding: '0.75rem 2rem 0.75rem 1rem' }}
+                        style={{ width: 'auto', minWidth: '130px' }}
                     >
-                        <option value="all">All Status</option>
-                        <option value="published">Published</option>
-                        <option value="draft">Draft</option>
+                        <option value="">All Status</option>
+                        {statuses.map(status => (
+                            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                        ))}
                     </select>
 
                     <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ marginLeft: 'auto' }}>
-                        <FaPlus /> Create New Page
+                        <FaPlus /> Add Page
                     </button>
                 </div>
             </div>
 
             {/* Pages Table */}
             <div className="admin-card">
+                <div className="admin-card-header">
+                    <h3 className="admin-card-title">All Pages ({filteredPages.length})</h3>
+                </div>
                 <div className="admin-table-wrapper">
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Title</th>
+                                <th>Page</th>
+                                <th>Type</th>
                                 <th>Status</th>
-                                <th>Created</th>
+                                <th>Last Updated</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredPages.map((page) => (
-                                <tr key={page.id}>
+                            {filteredPages.map((page, index) => (
+                                <tr key={page._id || index}>
                                     <td>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{page.title}</span>
-                                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/{page.slug}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div className="page-icon">
+                                                <FaFileAlt />
+                                            </div>
+                                            <div>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{page.title}</span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/{page.slug}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`status-badge ${page.status === 'published' ? 'active' : 'inactive'}`} style={{
-                                            background: page.status === 'published' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(251, 191, 36, 0.1)',
-                                            color: page.status === 'published' ? '#10b981' : '#f59e0b',
-                                            textTransform: 'uppercase'
-                                        }}>
+                                        <span className="type-badge">{page.type}</span>
+                                    </td>
+                                    <td>
+                                        <span className={`status-badge ${page.status}`}>
                                             {page.status}
                                         </span>
                                     </td>
-                                    <td>{page.createdAt}</td>
+                                    <td>{formatDate(page.updatedAt || '')}</td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenModal(page)} title="Edit Page">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(page._id)} title="View">
+                                                <FaEye />
+                                            </button>
+                                            <button className="table-action-btn" onClick={() => handleOpenModal(page)} title="Edit">
                                                 <FaEdit />
                                             </button>
-                                            <button className="table-action-btn delete" onClick={() => handleDelete(page.id, page.title)} title="Delete Page">
+                                            <button
+                                                className={`table-action-btn ${page.status === 'published' ? 'unpublish' : 'publish'}`}
+                                                onClick={() => handlePublishToggle(page)}
+                                                title={page.status === 'published' ? 'Unpublish' : 'Publish'}
+                                                disabled={isPublishing || isUnpublishing}
+                                            >
+                                                {page.status === 'published' ? <FaTimesSolid /> : <FaGlobe />}
+                                            </button>
+                                            <button
+                                                className="table-action-btn delete"
+                                                onClick={() => handleDelete(page._id, page.title)}
+                                                title="Delete"
+                                                disabled={isDeleting}
+                                            >
                                                 <FaTrash />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
+                            {filteredPages.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No pages found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
-
-                    {filteredPages.length === 0 && (
-                        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                            No pages found
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {/* Create/Edit Page Modal */}
+            {/* Create/Edit Modal */}
             {isModalOpen && (
-                <div className="modal-overlay" data-lenis-prevent onClick={(e) => e.target === e.currentTarget && handleCloseModal()}>
-                    <div className="modal-container" data-lenis-prevent>
-                        {/* Fixed Header */}
-                        <div className="modal-header admin-card-header">
-                            <h3 className="admin-card-title">{editingPage ? 'Edit Page' : 'Create New Page'}</h3>
-                            <button className="table-action-btn" onClick={handleCloseModal} type="button"><FaTimes /></button>
+                <div className="modal-overlay">
+                    <div className="modal-content admin-card">
+                        <div className="admin-card-header">
+                            <h3 className="admin-card-title">{editingPageId ? 'Edit Page' : 'Add Page'}</h3>
+                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
-
-                        {/* Scrollable Body */}
-                        <div className="modal-body">
-                            <form onSubmit={handleSave} id="cms-form">
-                                <div className="admin-grid-2">
-                                    <div className="form-group">
-                                        <label className="form-label">Page Title *</label>
-                                        <input
-                                            name="title"
-                                            className="form-input"
-                                            value={formData.title || ''}
-                                            onChange={handleInputChange}
-                                            placeholder="Privacy Policy"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">Slug (URL) *</label>
-                                        <input
-                                            name="slug"
-                                            className="form-input"
-                                            value={formData.slug || ''}
-                                            onChange={handleInputChange}
-                                            placeholder="privacy-policy"
-                                            required
-                                        />
-                                        <small style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
-                                            URL: /cms/{formData.slug || 'slug'}
-                                        </small>
-                                    </div>
-                                </div>
-
+                        <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
+                            <div className="admin-grid-2">
                                 <div className="form-group">
-                                    <label className="form-label">Status *</label>
-                                    <select
-                                        name="status"
-                                        className="form-input"
-                                        value={formData.status || 'draft'}
-                                        onChange={handleInputChange}
-                                        style={{ maxWidth: '200px' }}
-                                    >
-                                        <option value="published">Published</option>
-                                        <option value="draft">Draft</option>
+                                    <label className="form-label">Title</label>
+                                    <input name="title" className="form-input" value={formData.title} onChange={handleInputChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Slug</label>
+                                    <input name="slug" className="form-input" value={formData.slug} onChange={handleInputChange} required />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Type</label>
+                                    <select name="type" className="form-input" value={formData.type} onChange={handleInputChange}>
+                                        {pageTypes.map(type => (
+                                            <option key={type} value={type}>{type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                        ))}
                                     </select>
                                 </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status</label>
+                                    <select name="status" className="form-input" value={formData.status} onChange={handleInputChange}>
+                                        {statuses.map(status => (
+                                            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Excerpt</label>
+                                    <textarea name="excerpt" className="form-input" value={formData.excerpt} onChange={handleInputChange} rows={2} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Content</label>
+                                    <textarea name="content" className="form-input" value={formData.content} onChange={handleInputChange} required rows={8} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Featured</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '42px' }}>
+                                        <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
+                                        <span>Feature this page</span>
+                                    </div>
+                                </div>
 
+                                {/* SEO Section */}
+                                <div className="form-group" style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                                    <h4 style={{ marginBottom: '1rem', fontSize: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>SEO Settings</h4>
+                                </div>
                                 <div className="form-group">
                                     <label className="form-label">Meta Title</label>
-                                    <input
-                                        name="metaTitle"
-                                        className="form-input"
-                                        value={formData.metaTitle || ''}
-                                        onChange={handleInputChange}
-                                        placeholder="SEO meta title for search engines"
-                                    />
+                                    <input name="seo.metaTitle" className="form-input" value={formData.seo.metaTitle} onChange={handleInputChange} />
                                 </div>
-
                                 <div className="form-group">
+                                    <label className="form-label">Keywords (comma separated)</label>
+                                    <input name="seo.keywords" className="form-input" value={formData.seo.keywords} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Meta Description</label>
-                                    <textarea
-                                        name="metaDescription"
-                                        className="form-input"
-                                        value={formData.metaDescription || ''}
-                                        onChange={handleInputChange}
-                                        rows={2}
-                                        placeholder="Brief description for search engines (160 characters recommended)"
-                                    />
+                                    <textarea name="seo.metaDescription" className="form-input" value={formData.seo.metaDescription} onChange={handleInputChange} rows={2} />
                                 </div>
+                            </div>
 
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">Content *</label>
-                                    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading editor...</div>}>
-                                        <RichTextEditor
-                                            value={formData.content || ''}
-                                            onChange={(content: string) => setFormData(prev => ({ ...prev, content }))}
-                                            placeholder="Enter page content here..."
-                                        />
-                                    </Suspense>
-                                </div>
-                            </form>
+                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
+                                    {(isCreating || isUpdating) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Detail View Modal */}
+            {isDetailOpen && pageDetailResponse?.data && (
+                <div className="modal-overlay">
+                    <div className="modal-content admin-card detail-view">
+                        <div className="admin-card-header">
+                            <h3 className="admin-card-title">{pageDetailResponse.data.title}</h3>
+                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
-
-                        {/* Fixed Footer */}
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-outline" onClick={handleCloseModal}>Cancel</button>
-                            <button
-                                type="submit"
-                                form="cms-form"
-                                className="btn btn-primary"
-                                disabled={!formData.title?.trim() || !formData.slug?.trim() || !formData.content?.trim()}
-                            >
-                                <FaSave /> {editingPage ? 'Update Page' : 'Create Page'}
-                            </button>
+                        <div style={{ padding: '2rem' }}>
+                            <div className="detail-meta">
+                                <span className="type-badge">{pageDetailResponse.data.type}</span>
+                                <span className={`status-badge ${pageDetailResponse.data.status}`}>{pageDetailResponse.data.status}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>/{pageDetailResponse.data.slug}</span>
+                            </div>
+                            {pageDetailResponse.data.excerpt && (
+                                <div className="detail-section">
+                                    <h5>Excerpt</h5>
+                                    <p>{pageDetailResponse.data.excerpt}</p>
+                                </div>
+                            )}
+                            <div className="detail-section">
+                                <h5>Content</h5>
+                                <div className="content-preview" dangerouslySetInnerHTML={{ __html: pageDetailResponse.data.content }} />
+                            </div>
+                            {pageDetailResponse.data.seo && (
+                                <div className="detail-section seo-info">
+                                    <h5>SEO Information</h5>
+                                    <p><strong>Meta Title:</strong> {pageDetailResponse.data.seo.metaTitle || 'Not set'}</p>
+                                    <p><strong>Meta Description:</strong> {pageDetailResponse.data.seo.metaDescription || 'Not set'}</p>
+                                    <p><strong>Keywords:</strong> {pageDetailResponse.data.seo.keywords?.join(', ') || 'None'}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
-
-            <style jsx>{`
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.6);
-                    backdrop-filter: blur(4px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1000;
-                    padding: 2rem;
-                }
-                
-                .modal-container {
-                    width: 100%;
-                    max-width: 1000px;
-                    max-height: 90vh;
-                    background: var(--primary-light);
-                    box-shadow: var(--shadow-lg);
-                    border-radius: 0.5rem;
-                    display: flex;
-                    flex-direction: column;
-                    overflow: hidden;
-                }
-                
-                .modal-header {
-                    flex-shrink: 0;
-                    background: var(--primary-light);
-                    border-bottom: 1px solid var(--glass-border);
-                    position: sticky;
-                    top: 0;
-                    z-index: 10;
-                }
-                
-                .modal-body {
-                    flex: 1;
-                    overflow-y: auto;
-                    overflow-x: hidden;
-                    padding: 1.5rem;
-                    -webkit-overflow-scrolling: touch;
-                    scroll-behavior: smooth;
-                }
-                
-                /* Custom scrollbar for modal body */
-                .modal-body::-webkit-scrollbar {
-                    width: 8px;
-                }
-                
-                .modal-body::-webkit-scrollbar-track {
-                    background: var(--primary);
-                    border-radius: 4px;
-                }
-                
-                .modal-body::-webkit-scrollbar-thumb {
-                    background: var(--glass-border);
-                    border-radius: 4px;
-                }
-                
-                .modal-body::-webkit-scrollbar-thumb:hover {
-                    background: var(--text-muted);
-                }
-                
-                .modal-footer {
-                    flex-shrink: 0;
-                    background: var(--primary-light);
-                    border-top: 1px solid var(--glass-border);
-                    padding: 1.5rem;
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 1rem;
-                    position: sticky;
-                    bottom: 0;
-                    z-index: 10;
-                }
-                
-                .form-group {
-                    margin-bottom: 1.25rem;
-                }
-                
-                .form-label {
-                    display: block;
-                    margin-bottom: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-primary);
-                }
-                
-                .modal-body .form-input {
-                    background: var(--primary);
-                    border: 1px solid var(--glass-border);
-                    color: var(--text-primary);
-                }
-                
-                /* Responsive adjustments */
-                @media (max-width: 768px) {
-                    .modal-overlay {
-                        padding: 1rem;
-                    }
-                    
-                    .modal-container {
-                        max-height: 95vh;
-                    }
-                    
-                    .modal-body {
-                        padding: 1rem;
-                    }
-                    
-                    .modal-footer {
-                        padding: 1rem;
-                    }
-                }
-            `}</style>
         </AdminLayout>
     );
 }

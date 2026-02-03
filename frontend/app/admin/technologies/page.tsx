@@ -2,223 +2,442 @@
 
 import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaChevronDown, FaChevronRight, FaSpinner, FaLayerGroup, FaStar } from 'react-icons/fa';
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
+import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
 import {
-    FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaChevronRight, FaStar, FaCogs, FaTools,
-    FaReact, FaHtml5, FaCss3Alt, FaNodeJs, FaPython, FaJava, FaAws, FaDocker, FaGitAlt, FaLinux
-} from 'react-icons/fa';
-import {
-    SiNextdotjs, SiTypescript, SiPostgresql, SiMongodb, SiMysql, SiRedis, SiGo
-} from 'react-icons/si';
-import techsDataRaw from '../../../data/technologies.json';
+    useGetTechnologiesQuery,
+    useCreateTechnologyCategoryMutation,
+    useUpdateTechnologyCategoryMutation,
+    useDeleteTechnologyCategoryMutation,
+    useAddTechnologyItemMutation,
+    useUpdateTechnologyItemMutation,
+    useDeleteTechnologyItemMutation,
+} from '../../../lib/store/api/technologiesApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-const getIcon = (iconName: string) => {
-    const icons: any = {
-        FaReact, FaHtml5, FaCss3Alt, FaNodeJs, FaPython, FaJava, FaAws, FaDocker, FaGitAlt, FaLinux,
-        SiNextdotjs, SiTypescript, SiPostgresql, SiMongodb, SiMysql, SiRedis, SiGo, FaTools
-    };
-    const actualIconName = iconName === 'FaGolang' ? 'SiGo' : iconName;
-    const IconComponent = icons[actualIconName] || FaTools;
-    return <IconComponent size={14} />;
-};
+interface CategoryFormData {
+    name: string;
+    description: string;
+    icon: string;
+    featured: boolean;
+    isActive: boolean;
+}
 
-interface TechItem {
+interface ItemFormData {
     name: string;
     icon: string;
-    expertiseLevel: string;
-    experienceYears: number;
-    useCases: string[];
-    featured: boolean;
+    description: string;
+    proficiency: number;
 }
 
-interface TechCategory {
-    category: string;
-    slug: string;
-    description: string;
-    items: TechItem[];
-}
+const initialCategoryFormData: CategoryFormData = {
+    name: '',
+    description: '',
+    icon: '',
+    featured: false,
+    isActive: true,
+};
+
+const initialItemFormData: ItemFormData = {
+    name: '',
+    icon: '',
+    description: '',
+    proficiency: 80,
+};
 
 export default function TechnologiesPage() {
-    const [categories, setCategories] = useState<TechCategory[]>(techsDataRaw as unknown as TechCategory[]);
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
-    const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+    const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+    const [editingItemId, setEditingItemId] = useState<string | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+    const [categoryFormData, setCategoryFormData] = useState<CategoryFormData>(initialCategoryFormData);
+    const [itemFormData, setItemFormData] = useState<ItemFormData>(initialItemFormData);
+    const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
+    const [itemIconFile, setItemIconFile] = useState<File | null>(null);
+    const deleteConfirm = useDeleteConfirm();
 
-    const [activeCategory, setActiveCategory] = useState<TechCategory | null>(null);
-    const [editingCategory, setEditingCategory] = useState<TechCategory | null>(null);
-    const [editingItem, setEditingItem] = useState<TechItem | null>(null);
-    const [itemIdx, setItemIdx] = useState<number | null>(null);
+    // RTK Query hooks
+    const { data: technologiesResponse, isLoading, isError } = useGetTechnologiesQuery();
+    const [createCategory, { isLoading: isCreatingCategory }] = useCreateTechnologyCategoryMutation();
+    const [updateCategory, { isLoading: isUpdatingCategory }] = useUpdateTechnologyCategoryMutation();
+    const [deleteCategory, { isLoading: isDeletingCategory }] = useDeleteTechnologyCategoryMutation();
+    const [addItem, { isLoading: isAddingItem }] = useAddTechnologyItemMutation();
+    const [updateItem, { isLoading: isUpdatingItem }] = useUpdateTechnologyItemMutation();
+    const [deleteItem, { isLoading: isDeletingItem }] = useDeleteTechnologyItemMutation();
 
-    const [catFormData, setCatFormData] = useState<Partial<TechCategory>>({});
-    const [itemFormData, setItemFormData] = useState<Partial<TechItem>>({});
+    const categories = technologiesResponse?.data || [];
 
-    const filtered = categories.filter(c =>
-        c.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredCategories = categories.filter(cat =>
+        (cat.name || (cat as any).category || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        cat.items?.some(item => (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    // Category Handlers
-    const handleOpenCatModal = (cat: TechCategory | null = null) => {
-        if (cat) {
-            setEditingCategory(cat);
-            setCatFormData(cat);
-        } else {
-            setEditingCategory(null);
-            setCatFormData({ category: '', slug: '', description: '', items: [] });
-        }
-        setIsCatModalOpen(true);
+    const toggleCategory = (categoryId: string) => {
+        setExpandedCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(categoryId)) {
+                next.delete(categoryId);
+            } else {
+                next.add(categoryId);
+            }
+            return next;
+        });
     };
 
-    const handleSaveCategory = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (editingCategory) {
-            setCategories(prev => prev.map(c => c.slug === editingCategory.slug ? { ...c, ...catFormData } as TechCategory : c));
-        } else {
-            setCategories(prev => [...prev, { ...catFormData, slug: (catFormData.category || '').toLowerCase().replace(/ /g, '-') } as TechCategory]);
-        }
-        setIsCatModalOpen(false);
-    };
-
-    const handleDeleteCategory = (slug: string) => {
-        if (confirm('Delete this entire category and all its technologies?')) {
-            setCategories(prev => prev.filter(c => c.slug !== slug));
-        }
-    };
-
-    // Item Handlers
-    const handleOpenItemModal = (cat: TechCategory, item: TechItem | null = null, idx: number | null = null) => {
-        setActiveCategory(cat);
-        if (item) {
-            setEditingItem(item);
-            setItemIdx(idx);
-            setItemFormData({
-                ...item,
-                useCases: item.useCases?.join('\n') as any
+    // Category handlers
+    const handleOpenCategoryModal = (category: any = null) => {
+        if (category) {
+            setEditingCategoryId(category._id);
+            setCategoryFormData({
+                name: category.name || '',
+                description: category.description || '',
+                icon: category.icon || '',
+                featured: category.featured || false,
+                isActive: category.isActive ?? true,
             });
         } else {
-            setEditingItem(null);
-            setItemIdx(null);
-            setItemFormData({ name: '', icon: '', expertiseLevel: 'Intermediate', experienceYears: 1, useCases: '' as any, featured: false });
+            setEditingCategoryId(null);
+            setCategoryFormData(initialCategoryFormData);
         }
+        setCategoryIconFile(null);
+        setIsCategoryModalOpen(true);
+    };
+
+    const handleCloseCategoryModal = () => {
+        setIsCategoryModalOpen(false);
+        setEditingCategoryId(null);
+        setCategoryFormData(initialCategoryFormData);
+        setCategoryIconFile(null);
+    };
+
+    const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+        setCategoryFormData(prev => ({ ...prev, [name]: val }));
+    };
+
+    const handleCategoryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setCategoryIconFile(e.target.files[0]);
+        }
+    };
+
+    const handleSaveCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('name', categoryFormData.name);
+        formData.append('description', categoryFormData.description);
+        // formData.append('icon', categoryFormData.icon); // Handled via file
+        if (categoryIconFile) {
+            formData.append('icon', categoryIconFile);
+        }
+        formData.append('featured', String(categoryFormData.featured));
+        formData.append('isActive', String(categoryFormData.isActive));
+
+        try {
+            if (editingCategoryId) {
+                await updateCategory({ id: editingCategoryId, data: formData }).unwrap();
+                dispatch(showSuccessNotification('Category updated successfully'));
+            } else {
+                await createCategory(formData).unwrap();
+                dispatch(showSuccessNotification('Category created successfully'));
+            }
+            handleCloseCategoryModal();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save category'));
+        }
+    };
+
+    const handleDeleteCategory = (id: string, name: string) => {
+        deleteConfirm.showDeleteConfirm({
+            title: 'Delete Technology Category',
+            message: 'This will delete the category and all its items. This cannot be undone.',
+            itemName: name,
+            onConfirm: async () => {
+                try {
+                    await deleteCategory(id).unwrap();
+                    dispatch(showSuccessNotification('Category deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete category'));
+                }
+            }
+        });
+    };
+
+    // Item handlers
+    const handleOpenItemModal = (categoryId: string, item: any = null) => {
+        setSelectedCategoryId(categoryId);
+        if (item) {
+            setEditingItemId(item._id);
+            setItemFormData({
+                name: item.name || '',
+                icon: item.icon || '',
+                description: item.description || '',
+                proficiency: item.proficiency || 80,
+            });
+        } else {
+            setEditingItemId(null);
+            setItemFormData(initialItemFormData);
+        }
+        setItemIconFile(null);
         setIsItemModalOpen(true);
     };
 
-    const handleSaveItem = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!activeCategory) return;
-
-        const processedItem = {
-            ...itemFormData,
-            useCases: (itemFormData.useCases as any)?.split('\n').filter((i: string) => i.trim()) || []
-        } as TechItem;
-
-        setCategories(prev => prev.map(c => {
-            if (c.slug !== activeCategory.slug) return c;
-
-            let newItems = [...c.items];
-            if (itemIdx !== null) {
-                newItems[itemIdx] = processedItem;
-            } else {
-                newItems.push(processedItem);
-            }
-            return { ...c, items: newItems };
-        }));
-
+    const handleCloseItemModal = () => {
         setIsItemModalOpen(false);
-        setActiveCategory(null);
+        setEditingItemId(null);
+        setSelectedCategoryId(null);
+        setItemFormData(initialItemFormData);
+        setItemIconFile(null);
     };
 
-    const handleDeleteItem = (catSlug: string, idx: number) => {
-        if (confirm('Remove this technology?')) {
-            setCategories(prev => prev.map(c => {
-                if (c.slug !== catSlug) return c;
-                return { ...c, items: c.items.filter((_, i) => i !== idx) };
-            }));
+    const handleItemInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        setItemFormData(prev => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
+    };
+
+    const handleItemFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setItemIconFile(e.target.files[0]);
         }
     };
 
+    const handleSaveItem = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCategoryId) return;
+
+        const formData = new FormData();
+        formData.append('name', itemFormData.name);
+        formData.append('description', itemFormData.description);
+        // formData.append('icon', itemFormData.icon); // Handled via file
+        if (itemIconFile) {
+            formData.append('icon', itemIconFile);
+        }
+        formData.append('proficiency', String(itemFormData.proficiency));
+
+        try {
+            if (editingItemId) {
+                await updateItem({ categoryId: selectedCategoryId, itemId: editingItemId, data: formData }).unwrap();
+                dispatch(showSuccessNotification('Technology item updated successfully'));
+            } else {
+                await addItem({ categoryId: selectedCategoryId, data: formData }).unwrap();
+                dispatch(showSuccessNotification('Technology item added successfully'));
+            }
+            handleCloseItemModal();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save technology item'));
+        }
+    };
+
+    const handleDeleteItem = (categoryId: string, itemId: string, itemName: string) => {
+        deleteConfirm.showDeleteConfirm({
+            title: 'Delete Technology Item',
+            message: 'This action will permanently delete this technology. This cannot be undone.',
+            itemName: itemName,
+            onConfirm: async () => {
+                try {
+                    await deleteItem({ categoryId, itemId }).unwrap();
+                    dispatch(showSuccessNotification('Technology item deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete technology item'));
+                }
+            }
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Technologies">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading technologies...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="Technologies">
+                <div className="admin-error">
+                    <p>Failed to load technologies. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
     return (
         <AdminLayout pageTitle="Technologies">
+            {/* Header Actions */}
             <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
-                        <input type="text" className="form-input" placeholder="Search categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingLeft: '2.5rem' }} />
-                        <FaSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Search technologies..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ paddingLeft: '2.5rem' }}
+                        />
+                        <FaSearch style={{
+                            position: 'absolute',
+                            left: '1rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-muted)'
+                        }} />
                     </div>
-                    <button className="btn btn-primary" onClick={() => handleOpenCatModal()} style={{ marginLeft: 'auto' }}>
+
+                    <button className="btn btn-primary" onClick={() => handleOpenCategoryModal()} style={{ marginLeft: 'auto' }}>
                         <FaPlus /> Add Category
                     </button>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gap: '2rem' }}>
-                {filtered.map((cat) => (
-                    <div key={cat.slug} className="admin-card">
-                        <div className="admin-card-header" style={{ background: 'rgba(139, 92, 246, 0.03)' }}>
-                            <div>
-                                <h3 className="admin-card-title">{cat.category}</h3>
-                                <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{cat.description}</p>
+            {/* Categories Sections */}
+            {filteredCategories.length === 0 ? (
+                <div className="admin-card">
+                    <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                        No technology categories found
+                    </div>
+                </div>
+            ) : (
+                filteredCategories.map((category, index) => (
+                    <div key={category._id || `cat-${index}`} className="admin-card category-card">
+                        {/* Category Header */}
+                        <div className="category-section-header">
+                            <div className="category-section-info">
+                                <h3 className="category-section-title">{category.name || (category as any).category}</h3>
+                                <p className="category-section-description">{category.description || `Modern ${(category.name || (category as any).category || '').toLowerCase()} technologies`}</p>
                             </div>
-                            <div className="table-actions">
-                                <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }} onClick={() => handleOpenItemModal(cat)}>
+                            <div className="category-section-actions">
+                                <button className="btn btn-outline btn-sm" onClick={() => handleOpenItemModal(category._id)}>
                                     <FaPlus /> Add Tech
                                 </button>
-                                <button className="table-action-btn" onClick={() => handleOpenCatModal(cat)}><FaEdit /></button>
-                                <button className="table-action-btn delete" onClick={() => handleDeleteCategory(cat.slug)}><FaTrash /></button>
+                                <button className="icon-btn" onClick={() => handleOpenCategoryModal(category)} title="Edit Category">
+                                    <FaEdit />
+                                </button>
+                                <button
+                                    className="icon-btn delete"
+                                    onClick={() => handleDeleteCategory(category._id, category.name || (category as any).category)}
+                                    title="Delete Category"
+                                    disabled={isDeletingCategory}
+                                >
+                                    <FaTrash />
+                                </button>
                             </div>
                         </div>
 
-                        <div style={{ padding: '1.5rem' }}>
-                            <div className="tech-items-grid">
-                                {cat.items.map((item, idx) => (
-                                    <div key={idx} className="tech-item-mini-card">
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
-                                            <div className="tech-icon-circle">{getIcon(item.icon)}</div>
-                                            <div>
-                                                <div style={{ fontWeight: 600, fontSize: '0.9375rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {/* Tech Items Grid */}
+                        <div className="tech-items-grid">
+                            {category.items && category.items.length > 0 ? (
+                                category.items.map((item, idx) => (
+                                    <div key={item._id || `item-${idx}`} className="tech-item-card">
+                                        <div className="tech-item-main">
+                                            <div className={`tech-item-icon ${!item.icon ? 'fallback' : ''}`}>
+                                                {item.icon ? (
+                                                    <img
+                                                        src={item.icon.startsWith('http') || item.icon.startsWith('/') ? `${item.icon.startsWith('http') ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')}${item.icon.startsWith('/') ? '' : '/'}${item.icon}` : item.icon}
+                                                        alt={item.name}
+                                                        className="tech-icon-img"
+                                                        onError={(e) => {
+                                                            const img = e.target as HTMLImageElement;
+                                                            img.style.display = 'none';
+                                                            img.nextElementSibling?.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                ) : null}
+                                                <span className={`fallback-letter ${item.icon ? 'hidden' : ''}`}>
+                                                    {item.name.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div className="tech-item-details">
+                                                <span className="tech-item-name">
                                                     {item.name}
-                                                    {item.featured && <FaStar size={10} color="#f59e0b" title="Featured" />}
-                                                </div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                                    {item.expertiseLevel}
-                                                </div>
+                                                    {(item.proficiency ?? 0) >= 90 && <FaStar className="featured-star" />}
+                                                </span>
+                                                <span className="tech-item-level">
+                                                    {(item.proficiency ?? 0) >= 90 ? 'Expert' : (item.proficiency ?? 0) >= 70 ? 'Advanced' : 'Intermediate'}
+                                                    {item.description && ` • ${item.description}`}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div className="mini-actions">
-                                            <button className="mini-action-btn" onClick={() => handleOpenItemModal(cat, item, idx)}><FaEdit size={12} /></button>
-                                            <button className="mini-action-btn delete" onClick={() => handleDeleteItem(cat.slug, idx)}><FaTrash size={12} /></button>
+                                        <div className="tech-item-actions">
+                                            <button className="icon-btn" onClick={() => handleOpenItemModal(category._id, item)} title="Edit">
+                                                <FaEdit />
+                                            </button>
+                                            <button
+                                                className="icon-btn delete"
+                                                onClick={() => handleDeleteItem(category._id, item._id, item.name)}
+                                                title="Delete"
+                                                disabled={isDeletingItem}
+                                            >
+                                                <FaTrash />
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
-                                {cat.items.length === 0 && (
-                                    <p style={{ gridColumn: 'span 3', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                        No technologies added to this category yet.
-                                    </p>
-                                )}
-                            </div>
+                                ))
+                            ) : (
+                                <div className="empty-items">
+                                    No items in this category.{' '}
+                                    <button className="link-btn" onClick={() => handleOpenItemModal(category._id)}>Add one</button>
+                                </div>
+                            )}
                         </div>
                     </div>
-                ))}
-            </div>
+                ))
+            )}
 
             {/* Category Modal */}
-            {isCatModalOpen && (
+            {isCategoryModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card" style={{ maxWidth: '500px' }}>
+                    <div className="modal-content" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{editingCategory ? 'Edit Category' : 'Add Category'}</h3>
-                            <button className="table-action-btn" onClick={() => setIsCatModalOpen(false)}><FaTimes /></button>
+                            <h3 className="admin-card-title">{editingCategoryId ? 'Edit Category' : 'Add Category'}</h3>
+                            <button className="table-action-btn" onClick={handleCloseCategoryModal}><FaTimes /></button>
                         </div>
                         <form onSubmit={handleSaveCategory} style={{ padding: '1.5rem' }}>
                             <div className="form-group">
                                 <label className="form-label">Category Name</label>
-                                <input className="form-input" value={catFormData.category || ''} onChange={(e) => setCatFormData({ ...catFormData, category: e.target.value })} required />
+                                <input name="name" className="form-input" value={categoryFormData.name} onChange={handleCategoryInputChange} required />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Description</label>
-                                <textarea className="form-input" value={catFormData.description || ''} onChange={(e) => setCatFormData({ ...catFormData, description: e.target.value })} rows={3} />
+                                <textarea name="description" className="form-input" value={categoryFormData.description} onChange={handleCategoryInputChange} rows={3} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Icon (Upload File)</label>
+                                <input type="file" accept="image/*" className="form-input" onChange={handleCategoryFileChange} />
+                                {categoryFormData.icon && !categoryIconFile && (
+                                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        Current: {categoryFormData.icon}
+                                    </div>
+                                )}
+                            </div>
+                            <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input type="checkbox" name="isActive" checked={categoryFormData.isActive} onChange={handleCategoryInputChange} />
+                                    Active
+                                </label>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input type="checkbox" name="featured" checked={categoryFormData.featured} onChange={handleCategoryInputChange} />
+                                    Featured
+                                </label>
                             </div>
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button type="button" className="btn btn-outline" onClick={() => setIsCatModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary"><FaSave /> Save Category</button>
+                                <button type="button" className="btn btn-outline" onClick={handleCloseCategoryModal}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isCreatingCategory || isUpdatingCategory}>
+                                    {(isCreatingCategory || isUpdatingCategory) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -228,120 +447,46 @@ export default function TechnologiesPage() {
             {/* Item Modal */}
             {isItemModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card" style={{ maxWidth: '600px' }}>
+                    <div className="modal-content" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">
-                                {editingItem ? `Edit ${editingItem.name}` : `Add Tech to ${activeCategory?.category}`}
-                            </h3>
-                            <button className="table-action-btn" onClick={() => setIsItemModalOpen(false)}><FaTimes /></button>
+                            <h3 className="admin-card-title">{editingItemId ? 'Edit Technology' : 'Add Technology'}</h3>
+                            <button className="table-action-btn" onClick={handleCloseItemModal}><FaTimes /></button>
                         </div>
                         <form onSubmit={handleSaveItem} style={{ padding: '1.5rem' }}>
-                            <div className="admin-grid-2">
-                                <div className="form-group">
-                                    <label className="form-label">Tech Name</label>
-                                    <input className="form-input" value={itemFormData.name || ''} onChange={(e) => setItemFormData({ ...itemFormData, name: e.target.value })} required />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Icon (Icon Name)</label>
-                                    <input className="form-input" value={itemFormData.icon || ''} onChange={(e) => setItemFormData({ ...itemFormData, icon: e.target.value })} placeholder="e.g. FaReact" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Expertise Level</label>
-                                    <select className="form-input" value={itemFormData.expertiseLevel || ''} onChange={(e) => setItemFormData({ ...itemFormData, expertiseLevel: e.target.value })}>
-                                        <option value="Beginner">Beginner</option>
-                                        <option value="Intermediate">Intermediate</option>
-                                        <option value="Advanced">Advanced</option>
-                                        <option value="Expert">Expert</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Years of Experience</label>
-                                    <input type="number" className="form-input" value={itemFormData.experienceYears || 0} onChange={(e) => setItemFormData({ ...itemFormData, experienceYears: Number(e.target.value) })} />
-                                </div>
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Use Cases (One per line)</label>
-                                    <textarea className="form-input" value={itemFormData.useCases as any || ''} onChange={(e) => setItemFormData({ ...itemFormData, useCases: e.target.value as any })} rows={3} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Featured</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" checked={!!itemFormData.featured} onChange={(e) => setItemFormData({ ...itemFormData, featured: e.target.checked })} />
-                                        <span>Show in highlights</span>
+                            <div className="form-group">
+                                <label className="form-label">Technology Name</label>
+                                <input name="name" className="form-input" value={itemFormData.name} onChange={handleItemInputChange} required />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Icon (Upload File)</label>
+                                <input type="file" accept="image/*" className="form-input" onChange={handleItemFileChange} />
+                                {itemFormData.icon && !itemIconFile && (
+                                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        Current: {itemFormData.icon}
                                     </div>
-                                </div>
+                                )}
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Description</label>
+                                <textarea name="description" className="form-input" value={itemFormData.description} onChange={handleItemInputChange} rows={2} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Proficiency: {itemFormData.proficiency}%</label>
+                                <input type="range" name="proficiency" min="0" max="100" value={itemFormData.proficiency} onChange={handleItemInputChange} style={{ width: '100%' }} />
                             </div>
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                                <button type="button" className="btn btn-outline" onClick={() => setIsItemModalOpen(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary"><FaSave /> Save Tech</button>
+                                <button type="button" className="btn btn-outline" onClick={handleCloseItemModal}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={isAddingItem || isUpdatingItem}>
+                                    {(isAddingItem || isUpdatingItem) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            <style jsx>{`
-                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 2rem; }
-                .modal-content { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; background: var(--primary-light); box-shadow: var(--shadow-lg); }
-                .form-group { margin-bottom: 1.25rem; }
-                .form-label { display: block; margin-bottom: 0.375rem; font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); }
-                .modal-content .form-input { background: var(--primary); border: 1px solid var(--glass-border); color: var(--text-primary); width: 100%; padding: 0.75rem; border-radius: 8px; font-size: 0.9375rem; }
-                
-                .tech-items-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                    gap: 1rem;
-                }
-                .tech-item-mini-card {
-                    background: var(--primary);
-                    border: 1px solid var(--glass-border);
-                    border-radius: 12px;
-                    padding: 1rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    transition: all 0.2s;
-                }
-                .tech-item-mini-card:hover {
-                    border-color: var(--accent-start);
-                    background: var(--primary-lighter);
-                    transform: translateY(-2px);
-                }
-                .tech-icon-circle {
-                    width: 36px;
-                    height: 36px;
-                    background: var(--accent-glow);
-                    color: var(--accent-start);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .mini-actions {
-                    display: flex;
-                    gap: 0.25rem;
-                }
-                .mini-action-btn {
-                    width: 28px;
-                    height: 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 6px;
-                    border: none;
-                    background: transparent;
-                    color: var(--text-muted);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .mini-action-btn:hover {
-                    background: var(--glass-bg);
-                    color: var(--text-primary);
-                }
-                .mini-action-btn.delete:hover {
-                    color: #ef4444;
-                    background: rgba(239, 68, 68, 0.1);
-                }
-            `}</style>
+            <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>
     );
 }

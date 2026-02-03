@@ -2,156 +2,242 @@
 
 import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import Link from 'next/link';
 import Image from 'next/image';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaChevronRight, FaLink, FaExternalLinkAlt } from 'react-icons/fa';
-import portfolioDataRaw from '../../../data/portfolio.json';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaExternalLinkAlt, FaGithub, FaSpinner, FaProjectDiagram } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
+import {
+    useGetPortfoliosQuery,
+    useGetPortfolioByIdQuery,
+    useCreatePortfolioMutation,
+    useUpdatePortfolioMutation,
+    useDeletePortfolioMutation,
+} from '../../../lib/store/api/portfolioApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 
-interface PortfolioProject {
-    id: number;
-    slug: string;
+interface PortfolioFormData {
     title: string;
-    category: string;
-    industry: string;
-    client: {
-        name: string;
-        location: string;
-    };
     description: string;
-    keyFeatures: string[];
-    techStack: Record<string, string[]>;
-    metrics: Record<string, string>;
-    timeline: string;
-    status: string;
-    servicesProvided: string[];
-    links: {
-        live: string | null;
-        caseStudy: string | null;
-        github: string | null;
-    };
-    thumbnail: string;
+    category: string;
+    technologies: string;
+    client: string;
+    projectUrl: string;
+    githubUrl: string;
+    duration: string;
+    year: string;
     featured: boolean;
-    [key: string]: any;
 }
 
+const initialFormData: PortfolioFormData = {
+    title: '',
+    description: '',
+    category: 'web-app',
+    technologies: '',
+    client: '',
+    projectUrl: '',
+    githubUrl: '',
+    duration: '',
+    year: new Date().getFullYear().toString(),
+    featured: false,
+};
+
+const categories = ['web-app', 'mobile-app', 'e-commerce', 'saas', 'website', 'other'];
+
 export default function PortfolioPage() {
-    const [projects, setProjects] = useState<PortfolioProject[]>(portfolioDataRaw as unknown as PortfolioProject[]);
+    const dispatch = useAppDispatch();
     const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [editingProject, setEditingProject] = useState<PortfolioProject | null>(null);
-    const [viewingProject, setViewingProject] = useState<PortfolioProject | null>(null);
-    const [formData, setFormData] = useState<Partial<PortfolioProject>>({});
+    const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+    const [viewingProjectId, setViewingProjectId] = useState<string | null>(null);
+    const [formData, setFormData] = useState<PortfolioFormData>(initialFormData);
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
-    const filteredProjects = projects.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // RTK Query hooks
+    const { data: portfolioResponse, isLoading, isError } = useGetPortfoliosQuery();
+    const { data: portfolioDetailResponse } = useGetPortfolioByIdQuery(viewingProjectId!, {
+        skip: !viewingProjectId
+    });
+    const [createPortfolio, { isLoading: isCreating }] = useCreatePortfolioMutation();
+    const [updatePortfolio, { isLoading: isUpdating }] = useUpdatePortfolioMutation();
+    const [deletePortfolio, { isLoading: isDeleting }] = useDeletePortfolioMutation();
 
-    const handleOpenModal = (project: PortfolioProject | null = null) => {
+    const projects = portfolioResponse?.data || [];
+
+    const filteredProjects = projects.filter(project => {
+        const matchesSearch = (project.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (project.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory = !categoryFilter || project.category === categoryFilter;
+        return matchesSearch && matchesCategory;
+    });
+
+    const handleOpenModal = (project: any = null) => {
         if (project) {
-            setEditingProject(project);
+            setEditingProjectId(project._id);
             setFormData({
-                ...project,
-                keyFeatures: project.keyFeatures?.join('\n') as any,
-                servicesProvided: project.servicesProvided?.join('\n') as any,
+                title: project.title || '',
+                description: project.description || '',
+                category: project.category || 'web-app',
+                technologies: project.technologies?.join(', ') || '',
+                client: (typeof project.client === 'object' ? project.client?.name : project.client) || '',
+                projectUrl: project.projectUrl || '',
+                githubUrl: project.githubUrl || '',
+                duration: project.duration || '',
+                year: project.year?.toString() || new Date().getFullYear().toString(),
+                featured: project.featured || false,
             });
         } else {
-            setEditingProject(null);
-            setFormData({
-                id: Date.now(),
-                slug: '',
-                title: '',
-                category: 'Web Development',
-                industry: '',
-                client: { name: '', location: '' },
-                description: '',
-                keyFeatures: '' as any,
-                techStack: { frontend: [], backend: [] },
-                metrics: {},
-                timeline: '',
-                status: 'Completed',
-                servicesProvided: '' as any,
-                links: { live: '', caseStudy: '', github: '' },
-                thumbnail: '',
-                featured: false
-            });
+            setEditingProjectId(null);
+            setFormData(initialFormData);
         }
+        setThumbnailFile(null);
         setIsModalOpen(true);
     };
 
-    const handleOpenDetail = (project: PortfolioProject) => {
-        setViewingProject(project);
+    const handleOpenDetail = (projectId: string) => {
+        setViewingProjectId(projectId);
         setIsDetailOpen(true);
     };
 
     const handleCloseModals = () => {
         setIsModalOpen(false);
         setIsDetailOpen(false);
-        setEditingProject(null);
-        setViewingProject(null);
-        setFormData({});
+        setEditingProjectId(null);
+        setViewingProjectId(null);
+        setFormData(initialFormData);
+        setThumbnailFile(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+        setFormData(prev => ({ ...prev, [name]: val }));
+    };
 
-        if (name.includes('.')) {
-            const [parent, child] = name.split('.');
-            setFormData(prev => ({
-                ...prev,
-                [parent]: { ...(prev[parent as keyof PortfolioProject] || {}), [child]: val }
-            }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: val }));
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setThumbnailFile(e.target.files[0]);
         }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        const processedData = {
-            ...formData,
-            keyFeatures: (formData.keyFeatures as any)?.split('\n').filter((i: string) => i.trim()),
-            servicesProvided: (formData.servicesProvided as any)?.split('\n').filter((i: string) => i.trim()),
-        };
 
-        if (editingProject) {
-            setProjects(prev => prev.map(p => p.id === editingProject.id ? { ...p, ...processedData } as PortfolioProject : p));
-        } else {
-            setProjects(prev => [...prev, processedData as PortfolioProject]);
+        const formDataToSend = new FormData();
+        formDataToSend.append('title', formData.title);
+        formDataToSend.append('description', formData.description);
+        formDataToSend.append('category', formData.category);
+        formDataToSend.append('client', formData.client);
+        formDataToSend.append('projectUrl', formData.projectUrl);
+        formDataToSend.append('githubUrl', formData.githubUrl);
+        formDataToSend.append('duration', formData.duration);
+        formDataToSend.append('year', formData.year);
+        formDataToSend.append('featured', String(formData.featured));
+
+        // Technologies array
+        const technologies = formData.technologies.split(',').map(t => t.trim()).filter(t => t);
+        technologies.forEach(tech => formDataToSend.append('technologies[]', tech));
+
+        if (thumbnailFile) {
+            formDataToSend.append('thumbnail', thumbnailFile);
         }
-        handleCloseModals();
+
+        try {
+            if (editingProjectId) {
+                await updatePortfolio({ id: editingProjectId, data: formDataToSend }).unwrap();
+                dispatch(showSuccessNotification('Project updated successfully'));
+            } else {
+                await createPortfolio(formDataToSend).unwrap();
+                dispatch(showSuccessNotification('Project created successfully'));
+            }
+            handleCloseModals();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save project'));
+        }
     };
 
-    const handleDelete = (id: number, title: string) => {
+    const handleDelete = (id: string, title: string) => {
         deleteConfirm.showDeleteConfirm({
             title: 'Delete Project',
-            message: 'This action will permanently delete this portfolio project. This cannot be undone.',
+            message: 'This action will permanently delete this project from the portfolio. This cannot be undone.',
             itemName: title,
-            onConfirm: () => {
-                setProjects(prev => prev.filter(p => p.id !== id));
+            onConfirm: async () => {
+                try {
+                    await deletePortfolio(id).unwrap();
+                    dispatch(showSuccessNotification('Project deleted successfully'));
+                } catch (err: any) {
+                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete project'));
+                }
             }
         });
     };
 
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Portfolio">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading projects...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (isError) {
+        return (
+            <AdminLayout pageTitle="Portfolio">
+                <div className="admin-error">
+                    <p>Failed to load projects. Please try again later.</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
     return (
         <AdminLayout pageTitle="Portfolio">
+            {/* Header Actions */}
             <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
                 <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
-                        <input type="text" className="form-input" placeholder="Search projects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingLeft: '2.5rem' }} />
-                        <FaSearch style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Search projects..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ paddingLeft: '2.5rem' }}
+                        />
+                        <FaSearch style={{
+                            position: 'absolute',
+                            left: '1rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'var(--text-muted)'
+                        }} />
                     </div>
+
+                    <select
+                        className="form-input"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        style={{ width: 'auto', minWidth: '150px' }}
+                    >
+                        <option value="">All Categories</option>
+                        {categories.map(cat => (
+                            <option key={cat} value={cat}>{cat.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                        ))}
+                    </select>
+
                     <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ marginLeft: 'auto' }}>
                         <FaPlus /> Add Project
                     </button>
                 </div>
             </div>
 
+            {/* Projects Table */}
             <div className="admin-card">
                 <div className="admin-card-header">
                     <h3 className="admin-card-title">All Projects ({filteredProjects.length})</h3>
@@ -160,181 +246,202 @@ export default function PortfolioPage() {
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Project</th>
-                                <th>Category</th>
-                                <th>Client</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>PROJECT</th>
+                                <th>CATEGORY</th>
+                                <th>CLIENT</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredProjects.map((p) => (
-                                <tr key={p.id}>
+                            {filteredProjects.map((project, index) => (
+                                <tr key={project._id || `project-${index}`}>
                                     <td>
-                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                            <div style={{ width: '40px', height: '40px', background: 'var(--primary)', borderRadius: '4px', overflow: 'hidden', position: 'relative' }}>
-                                                {p.thumbnail && (
-                                                    <Image
-                                                        src={p.thumbnail}
-                                                        alt={p.title}
-                                                        fill
-                                                        style={{ objectFit: 'cover' }}
-                                                        unoptimized={true}
-                                                    />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div className="project-thumbnail">
+                                                {project.thumbnail ? (
+                                                    <Image src={project.thumbnail} alt={project.title} width={48} height={40} style={{ objectFit: 'cover', borderRadius: '6px' }} />
+                                                ) : (
+                                                    <div className="project-placeholder">
+                                                        <FaProjectDiagram />
+                                                    </div>
                                                 )}
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ fontWeight: 600 }}>{p.title}</span>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.industry}</span>
+                                            <div>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{project.title}</span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{project.industry || 'General'}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{p.category}</td>
-                                    <td>{p.client?.name}</td>
+                                    <td>{project.category}</td>
+                                    <td>{project.client && typeof project.client === 'object' ? (project.client as any).name : (project.client || 'N/A')}</td>
                                     <td>
-                                        <span className={`status-badge active`} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>{p.status}</span>
+                                        <span className={`status-badge ${project.status || 'completed'}`}>
+                                            {(project.status || 'completed').toUpperCase()}
+                                        </span>
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(p)} title="View Detail"><FaEye /></button>
-                                            <button className="table-action-btn" onClick={() => handleOpenModal(p)} title="Edit"><FaEdit /></button>
-                                            <button className="table-action-btn delete" onClick={() => handleDelete(p.id, p.title)} title="Delete"><FaTrash /></button>
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(project._id)} title="View">
+                                                <FaEye />
+                                            </button>
+                                            <button className="table-action-btn" onClick={() => handleOpenModal(project)} title="Edit">
+                                                <FaEdit />
+                                            </button>
+                                            <button
+                                                className="table-action-btn delete"
+                                                onClick={() => handleDelete(project._id, project.title)}
+                                                title="Delete"
+                                                disabled={isDeleting}
+                                            >
+                                                <FaTrash />
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
+                            {filteredProjects.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
+                                        No projects found
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card">
+                    <div className="modal-content" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{editingProject ? 'Edit Project' : 'Add Project'}</h3>
+                            <h3 className="admin-card-title">{editingProjectId ? 'Edit Project' : 'Add Project'}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
-                            <div className="admin-grid-3">
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Project Title</label>
-                                    <input name="title" className="form-input" value={formData.title || ''} onChange={handleInputChange} required />
+                            <div className="admin-grid-2">
+                                <div className="form-group">
+                                    <label className="form-label">Title</label>
+                                    <input name="title" className="form-input" value={formData.title} onChange={handleInputChange} required />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Category</label>
-                                    <select name="category" className="form-input" value={formData.category || ''} onChange={handleInputChange}>
-                                        <option value="Web Development">Web Development</option>
-                                        <option value="Mobile App Development">Mobile App Development</option>
-                                        <option value="UI/UX Design">UI/UX Design</option>
+                                    <select name="category" className="form-input" value={formData.category} onChange={handleInputChange}>
+                                        {categories.map(cat => (
+                                            <option key={cat} value={cat}>{cat.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                        ))}
                                     </select>
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label">Client Name</label>
-                                    <input name="client.name" className="form-input" value={formData.client?.name || ''} onChange={handleInputChange} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Client Location</label>
-                                    <input name="client.location" className="form-input" value={formData.client?.location || ''} onChange={handleInputChange} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Timeline</label>
-                                    <input name="timeline" className="form-input" value={formData.timeline || ''} onChange={handleInputChange} placeholder="e.g. 3 Months" />
-                                </div>
-                                <div className="form-group" style={{ gridColumn: 'span 3' }}>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Description</label>
-                                    <textarea name="description" className="form-input" value={formData.description || ''} onChange={handleInputChange} rows={2} />
+                                    <textarea name="description" className="form-input" value={formData.description} onChange={handleInputChange} required rows={3} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Features (One per line)</label>
-                                    <textarea name="keyFeatures" className="form-input" value={formData.keyFeatures as any || ''} onChange={handleInputChange} rows={5} />
+                                    <label className="form-label">Technologies (comma separated)</label>
+                                    <input name="technologies" className="form-input" value={formData.technologies} onChange={handleInputChange} placeholder="React, Node.js, MongoDB" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Services Provided (One per line)</label>
-                                    <textarea name="servicesProvided" className="form-input" value={formData.servicesProvided as any || ''} onChange={handleInputChange} rows={5} />
+                                    <label className="form-label">Client</label>
+                                    <input name="client" className="form-input" value={formData.client} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Live Link</label>
-                                    <input name="links.live" className="form-input" value={formData.links?.live || ''} onChange={handleInputChange} />
-                                    <label className="form-label" style={{ marginTop: '0.75rem' }}>GitHub Link</label>
-                                    <input name="links.github" className="form-input" value={formData.links?.github || ''} onChange={handleInputChange} />
+                                    <label className="form-label">Project URL</label>
+                                    <input name="projectUrl" className="form-input" value={formData.projectUrl} onChange={handleInputChange} placeholder="https://" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">GitHub URL</label>
+                                    <input name="githubUrl" className="form-input" value={formData.githubUrl} onChange={handleInputChange} placeholder="https://github.com/" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Duration</label>
+                                    <input name="duration" className="form-input" value={formData.duration} onChange={handleInputChange} placeholder="e.g. 3 months" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Year</label>
+                                    <input name="year" type="number" className="form-input" value={formData.year} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Thumbnail</label>
+                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Featured</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <input type="checkbox" name="featured" checked={!!formData.featured} onChange={handleInputChange} />
-                                        <span>Show on Portfolio page</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '42px' }}>
+                                        <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
+                                        <span>Show on homepage</span>
                                     </div>
                                 </div>
                             </div>
+
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
-                                <button type="submit" className="btn btn-primary"><FaSave /> Save Changes</button>
+                                <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
+                                    {(isCreating || isUpdating) ? <FaSpinner className="spinner" /> : <FaSave />}
+                                    {' '}Save Changes
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
 
-            {isDetailOpen && viewingProject && (
+            {/* Detail View Modal */}
+            {isDetailOpen && portfolioDetailResponse?.data && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card" style={{ maxWidth: '900px' }}>
+                    <div className="modal-content detail-view" data-lenis-prevent>
                         <div className="admin-card-header">
-                            <h3 className="admin-card-title">{viewingProject.title}</h3>
+                            <h3 className="admin-card-title">{portfolioDetailResponse.data.title}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
                         <div style={{ padding: '2rem' }}>
+                            {portfolioDetailResponse.data.thumbnail && (
+                                <div style={{ position: 'relative', height: '300px', marginBottom: '2rem', borderRadius: '12px', overflow: 'hidden' }}>
+                                    <Image src={portfolioDetailResponse.data.thumbnail} alt={portfolioDetailResponse.data.title} fill style={{ objectFit: 'cover' }} />
+                                </div>
+                            )}
                             <div className="detail-grid">
-                                <div>
-                                    <h5 style={{ color: 'var(--accent-start)', marginBottom: '1rem' }}>Project Meta</h5>
-                                    <p><strong>Category:</strong> {viewingProject.category}</p>
-                                    <p><strong>Industry:</strong> {viewingProject.industry}</p>
-                                    <p><strong>Client:</strong> {viewingProject.client?.name} ({viewingProject.client?.location})</p>
-                                    <p><strong>Timeline:</strong> {viewingProject.timeline}</p>
-                                    <p><strong>Status:</strong> {viewingProject.status}</p>
-                                    <div style={{ marginTop: '1rem' }}>
-                                        {viewingProject.links.live && <a href={viewingProject.links.live} target="_blank" className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}>Live Preview <FaExternalLinkAlt size={10} /></a>}
-                                    </div>
+                                <div className="detail-section">
+                                    <h5>Project Info</h5>
+                                    <p><strong>Category:</strong> {portfolioDetailResponse.data.category}</p>
+                                    <p><strong>Client:</strong> {portfolioDetailResponse.data.client && typeof portfolioDetailResponse.data.client === 'object' ? (portfolioDetailResponse.data.client as any).name : (portfolioDetailResponse.data.client || 'N/A')}</p>
+                                    <p><strong>Duration:</strong> {portfolioDetailResponse.data.duration || 'N/A'}</p>
+                                    <p><strong>Year:</strong> {portfolioDetailResponse.data.year}</p>
+                                    <p><strong>Featured:</strong> {portfolioDetailResponse.data.featured ? 'Yes' : 'No'}</p>
                                 </div>
-                                <div>
-                                    <h5 style={{ color: 'var(--accent-start)', marginBottom: '0.5rem' }}>Overview</h5>
-                                    <p style={{ lineHeight: 1.6 }}>{viewingProject.description}</p>
-
-                                    <div className="admin-grid-2" style={{ marginTop: '1.5rem' }}>
-                                        <div>
-                                            <h6 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Key Features</h6>
-                                            <ul style={{ padding: 0, listStyle: 'none' }}>
-                                                {viewingProject.keyFeatures?.map((f, i) => <li key={i} style={{ fontSize: '0.8125rem', marginBottom: '0.25rem' }}><FaChevronRight size={8} /> {f}</li>)}
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h6 style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Services Provided</h6>
-                                            <ul style={{ padding: 0, listStyle: 'none' }}>
-                                                {viewingProject.servicesProvided?.map((s, i) => <li key={i} style={{ fontSize: '0.8125rem', marginBottom: '0.25rem' }}><FaChevronRight size={8} /> {s}</li>)}
-                                            </ul>
-                                        </div>
-                                    </div>
+                                <div className="detail-section">
+                                    <h5>Description</h5>
+                                    <p>{portfolioDetailResponse.data.description}</p>
+                                    {portfolioDetailResponse.data.technologies && portfolioDetailResponse.data.technologies.length > 0 && (
+                                        <>
+                                            <h5 style={{ marginTop: '1rem' }}>Technologies</h5>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                {portfolioDetailResponse.data.technologies.map((tech: string, idx: number) => (
+                                                    <span key={idx} className="tech-badge">{tech}</span>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                                {portfolioDetailResponse.data.projectUrl && (
+                                    <a href={portfolioDetailResponse.data.projectUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                                        <FaExternalLinkAlt /> Live Demo
+                                    </a>
+                                )}
+                                {portfolioDetailResponse.data.githubUrl && (
+                                    <a href={portfolioDetailResponse.data.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
+                                        <FaGithub /> GitHub
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            <style jsx>{`
-                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 2rem; }
-                .modal-content { width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto; background: var(--primary-light); box-shadow: var(--shadow-lg); }
-                .form-group { margin-bottom: 1.25rem; }
-                .form-label { display: block; margin-bottom: 0.375rem; font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; }
-                .modal-content .form-input { background: var(--primary); border: 1px solid var(--glass-border); color: var(--text-primary); width: 100%; padding: 0.75rem; border-radius: 8px; font-size: 0.9375rem; }
-                .modal-content h5 { font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-                .detail-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2rem; }
-                @media (min-width: 768px) {
-                    .detail-grid { grid-template-columns: 1fr 2fr; }
-                }
-            `}</style>
-
-            {/* Delete Confirmation Modal */}
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>
     );
