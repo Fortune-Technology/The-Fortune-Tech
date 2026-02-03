@@ -4,6 +4,19 @@
  */
 
 import crypto from 'crypto';
+import { env } from '../config/env';
+
+/**
+ * Get full URL for a path (prepends API_URL if path starts with /uploads)
+ */
+export const getFullUrl = (path: string | undefined | null): string | undefined => {
+    if (!path) return undefined;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/')) {
+        return `${env.API_URL}${path}`;
+    }
+    return path;
+};
 
 /**
  * Generate a URL-friendly slug from a string

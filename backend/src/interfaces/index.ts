@@ -103,6 +103,7 @@ export interface IService extends Timestamps {
     overview?: string;
     icon?: string;
     image?: string;
+    thumbnail?: string;
     features: string[];
     deliverables: string[];
     process: string[];
@@ -252,6 +253,7 @@ export interface ITestimonial extends Timestamps {
     content: string;
     metrics: ITestimonialMetrics;
     avatar?: string;
+    thumbnail?: string;
     linkedin?: string;
     website?: string;
     verified: boolean;

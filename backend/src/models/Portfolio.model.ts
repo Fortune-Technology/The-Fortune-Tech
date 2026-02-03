@@ -5,7 +5,7 @@
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { IPortfolio } from '../interfaces';
-import { generateSlug } from '../utils/helpers';
+import { generateSlug, getFullUrl } from '../utils/helpers';
 import { PORTFOLIO_STATUSES } from '../constants';
 
 export interface IPortfolioDocument extends Omit<IPortfolio, 'id'>, Document {
@@ -109,6 +109,7 @@ const PortfolioSchema = new Schema<IPortfolioDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;
@@ -118,6 +119,7 @@ const PortfolioSchema = new Schema<IPortfolioDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;

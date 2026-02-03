@@ -6,13 +6,23 @@
 import { baseApi } from './baseApi';
 
 export interface Testimonial {
-    _id: string;
+    id: string;
+    _id?: string; // Keep for backwards compatibility
+    slug?: string;
     name: string;
     role?: string;
     company?: string;
+    industry?: string;
+    serviceProvided?: string;
+    projectType?: string;
     avatar?: string;
+    thumbnail?: string;
     content: string;
     rating?: number;
+    metrics?: Record<string, string>;
+    linkedin?: string;
+    website?: string;
+    verified?: boolean;
     featured?: boolean;
     isActive?: boolean;
     order?: number;
@@ -53,7 +63,7 @@ export const testimonialsApi = baseApi.injectEndpoints({
             providesTags: (result) =>
                 result?.data
                     ? [
-                        ...result.data.map(({ _id }) => ({ type: 'Testimonial' as const, id: _id })),
+                        ...result.data.map(({ id, _id }) => ({ type: 'Testimonial' as const, id: id || _id })),
                         { type: 'Testimonials' as const },
                     ]
                     : [{ type: 'Testimonials' as const }],

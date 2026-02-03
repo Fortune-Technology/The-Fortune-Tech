@@ -5,7 +5,7 @@
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { ITestimonial } from '../interfaces';
-import { generateSlug } from '../utils/helpers';
+import { generateSlug, getFullUrl } from '../utils/helpers';
 
 export interface ITestimonialDocument extends Omit<ITestimonial, 'id'>, Document {
     _id: mongoose.Types.ObjectId;
@@ -66,6 +66,10 @@ const TestimonialSchema = new Schema<ITestimonialDocument>(
             type: String,
             trim: true,
         },
+        thumbnail: {
+            type: String,
+            trim: true,
+        },
         linkedin: {
             type: String,
             trim: true,
@@ -90,6 +94,8 @@ const TestimonialSchema = new Schema<ITestimonialDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.avatar = getFullUrl(ret.avatar);
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;
@@ -99,6 +105,8 @@ const TestimonialSchema = new Schema<ITestimonialDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.avatar = getFullUrl(ret.avatar);
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;

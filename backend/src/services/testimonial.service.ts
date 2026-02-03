@@ -55,7 +55,7 @@ export class TestimonialService {
             .limit(limit);
     }
 
-    static async create(data: CreateTestimonialDTO, avatarUrl?: string): Promise<ITestimonialDocument> {
+    static async create(data: CreateTestimonialDTO, avatarUrl?: string, thumbnailUrl?: string): Promise<ITestimonialDocument> {
         const slug = generateSlug(`${data.name}-${data.company || 'testimonial'}`);
 
         const testimonial = new Testimonial({
@@ -70,6 +70,7 @@ export class TestimonialService {
             content: data.content,
             metrics: parseJSON(data.metrics as unknown as string, {}),
             avatar: avatarUrl,
+            thumbnail: thumbnailUrl,
             linkedin: data.linkedin,
             website: data.website,
             verified: parseBoolean(data.verified as unknown as string),
@@ -80,12 +81,13 @@ export class TestimonialService {
         return testimonial;
     }
 
-    static async update(idOrSlug: string, data: UpdateTestimonialDTO, avatarUrl?: string): Promise<ITestimonialDocument> {
+    static async update(idOrSlug: string, data: UpdateTestimonialDTO, avatarUrl?: string, thumbnailUrl?: string): Promise<ITestimonialDocument> {
         const testimonial = await this.getById(idOrSlug);
 
         const updateData: Record<string, unknown> = { ...data };
 
         if (avatarUrl) updateData.avatar = avatarUrl;
+        if (thumbnailUrl) updateData.thumbnail = thumbnailUrl;
         if (data.rating !== undefined) updateData.rating = parseNumber(data.rating as unknown as string, testimonial.rating);
         if (data.metrics !== undefined) updateData.metrics = parseJSON(data.metrics as unknown as string, testimonial.metrics);
         if (data.verified !== undefined) updateData.verified = parseBoolean(data.verified as unknown as string);

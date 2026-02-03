@@ -6,7 +6,8 @@
 import { baseApi } from './baseApi';
 
 export interface Portfolio {
-    _id: string;
+    id: string;
+    _id?: string; // Keep for backwards compatibility
     title: string;
     slug?: string;
     description: string;
@@ -14,17 +15,26 @@ export interface Portfolio {
     thumbnail?: string;
     images?: string[];
     technologies?: string[];
-    techStack?: Record<string, string[]>;
-    client?: string;
+    techStack?: Record<string, string[]> | string[];
+    client?: string | { name?: string; location?: string };
     projectUrl?: string;
     githubUrl?: string;
     duration?: string;
+    timeline?: string;
     year?: number;
     status?: string;
     industry?: string;
     featured?: boolean;
     isActive?: boolean;
     order?: number;
+    keyFeatures?: string[];
+    servicesProvided?: string[];
+    metrics?: Record<string, string>;
+    links?: {
+        live?: string;
+        github?: string;
+        caseStudy?: string;
+    };
     createdAt?: string;
     updatedAt?: string;
 }
@@ -64,7 +74,7 @@ export const portfolioApi = baseApi.injectEndpoints({
             providesTags: (result) =>
                 result?.data
                     ? [
-                        ...result.data.map(({ _id }) => ({ type: 'Portfolio' as const, id: _id })),
+                        ...result.data.map(({ id, _id }) => ({ type: 'Portfolio' as const, id: id || _id })),
                         { type: 'Portfolios' as const },
                     ]
                     : [{ type: 'Portfolios' as const }],

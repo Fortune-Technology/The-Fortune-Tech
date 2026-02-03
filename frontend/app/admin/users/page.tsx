@@ -15,6 +15,7 @@ import {
 } from '../../../lib/store/api/usersApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import { getImageUrl } from '../../../lib/utils';
 
 interface UserFormData {
     firstName: string;
@@ -296,7 +297,7 @@ export default function UsersPage() {
                                             <div className="user-avatar">
                                                 {user.avatar ? (
                                                     <img
-                                                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}`}
+                                                        src={getImageUrl(user.avatar)}
                                                         alt={user.name}
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                     />
@@ -456,7 +457,7 @@ export default function UsersPage() {
                                             <div style={{ textAlign: 'center' }}>
                                                 <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)', marginBottom: '0.25rem' }}>
                                                     <img
-                                                        src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${editingUser.avatar.startsWith('/') ? '' : '/'}${editingUser.avatar}`}
+                                                        src={getImageUrl(editingUser.avatar)}
                                                         alt="Current"
                                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                     />
@@ -508,7 +509,7 @@ export default function UsersPage() {
                                     <div className="detail-avatar">
                                         {userDetailResponse.data.avatar ? (
                                             <img
-                                                src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${userDetailResponse.data.avatar.startsWith('/') ? '' : '/'}${userDetailResponse.data.avatar}`}
+                                                src={getImageUrl(userDetailResponse.data.avatar)}
                                                 alt={userDetailResponse.data.name}
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             />

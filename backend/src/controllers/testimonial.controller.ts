@@ -29,23 +29,45 @@ export class TestimonialController {
 
     static create = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         let avatarUrl: string | undefined;
+        let thumbnailUrl: string | undefined;
 
-        if (req.file) {
-            avatarUrl = getFileUrl(req.file.filename, 'avatars');
+        // Handle multiple file fields
+        if (req.files && typeof req.files === 'object') {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files.avatar && files.avatar[0]) {
+                avatarUrl = getFileUrl(files.avatar[0].filename, 'avatars');
+            }
+            if (files.thumbnail && files.thumbnail[0]) {
+                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, 'images');
+            }
+        } else if (req.file) {
+            // Single file upload - use as thumbnail by default
+            thumbnailUrl = getFileUrl(req.file.filename, 'images');
         }
 
-        const testimonial = await TestimonialService.create(req.body, avatarUrl);
+        const testimonial = await TestimonialService.create(req.body, avatarUrl, thumbnailUrl);
         sendCreated(res, testimonial, 'Testimonial created successfully');
     });
 
     static update = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         let avatarUrl: string | undefined;
+        let thumbnailUrl: string | undefined;
 
-        if (req.file) {
-            avatarUrl = getFileUrl(req.file.filename, 'avatars');
+        // Handle multiple file fields
+        if (req.files && typeof req.files === 'object') {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files.avatar && files.avatar[0]) {
+                avatarUrl = getFileUrl(files.avatar[0].filename, 'avatars');
+            }
+            if (files.thumbnail && files.thumbnail[0]) {
+                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, 'images');
+            }
+        } else if (req.file) {
+            // Single file upload - use as thumbnail by default
+            thumbnailUrl = getFileUrl(req.file.filename, 'images');
         }
 
-        const testimonial = await TestimonialService.update(req.params.id as string, req.body, avatarUrl);
+        const testimonial = await TestimonialService.update(req.params.id as string, req.body, avatarUrl, thumbnailUrl);
         sendSuccess(res, testimonial, 'Testimonial updated successfully');
     });
 

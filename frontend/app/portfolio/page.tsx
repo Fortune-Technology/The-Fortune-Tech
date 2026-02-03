@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import PageHeader from '../../components/ui/PageHeader';
+import { getImageUrl } from '../../lib/utils';
 import { FaArrowRight, FaStar, FaSpinner } from 'react-icons/fa';
 import { useGetPortfoliosQuery } from '../../lib/store/api/portfolioApi';
 
@@ -109,8 +110,8 @@ export default function PortfolioPage() {
           <div className="portfolio-grid">
             {projects.map((project) => (
               <Link
-                key={project._id}
-                href={`/portfolio/${project.slug || project._id}`}
+                key={project.id || project._id}
+                href={`/portfolio/${project.slug || project.id}`}
                 className="project-card-link"
               >
                 <div className="project-card">
@@ -121,9 +122,10 @@ export default function PortfolioPage() {
                   )}
                   <div className="project-image">
                     <Image
-                      src={project.thumbnail || '/images/placeholder-project.jpg'}
+                      src={getImageUrl(project.thumbnail, '/images/placeholder-project.jpg')}
                       alt={project.title}
                       fill
+                      unoptimized
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       style={{ objectFit: 'cover' }}
                     />

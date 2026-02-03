@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaStar, FaQuoteLeft, FaSpinner } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
@@ -14,23 +15,34 @@ import {
 } from '../../../lib/store/api/testimonialsApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import { getImageUrl } from '../../../lib/utils';
 
 interface TestimonialFormData {
     name: string;
     role: string;
     company: string;
+    industry: string;
+    serviceProvided: string;
     content: string;
     rating: number;
+    linkedin: string;
+    website: string;
     featured: boolean;
+    verified: boolean;
 }
 
 const initialFormData: TestimonialFormData = {
     name: '',
     role: '',
     company: '',
+    industry: '',
+    serviceProvided: '',
     content: '',
     rating: 5,
+    linkedin: '',
+    website: '',
     featured: false,
+    verified: true,
 };
 
 export default function TestimonialsPage() {
@@ -41,7 +53,7 @@ export default function TestimonialsPage() {
     const [editingTestimonialId, setEditingTestimonialId] = useState<string | null>(null);
     const [viewingTestimonialId, setViewingTestimonialId] = useState<string | null>(null);
     const [formData, setFormData] = useState<TestimonialFormData>(initialFormData);
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -63,20 +75,25 @@ export default function TestimonialsPage() {
 
     const handleOpenModal = (testimonial: any = null) => {
         if (testimonial) {
-            setEditingTestimonialId(testimonial._id);
+            setEditingTestimonialId(testimonial.id || testimonial._id);
             setFormData({
                 name: testimonial.name || '',
                 role: testimonial.role || '',
                 company: testimonial.company || '',
+                industry: testimonial.industry || '',
+                serviceProvided: testimonial.serviceProvided || '',
                 content: testimonial.content || '',
                 rating: testimonial.rating || 5,
+                linkedin: testimonial.linkedin || '',
+                website: testimonial.website || '',
                 featured: testimonial.featured || false,
+                verified: testimonial.verified !== false,
             });
         } else {
             setEditingTestimonialId(null);
             setFormData(initialFormData);
         }
-        setAvatarFile(null);
+        setThumbnailFile(null);
         setIsModalOpen(true);
     };
 
@@ -91,7 +108,7 @@ export default function TestimonialsPage() {
         setEditingTestimonialId(null);
         setViewingTestimonialId(null);
         setFormData(initialFormData);
-        setAvatarFile(null);
+        setThumbnailFile(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -100,9 +117,9 @@ export default function TestimonialsPage() {
         setFormData(prev => ({ ...prev, [name]: val }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setAvatarFile(e.target.files[0]);
+            setThumbnailFile(e.target.files[0]);
         }
     };
 
@@ -113,12 +130,17 @@ export default function TestimonialsPage() {
         formDataToSend.append('name', formData.name);
         formDataToSend.append('role', formData.role);
         formDataToSend.append('company', formData.company);
+        formDataToSend.append('industry', formData.industry);
+        formDataToSend.append('serviceProvided', formData.serviceProvided);
         formDataToSend.append('content', formData.content);
         formDataToSend.append('rating', formData.rating.toString());
+        formDataToSend.append('linkedin', formData.linkedin);
+        formDataToSend.append('website', formData.website);
         formDataToSend.append('featured', String(formData.featured));
+        formDataToSend.append('verified', String(formData.verified));
 
-        if (avatarFile) {
-            formDataToSend.append('avatar', avatarFile);
+        if (thumbnailFile) {
+            formDataToSend.append('thumbnail', thumbnailFile);
         }
 
         try {
@@ -155,6 +177,17 @@ export default function TestimonialsPage() {
         return Array(5).fill(0).map((_, i) => (
             <FaStar key={i} style={{ color: i < rating ? '#f59e0b' : 'var(--text-muted)', fontSize: '0.875rem' }} />
         ));
+    };
+
+    // Get testimonial image
+    const getTestimonialImage = (testimonial: { thumbnail?: string; avatar?: string }) => {
+        if (testimonial.thumbnail) {
+            return getImageUrl(testimonial.thumbnail);
+        }
+        if (testimonial.avatar) {
+            return getImageUrl(testimonial.avatar);
+        }
+        return null;
     };
 
     if (isLoading) {
@@ -216,6 +249,7 @@ export default function TestimonialsPage() {
                     <table className="admin-table">
                         <thead>
                             <tr>
+                                <th style={{ width: '60px' }}>IMAGE</th>
                                 <th>CLIENT</th>
                                 <th>STATUS</th>
                                 <th>RATING</th>
@@ -223,51 +257,67 @@ export default function TestimonialsPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredTestimonials.map((testimonial, index) => (
-                                <tr key={testimonial._id || `testimonial-${index}`}>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            <div className="testimonial-avatar">
-                                                {testimonial.name ? testimonial.name.split(' ').map(n => n[0]).join('').substring(0, 2) : '?'}
+                            {filteredTestimonials.map((testimonial, index) => {
+                                const imageUrl = getTestimonialImage(testimonial);
+                                return (
+                                    <tr key={testimonial.id || testimonial._id || `testimonial-${index}`}>
+                                        <td>
+                                            <div style={{ width: '50px', height: '50px', borderRadius: '50%', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
+                                                {imageUrl ? (
+                                                    <Image
+                                                        src={imageUrl}
+                                                        alt={testimonial.name}
+                                                        fill
+                                                        unoptimized
+                                                        sizes="50px"
+                                                        style={{ objectFit: 'cover' }}
+                                                    />
+                                                ) : (
+                                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-start)', fontWeight: 600, fontSize: '1rem' }}>
+                                                        {testimonial.name ? testimonial.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?'}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div>
-                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'block' }}>{testimonial.name}</span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{testimonial.name}</span>
                                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{testimonial.role} at {testimonial.company}</span>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            {testimonial.featured && <span className="status-badge featured">FEATURED</span>}
-                                            <span className="status-badge verified">VERIFIED</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className="rating-stars">{renderStars(testimonial.rating || 5)}</div>
-                                    </td>
-                                    <td>
-                                        <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(testimonial._id)} title="View">
-                                                <FaEye />
-                                            </button>
-                                            <button className="table-action-btn" onClick={() => handleOpenModal(testimonial)} title="Edit">
-                                                <FaEdit />
-                                            </button>
-                                            <button
-                                                className="table-action-btn delete"
-                                                onClick={() => handleDelete(testimonial._id, testimonial.name)}
-                                                title="Delete"
-                                                disabled={isDeleting}
-                                            >
-                                                <FaTrash />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                {testimonial.featured && <span className="status-badge featured">FEATURED</span>}
+                                                {testimonial.verified !== false && <span className="status-badge verified">VERIFIED</span>}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div className="rating-stars">{renderStars(testimonial.rating || 5)}</div>
+                                        </td>
+                                        <td>
+                                            <div className="table-actions">
+                                                <button className="table-action-btn" onClick={() => handleOpenDetail(testimonial.id || testimonial._id || '')} title="View">
+                                                    <FaEye />
+                                                </button>
+                                                <button className="table-action-btn" onClick={() => handleOpenModal(testimonial)} title="Edit">
+                                                    <FaEdit />
+                                                </button>
+                                                <button
+                                                    className="table-action-btn delete"
+                                                    onClick={() => handleDelete(testimonial.id || testimonial._id || '', testimonial.name)}
+                                                    title="Delete"
+                                                    disabled={isDeleting}
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                             {filteredTestimonials.length === 0 && (
                                 <tr>
-                                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem' }}>
+                                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem' }}>
                                         No testimonials found
                                     </td>
                                 </tr>
@@ -288,7 +338,7 @@ export default function TestimonialsPage() {
                         <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
                             <div className="admin-grid-2">
                                 <div className="form-group">
-                                    <label className="form-label">Name</label>
+                                    <label className="form-label">Name *</label>
                                     <input name="name" className="form-input" value={formData.name} onChange={handleInputChange} required />
                                 </div>
                                 <div className="form-group">
@@ -300,6 +350,14 @@ export default function TestimonialsPage() {
                                     <input name="company" className="form-input" value={formData.company} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
+                                    <label className="form-label">Industry</label>
+                                    <input name="industry" className="form-input" value={formData.industry} onChange={handleInputChange} placeholder="e.g. Healthcare, Fintech" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Service Provided</label>
+                                    <input name="serviceProvided" className="form-input" value={formData.serviceProvided} onChange={handleInputChange} placeholder="e.g. Web Development" />
+                                </div>
+                                <div className="form-group">
                                     <label className="form-label">Rating</label>
                                     <select name="rating" className="form-input" value={formData.rating} onChange={handleInputChange}>
                                         {[5, 4, 3, 2, 1].map(r => (
@@ -308,18 +366,31 @@ export default function TestimonialsPage() {
                                     </select>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Testimonial Content</label>
+                                    <label className="form-label">Testimonial Content *</label>
                                     <textarea name="content" className="form-input" value={formData.content} onChange={handleInputChange} required rows={5} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Avatar</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                    <label className="form-label">LinkedIn URL</label>
+                                    <input name="linkedin" className="form-input" value={formData.linkedin} onChange={handleInputChange} placeholder="https://linkedin.com/in/..." />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Featured</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', height: '42px' }}>
-                                        <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
-                                        <span>Show on homepage</span>
+                                    <label className="form-label">Website URL</label>
+                                    <input name="website" className="form-input" value={formData.website} onChange={handleInputChange} placeholder="https://..." />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Client Photo</label>
+                                    <input type="file" accept="image/*" className="form-input" onChange={handleThumbnailChange} />
+                                </div>
+                                <div className="form-group">
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
+                                            <span>Featured (show on homepage)</span>
+                                        </label>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input type="checkbox" name="verified" checked={formData.verified} onChange={handleInputChange} />
+                                            <span>Verified</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -346,27 +417,39 @@ export default function TestimonialsPage() {
                         </div>
                         <div style={{ padding: '2rem' }}>
                             <div className="detail-header">
-                                <div className="detail-avatar">
-                                    {testimonialDetailResponse.data.avatar ? (
-                                        <img
-                                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${testimonialDetailResponse.data.avatar.startsWith('/') ? '' : '/'}${testimonialDetailResponse.data.avatar}`}
+                                <div className="detail-avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
+                                    {(testimonialDetailResponse.data.thumbnail || testimonialDetailResponse.data.avatar) ? (
+                                        <Image
+                                            src={getImageUrl(testimonialDetailResponse.data.thumbnail || testimonialDetailResponse.data.avatar)}
                                             alt={testimonialDetailResponse.data.name}
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            fill
+                                            unoptimized
+                                            style={{ objectFit: 'cover' }}
                                         />
                                     ) : (
-                                        testimonialDetailResponse.data.name ? testimonialDetailResponse.data.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'
+                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-start)', fontWeight: 600, fontSize: '1.5rem' }}>
+                                            {testimonialDetailResponse.data.name ? testimonialDetailResponse.data.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : '?'}
+                                        </div>
                                     )}
                                 </div>
                                 <div>
                                     <h4>{testimonialDetailResponse.data.name || 'Unknown'}</h4>
                                     <p>{testimonialDetailResponse.data.role || ''} at {testimonialDetailResponse.data.company || 'N/A'}</p>
+                                    {testimonialDetailResponse.data.industry && <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{testimonialDetailResponse.data.industry}</p>}
                                     <div style={{ marginTop: '0.5rem' }}>{renderStars(testimonialDetailResponse.data.rating || 5)}</div>
                                 </div>
                             </div>
-                            <div className="detail-content">
+                            <div className="detail-content" style={{ marginTop: '1.5rem' }}>
                                 <FaQuoteLeft style={{ fontSize: '1.5rem', color: 'var(--accent-start)', marginBottom: '1rem' }} />
-                                <p>{testimonialDetailResponse.data.content}</p>
+                                <p style={{ lineHeight: 1.7 }}>{testimonialDetailResponse.data.content}</p>
                             </div>
+                            {testimonialDetailResponse.data.serviceProvided && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <span className="status-badge" style={{ backgroundColor: 'var(--accent-start)', color: 'white' }}>
+                                        {testimonialDetailResponse.data.serviceProvided}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

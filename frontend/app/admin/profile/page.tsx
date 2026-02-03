@@ -17,6 +17,7 @@ import {
     showErrorNotification
 } from '../../../lib/store/slices/notificationSlice';
 import Image from 'next/image';
+import { getImageUrl } from '../../../lib/utils';
 
 export default function ProfilePage() {
     const dispatch = useAppDispatch();
@@ -153,21 +154,28 @@ export default function ProfilePage() {
                     <div className="admin-card">
                         <div className="admin-card-header">
                             <h3 className="admin-card-title">
-                                <FaUser style={{ marginRight: '0.5rem' }} /> Personal Information
+                                <FaUser style={{ color: 'var(--accent-start)' }} /> Personal Information
                             </h3>
                         </div>
                         <div className="admin-card-body">
                             <form onSubmit={handleUpdateProfile}>
                                 <div className="avatar-upload-section">
-                                    <div className="avatar-preview-wrapper">
+                                    <div className="avatar-preview-wrapper shadow-lg">
                                         {avatarPreview ? (
-                                            <Image src={avatarPreview} alt="Avatar" width={100} height={100} className="profile-avatar-large" />
+                                            <Image
+                                                src={avatarFile ? avatarPreview : getImageUrl(avatarPreview)}
+                                                alt="Avatar"
+                                                width={120}
+                                                height={120}
+                                                className="profile-avatar-large"
+                                                unoptimized
+                                            />
                                         ) : (
                                             <div className="avatar-placeholder-large">
                                                 {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
                                             </div>
                                         )}
-                                        <label htmlFor="avatar-upload" className="avatar-edit-badge">
+                                        <label htmlFor="avatar-upload" className="avatar-edit-badge" title="Change Avatar">
                                             <FaCamera />
                                             <input
                                                 id="avatar-upload"
@@ -179,8 +187,17 @@ export default function ProfilePage() {
                                         </label>
                                     </div>
                                     <div className="avatar-info">
-                                        <h4>{user?.displayName || 'User Profile'}</h4>
-                                        <p>{user?.role?.toUpperCase()} • {user?.email}</p>
+                                        <h4 className="gradient-text" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                                            {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.displayName || 'User Profile'}
+                                        </h4>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            <span className={`role-badge ${user?.role}`} style={{ alignSelf: 'flex-start' }}>
+                                                <FaShieldAlt size={10} style={{ marginRight: '6px' }} /> {user?.role?.replace('_', ' ')}
+                                            </span>
+                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <FaEnvelope size={12} /> {user?.email}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -248,16 +265,16 @@ export default function ProfilePage() {
                                     <div className="form-input-wrapper">
                                         <input
                                             name="phone"
-                                            className="form-input"
+                                            className="form-input form-input-with-icon"
                                             value={profileData.phone}
                                             onChange={handleProfileChange}
-                                            placeholder="+1 234 567 890"
+                                            placeholder="+91 12345 67890"
                                         />
                                         <FaPhone className="form-input-icon" />
                                     </div>
                                 </div>
 
-                                <button type="submit" className="btn btn-primary w-full" disabled={isUpdating}>
+                                <button type="submit" className="btn btn-primary w-full shadow-sm" style={{ marginTop: '1rem', height: '3rem' }} disabled={isUpdating}>
                                     {isUpdating ? <FaSpinner className="spinner" /> : <FaSave />}
                                     {' '}Save Profile Changes
                                 </button>
@@ -269,7 +286,7 @@ export default function ProfilePage() {
                     <div className="admin-card">
                         <div className="admin-card-header">
                             <h3 className="admin-card-title">
-                                <FaShieldAlt style={{ marginRight: '0.5rem' }} /> Security & Password
+                                <FaShieldAlt style={{ color: 'var(--accent-start)' }} /> Security & Password
                             </h3>
                         </div>
                         <div className="admin-card-body">
@@ -284,9 +301,10 @@ export default function ProfilePage() {
                                         <input
                                             name="currentPassword"
                                             type="password"
-                                            className="form-input"
+                                            className="form-input form-input-with-icon"
                                             value={passwordData.currentPassword}
                                             onChange={handlePasswordChange}
+                                            placeholder="••••••••"
                                             required
                                         />
                                         <FaLock className="form-input-icon" />
@@ -301,9 +319,10 @@ export default function ProfilePage() {
                                         <input
                                             name="newPassword"
                                             type="password"
-                                            className="form-input"
+                                            className="form-input form-input-with-icon"
                                             value={passwordData.newPassword}
                                             onChange={handlePasswordChange}
+                                            placeholder="••••••••"
                                             required
                                             minLength={8}
                                         />
@@ -317,16 +336,17 @@ export default function ProfilePage() {
                                         <input
                                             name="confirmPassword"
                                             type="password"
-                                            className="form-input"
+                                            className="form-input form-input-with-icon"
                                             value={passwordData.confirmPassword}
                                             onChange={handlePasswordChange}
+                                            placeholder="••••••••"
                                             required
                                         />
                                         <FaLock className="form-input-icon" />
                                     </div>
                                 </div>
 
-                                <button type="submit" className="btn btn-primary w-full" disabled={isChangingPassword}>
+                                <button type="submit" className="btn btn-primary w-full shadow-sm" style={{ height: '3rem' }} disabled={isChangingPassword}>
                                     {isChangingPassword ? <FaSpinner className="spinner" /> : <FaLock />}
                                     {' '}Update Password
                                 </button>

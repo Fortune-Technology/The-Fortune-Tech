@@ -5,11 +5,17 @@
 
 import { Router } from 'express';
 import { ServiceController } from '../controllers';
-import { validate, authenticate, requirePermissions, singleImage } from '../middlewares';
+import { validate, authenticate, requirePermissions, multiFields } from '../middlewares';
 import { createServiceSchema, updateServiceSchema, serviceIdSchema, serviceQuerySchema } from '../dtos';
 import { PERMISSIONS } from '../constants';
 
 const router = Router();
+
+// File fields for service uploads
+const serviceUploadFields = [
+    { name: 'image', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 },
+];
 
 // Public routes
 router.get('/', validate(serviceQuerySchema, 'query'), ServiceController.getAll);
@@ -21,7 +27,7 @@ router.post(
     '/',
     authenticate,
     requirePermissions(PERMISSIONS.CREATE_SERVICES),
-    singleImage('image'),
+    multiFields(serviceUploadFields),
     validate(createServiceSchema),
     ServiceController.create
 );
@@ -30,7 +36,7 @@ router.put(
     '/:id',
     authenticate,
     requirePermissions(PERMISSIONS.EDIT_SERVICES),
-    singleImage('image'),
+    multiFields(serviceUploadFields),
     validate(serviceIdSchema, 'params'),
     validate(updateServiceSchema),
     ServiceController.update

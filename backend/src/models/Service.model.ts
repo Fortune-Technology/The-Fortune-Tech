@@ -5,7 +5,7 @@
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { IService } from '../interfaces';
-import { generateSlug } from '../utils/helpers';
+import { generateSlug, getFullUrl } from '../utils/helpers';
 
 export interface IServiceDocument extends Omit<IService, 'id'>, Document {
     _id: mongoose.Types.ObjectId;
@@ -57,6 +57,10 @@ const ServiceSchema = new Schema<IServiceDocument>(
             type: String,
             trim: true,
         },
+        thumbnail: {
+            type: String,
+            trim: true,
+        },
         features: {
             type: [String],
             default: [],
@@ -105,6 +109,8 @@ const ServiceSchema = new Schema<IServiceDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.image = getFullUrl(ret.image);
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;
@@ -114,6 +120,8 @@ const ServiceSchema = new Schema<IServiceDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.image = getFullUrl(ret.image);
+                ret.thumbnail = getFullUrl(ret.thumbnail);
                 delete ret._id;
                 delete ret.__v;
                 return ret;

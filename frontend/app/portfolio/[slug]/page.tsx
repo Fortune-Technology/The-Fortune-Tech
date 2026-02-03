@@ -1,70 +1,16 @@
-import { Metadata } from 'next';
+'use client';
+
+import { use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import Button from '../../../components/ui/Button';
-import portfolioData from '../../../data/portfolio.json';
-import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine } from 'react-icons/fa';
+import { getImageUrl } from '../../../lib/utils';
+import { useGetPortfolioByIdQuery, useGetPortfoliosQuery } from '../../../lib/store/api/portfolioApi';
+import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine, FaSpinner, FaFileAlt } from 'react-icons/fa';
 import { SiNextdotjs, SiTypescript, SiPython, SiPostgresql, SiRedis, SiDocker, SiFirebase, SiStripe, SiMongodb, SiFigma } from 'react-icons/si';
 import { FaReact, FaNodeJs, FaAws } from 'react-icons/fa';
-
-// Type definitions based on the new data structure
-interface TechStack {
-    [key: string]: string[];
-}
-
-interface Project {
-    id: number;
-    slug: string;
-    title: string;
-    category: string;
-    industry: string;
-    client: {
-        name: string;
-        location: string;
-    };
-    description: string;
-    keyFeatures: string[];
-    techStack: TechStack;
-    metrics: {
-        [key: string]: string;
-    };
-    timeline: string;
-    status: string;
-    servicesProvided: string[];
-    links: {
-        live: string | null;
-        caseStudy: string | null;
-        github: string | null;
-    };
-    thumbnail: string;
-    featured: boolean;
-}
-
-// Generate Static Params for SSG
-export async function generateStaticParams() {
-    return portfolioData.map((project) => ({
-        slug: project.slug,
-    }));
-}
-
-// Generate Metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-    const { slug } = await params;
-    const project = portfolioData.find((p) => p.slug === slug);
-
-    if (!project) {
-        return {
-            title: 'Project Not Found',
-        };
-    }
-
-    return {
-        title: project.title,
-        description: project.description,
-    };
-}
 
 // Helper to get tech icon
 const getTechIcon = (tech: string) => {
@@ -94,7 +40,7 @@ const getTechIcon = (tech: string) => {
 
 // Status badge color
 const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
         case 'completed':
             return 'status-completed';
         case 'live':
@@ -106,23 +52,93 @@ const getStatusColor = (status: string) => {
     }
 };
 
-export default async function PortfolioDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const project = portfolioData.find((p) => p.slug === slug) as Project | undefined;
+// Helper to check if object has values
+const hasObjectData = (obj: unknown): boolean => {
+    if (!obj || typeof obj !== 'object') return false;
+    return Object.keys(obj).length > 0 && Object.values(obj).some(v => v !== undefined && v !== null && v !== '');
+};
 
-    if (!project) {
+export default function PortfolioDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
+
+    // Fetch portfolio by slug
+    const { data: portfolioResponse, isLoading, isError } = useGetPortfolioByIdQuery(slug);
+    const project = portfolioResponse?.data;
+
+    // Fetch all portfolios for related projects
+    const { data: portfoliosResponse } = useGetPortfoliosQuery();
+    const allProjects = portfoliosResponse?.data || [];
+
+    if (isLoading) {
+        return (
+            <>
+                <PageHeader
+                    title="Loading..."
+                    subtitle="Please wait while we load the project details"
+                />
+                <section className="section">
+                    <div className="container">
+                        <div className="loading-state">
+                            <FaSpinner className="spinner" />
+                            <p>Loading project details...</p>
+                        </div>
+                    </div>
+                </section>
+                <style jsx>{`
+                    .loading-state {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 4rem;
+                        gap: 1rem;
+                        color: var(--text-muted);
+                    }
+                    .spinner {
+                        font-size: 2rem;
+                        animation: spin 1s linear infinite;
+                    }
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                `}</style>
+            </>
+        );
+    }
+
+    if (isError || !project) {
         notFound();
     }
 
+    // Get client info safely - client can be object with name/location
+    const clientData = project.client;
+    const clientName = clientData && typeof clientData === 'object'
+        ? (clientData as { name?: string }).name || 'N/A'
+        : (clientData as string) || 'N/A';
+    const clientLocation = clientData && typeof clientData === 'object'
+        ? (clientData as { location?: string }).location || ''
+        : '';
 
-    // Get all tech items from techStack object
-    const getAllTech = () => {
-        const allTech: string[] = [];
-        Object.values(project.techStack).forEach((techs) => {
-            allTech.push(...techs);
-        });
-        return allTech;
-    };
+    // Get links safely - links is an object with live, github, caseStudy
+    const links = project.links || {};
+    const liveLink = typeof links === 'object' ? (links as { live?: string }).live : null;
+    const githubLink = typeof links === 'object' ? (links as { github?: string }).github : null;
+    const caseStudyLink = typeof links === 'object' ? (links as { caseStudy?: string }).caseStudy : null;
+
+    // Find related projects (same category, excluding current)
+    const relatedProjects = allProjects
+        .filter((p) => p.id !== project.id && p.category === project.category)
+        .slice(0, 2);
+
+    // Check if techStack has data - it can be an object or array
+    const hasTechStack = project.techStack && (
+        (Array.isArray(project.techStack) && project.techStack.length > 0) ||
+        (typeof project.techStack === 'object' && hasObjectData(project.techStack))
+    );
+
+    // Check if metrics has data
+    const hasMetrics = project.metrics && hasObjectData(project.metrics);
 
     return (
         <>
@@ -142,17 +158,20 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                     <div className="project-detail-hero">
                         <div className="project-detail-image">
                             <Image
-                                src={project.thumbnail}
+                                src={getImageUrl(project.thumbnail, '/images/placeholder-project.jpg')}
                                 alt={project.title}
                                 fill
+                                unoptimized
                                 sizes="(max-width: 768px) 100vw, 80vw"
                                 style={{ objectFit: 'cover' }}
                                 priority
                             />
                             <div className="project-overlay">
-                                <span className={`status-badge ${getStatusColor(project.status)}`}>
-                                    {project.status}
-                                </span>
+                                {project.status && (
+                                    <span className={`status-badge ${getStatusColor(project.status)}`}>
+                                        {project.status}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -162,50 +181,75 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                         {/* Main Content */}
                         <div className="project-main-content">
                             {/* Key Features */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Key Features</h2>
-                                <ul className="feature-list">
-                                    {project.keyFeatures.map((feature, idx) => (
-                                        <li key={idx} className="feature-item">
-                                            <FaCheck className="feature-icon" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
+                            {project.keyFeatures && project.keyFeatures.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Key Features</h2>
+                                    <ul className="feature-list">
+                                        {project.keyFeatures.map((feature: string, idx: number) => (
+                                            <li key={`feature-${idx}`} className="feature-item">
+                                                <FaCheck className="feature-icon" />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
 
                             {/* Tech Stack */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Technology Stack</h2>
-                                <div className="tech-stack-grid">
-                                    {Object.entries(project.techStack).map(([category, techs]) => (
-                                        <div key={category} className="tech-stack-category">
-                                            <h4 className="tech-category-label">{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+                            {hasTechStack && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Technology Stack</h2>
+                                    <div className="tech-stack-grid">
+                                        {/* Handle both object format and array format */}
+                                        {typeof project.techStack === 'object' && !Array.isArray(project.techStack) ? (
+                                            // Object format: { frontend: [...], backend: [...] }
+                                            Object.entries(project.techStack as Record<string, string[]>).map(([category, techs]) => (
+                                                Array.isArray(techs) && techs.length > 0 && (
+                                                    <div key={category} className="tech-stack-category">
+                                                        <h4 className="tech-category-label">{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
+                                                        <div className="tech-pills">
+                                                            {techs.map((tech: string, idx: number) => {
+                                                                const Icon = getTechIcon(tech);
+                                                                return (
+                                                                    <span key={`${category}-${idx}`} className="tech-pill">
+                                                                        {Icon && <Icon className="tech-pill-icon" />}
+                                                                        {tech}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            ))
+                                        ) : Array.isArray(project.techStack) ? (
+                                            // Array format: ["React", "Node.js", ...]
                                             <div className="tech-pills">
-                                                {techs.map((tech, idx) => {
+                                                {project.techStack.map((tech: string, idx: number) => {
                                                     const Icon = getTechIcon(tech);
                                                     return (
-                                                        <span key={idx} className="tech-pill">
+                                                        <span key={`tech-${idx}`} className="tech-pill">
                                                             {Icon && <Icon className="tech-pill-icon" />}
                                                             {tech}
                                                         </span>
                                                     );
                                                 })}
                                             </div>
-                                        </div>
-                                    ))}
+                                        ) : null}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Services Provided */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Services Provided</h2>
-                                <div className="services-tags">
-                                    {project.servicesProvided.map((service, idx) => (
-                                        <span key={idx} className="service-tag">{service}</span>
-                                    ))}
+                            {project.servicesProvided && project.servicesProvided.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Services Provided</h2>
+                                    <div className="services-tags">
+                                        {project.servicesProvided.map((service: string, idx: number) => (
+                                            <span key={`service-${idx}`} className="service-tag">{service}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
@@ -214,88 +258,116 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                             <div className="sidebar-card">
                                 <h3 className="sidebar-title">Project Details</h3>
 
-                                <div className="sidebar-item">
-                                    <FaIndustry className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Industry</span>
-                                        <span className="sidebar-value">{project.industry}</span>
+                                {project.category && (
+                                    <div className="sidebar-item">
+                                        <span className="sidebar-icon">📁</span>
+                                        <div>
+                                            <span className="sidebar-label">Category</span>
+                                            <span className="sidebar-value">{project.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <span className="sidebar-icon">🏢</span>
-                                    <div>
-                                        <span className="sidebar-label">Client</span>
-                                        <span className="sidebar-value">{project.client.name}</span>
+                                {project.industry && (
+                                    <div className="sidebar-item">
+                                        <FaIndustry className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Industry</span>
+                                            <span className="sidebar-value">{project.industry}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <FaMapMarkerAlt className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Location</span>
-                                        <span className="sidebar-value">{project.client.location}</span>
+                                {clientName !== 'N/A' && (
+                                    <div className="sidebar-item">
+                                        <span className="sidebar-icon">🏢</span>
+                                        <div>
+                                            <span className="sidebar-label">Client</span>
+                                            <span className="sidebar-value">{clientName}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <FaClock className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Timeline</span>
-                                        <span className="sidebar-value">{project.timeline}</span>
+                                {clientLocation && (
+                                    <div className="sidebar-item">
+                                        <FaMapMarkerAlt className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Location</span>
+                                            <span className="sidebar-value">{clientLocation}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {project.timeline && (
+                                    <div className="sidebar-item">
+                                        <FaClock className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Timeline</span>
+                                            <span className="sidebar-value">{project.timeline}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Metrics Card */}
-                            <div className="sidebar-card metrics-card">
-                                <h3 className="sidebar-title">
-                                    <FaChartLine className="title-icon" /> Key Metrics
-                                </h3>
-                                <div className="metrics-grid">
-                                    {Object.entries(project.metrics).map(([key, value]) => (
-                                        <div key={key} className="metric-item">
-                                            <span className="metric-value">{value}</span>
-                                            <span className="metric-label">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                        </div>
-                                    ))}
+                            {hasMetrics && (
+                                <div className="sidebar-card metrics-card">
+                                    <h3 className="sidebar-title">
+                                        <FaChartLine className="title-icon" /> Key Metrics
+                                    </h3>
+                                    <div className="metrics-grid">
+                                        {Object.entries(project.metrics as Record<string, string>).map(([key, value]) => (
+                                            value && (
+                                                <div key={key} className="metric-item">
+                                                    <span className="metric-value">{value}</span>
+                                                    <span className="metric-label">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Action Buttons */}
-                            <div className="sidebar-actions">
-                                {project.links.live && (
-                                    <Button href={project.links.live} variant="primary" target="_blank">
-                                        <FaExternalLinkAlt /> View Live Site
-                                    </Button>
-                                )}
-                                {project.links.github && (
-                                    <Button href={project.links.github} variant="outline" target="_blank">
-                                        <FaGithub /> View Code
-                                    </Button>
-                                )}
-                            </div>
+                            {(liveLink || githubLink || caseStudyLink) && (
+                                <div className="sidebar-actions">
+                                    {liveLink && (
+                                        <Button href={liveLink} variant="primary" target="_blank">
+                                            <FaExternalLinkAlt /> View Live Site
+                                        </Button>
+                                    )}
+                                    {githubLink && (
+                                        <Button href={githubLink} variant="outline" target="_blank">
+                                            <FaGithub /> View Code
+                                        </Button>
+                                    )}
+                                    {caseStudyLink && (
+                                        <Button href={caseStudyLink} variant="outline" target="_blank">
+                                            <FaFileAlt /> Case Study
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Related Projects */}
-                    <div className="related-projects">
-                        <h2 className="section-title">Related Projects</h2>
-                        <div className="related-grid">
-                            {portfolioData
-                                .filter((p) => p.id !== project.id && p.category === project.category)
-                                .slice(0, 2)
-                                .map((relatedProject) => (
+                    {relatedProjects.length > 0 && (
+                        <div className="related-projects">
+                            <h2 className="section-title">Related Projects</h2>
+                            <div className="related-grid">
+                                {relatedProjects.map((relatedProject) => (
                                     <Link
-                                        key={relatedProject.id}
+                                        key={relatedProject.id || relatedProject.slug}
                                         href={`/portfolio/${relatedProject.slug}`}
                                         className="related-card"
                                     >
                                         <div className="related-image">
                                             <Image
-                                                src={relatedProject.thumbnail}
+                                                src={getImageUrl(relatedProject.thumbnail, '/images/placeholder-project.jpg')}
                                                 alt={relatedProject.title}
                                                 fill
+                                                unoptimized
                                                 sizes="(max-width: 768px) 100vw, 50vw"
                                                 style={{ objectFit: 'cover' }}
                                             />
@@ -306,8 +378,9 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                                         </div>
                                     </Link>
                                 ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* CTA Section */}
                     <div className="cta-wrapper">

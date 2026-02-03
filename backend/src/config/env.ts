@@ -12,6 +12,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 interface EnvConfig {
     NODE_ENV: 'development' | 'production' | 'test';
     PORT: number;
+    API_URL: string;
     MONGODB_URI: string;
     JWT_SECRET: string;
     JWT_EXPIRES_IN: string;
@@ -52,6 +53,7 @@ const getEnvVarAsNumber = (key: string, defaultValue?: number): number => {
 export const env: EnvConfig = {
     NODE_ENV: (getEnvVar('NODE_ENV', 'development') as EnvConfig['NODE_ENV']),
     PORT: getEnvVarAsNumber('PORT', 5000),
+    API_URL: getEnvVar('API_URL', 'http://localhost:5000'),
     MONGODB_URI: getEnvVar('MONGODB_URI', 'mongodb://localhost:27017/the-fortune-tech'),
     JWT_SECRET: getEnvVar('JWT_SECRET'),
     JWT_EXPIRES_IN: getEnvVar('JWT_EXPIRES_IN', '7d'),

@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
 import { logOut, selectCurrentUser } from '../../lib/store/slices/authSlice';
 import { showSuccessNotification } from '../../lib/store/slices/notificationSlice';
 import { useLogoutMutation } from '../../lib/store/api/authApi';
+import { getImageUrl } from '../../lib/utils';
 
 const navItems = [
     { name: 'Dashboard', href: '/admin', icon: FaHome },
@@ -144,9 +145,20 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
                                 onClick={() => setProfileOpen(!profileOpen)}
                             >
                                 <div className="header-profile-avatar">
-                                    {user?.firstName && user?.lastName
-                                        ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
-                                        : user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD'}
+                                    {user?.avatar ? (
+                                        <Image
+                                            src={getImageUrl(user.avatar)}
+                                            alt={user.displayName || 'User'}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full object-cover"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        user?.firstName && user?.lastName
+                                            ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+                                            : user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD'
+                                    )}
                                 </div>
                             </button>
 

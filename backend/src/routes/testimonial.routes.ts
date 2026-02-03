@@ -4,11 +4,17 @@
 
 import { Router } from 'express';
 import { TestimonialController } from '../controllers';
-import { validate, authenticate, requirePermissions, singleImage } from '../middlewares';
+import { validate, authenticate, requirePermissions, multiFields } from '../middlewares';
 import { createTestimonialSchema, updateTestimonialSchema, testimonialIdSchema, testimonialQuerySchema } from '../dtos';
 import { PERMISSIONS } from '../constants';
 
 const router = Router();
+
+// Define file fields for testimonials
+const testimonialFileFields = [
+    { name: 'avatar', maxCount: 1 },
+    { name: 'thumbnail', maxCount: 1 },
+];
 
 // Public routes
 router.get('/', validate(testimonialQuerySchema, 'query'), TestimonialController.getAll);
@@ -20,7 +26,7 @@ router.post(
     '/',
     authenticate,
     requirePermissions(PERMISSIONS.CREATE_TESTIMONIALS),
-    singleImage('avatar'),
+    multiFields(testimonialFileFields),
     validate(createTestimonialSchema),
     TestimonialController.create
 );
@@ -29,7 +35,7 @@ router.put(
     '/:id',
     authenticate,
     requirePermissions(PERMISSIONS.EDIT_TESTIMONIALS),
-    singleImage('avatar'),
+    multiFields(testimonialFileFields),
     validate(testimonialIdSchema, 'params'),
     validate(updateTestimonialSchema),
     TestimonialController.update

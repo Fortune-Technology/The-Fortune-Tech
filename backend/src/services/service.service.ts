@@ -87,7 +87,8 @@ export class ServiceService {
      */
     static async create(
         data: CreateServiceDTO,
-        imageUrl?: string
+        imageUrl?: string,
+        thumbnailUrl?: string
     ): Promise<IServiceDocument> {
         const slug = generateSlug(data.title);
 
@@ -101,6 +102,7 @@ export class ServiceService {
             ...data,
             slug,
             image: imageUrl,
+            thumbnail: thumbnailUrl,
             features: parseArrayFromString(data.features as unknown as string),
             deliverables: parseArrayFromString(data.deliverables as unknown as string),
             process: parseArrayFromString(data.process as unknown as string),
@@ -124,7 +126,8 @@ export class ServiceService {
     static async update(
         idOrSlug: string,
         data: UpdateServiceDTO,
-        imageUrl?: string
+        imageUrl?: string,
+        thumbnailUrl?: string
     ): Promise<IServiceDocument> {
         const service = await this.getById(idOrSlug);
 
@@ -133,6 +136,9 @@ export class ServiceService {
 
         if (imageUrl) {
             updateData.image = imageUrl;
+        }
+        if (thumbnailUrl) {
+            updateData.thumbnail = thumbnailUrl;
         }
 
         // Parse array fields

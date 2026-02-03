@@ -15,6 +15,7 @@ import {
 } from '../../../lib/store/api/portfolioApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import { getImageUrl } from '../../../lib/utils';
 
 interface PortfolioFormData {
     title: string;
@@ -76,7 +77,7 @@ export default function PortfolioPage() {
 
     const handleOpenModal = (project: any = null) => {
         if (project) {
-            setEditingProjectId(project._id);
+            setEditingProjectId(project.id || project._id);
             setFormData({
                 title: project.title || '',
                 description: project.description || '',
@@ -260,7 +261,7 @@ export default function PortfolioPage() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                             <div className="project-thumbnail">
                                                 {project.thumbnail ? (
-                                                    <Image src={project.thumbnail} alt={project.title} width={48} height={40} style={{ objectFit: 'cover', borderRadius: '6px' }} />
+                                                    <Image src={getImageUrl(project.thumbnail)} alt={project.title} width={48} height={40} unoptimized style={{ objectFit: 'cover', borderRadius: '6px' }} />
                                                 ) : (
                                                     <div className="project-placeholder">
                                                         <FaProjectDiagram />
@@ -282,7 +283,7 @@ export default function PortfolioPage() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(project._id)} title="View">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(project.id || project._id || '')} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(project)} title="Edit">
@@ -290,7 +291,7 @@ export default function PortfolioPage() {
                                             </button>
                                             <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(project._id, project.title)}
+                                                onClick={() => handleDelete(project.id || project._id || '', project.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -398,7 +399,7 @@ export default function PortfolioPage() {
                         <div style={{ padding: '2rem' }}>
                             {portfolioDetailResponse.data.thumbnail && (
                                 <div style={{ position: 'relative', height: '300px', marginBottom: '2rem', borderRadius: '12px', overflow: 'hidden' }}>
-                                    <Image src={portfolioDetailResponse.data.thumbnail} alt={portfolioDetailResponse.data.title} fill style={{ objectFit: 'cover' }} />
+                                    <Image src={getImageUrl(portfolioDetailResponse.data.thumbnail)} alt={portfolioDetailResponse.data.title} fill unoptimized style={{ objectFit: 'cover' }} />
                                 </div>
                             )}
                             <div className="detail-grid">

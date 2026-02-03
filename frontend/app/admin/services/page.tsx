@@ -14,6 +14,8 @@ import {
 } from '../../../lib/store/api/servicesApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import { getImageUrl } from '../../../lib/utils';
+import Image from 'next/image';
 
 interface ServiceFormData {
     title: string;
@@ -22,6 +24,7 @@ interface ServiceFormData {
     overview: string;
     icon: string;
     image: string;
+    thumbnail: string;
     features: string;
     deliverables: string;
     process: string;
@@ -44,6 +47,7 @@ const initialFormData: ServiceFormData = {
     overview: '',
     icon: 'FaBox',
     image: '',
+    thumbnail: '',
     features: '',
     deliverables: '',
     process: '',
@@ -66,6 +70,7 @@ export default function ServicesPage() {
     const [viewingService, setViewingService] = useState<any>(null);
     const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
     const [iconFile, setIconFile] = useState<File | null>(null);
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -86,7 +91,7 @@ export default function ServicesPage() {
 
     const handleOpenModal = (service: any = null) => {
         if (service) {
-            setEditingServiceId(service._id);
+            setEditingServiceId(service.id || service._id);
             setFormData({
                 title: service.title || '',
                 tagline: service.tagline || '',
@@ -94,6 +99,7 @@ export default function ServicesPage() {
                 overview: service.overview || '',
                 icon: service.icon || 'FaBox',
                 image: service.image || '',
+                thumbnail: service.thumbnail || '',
                 features: service.features?.join('\n') || '',
                 deliverables: service.deliverables?.join('\n') || '',
                 process: service.process?.join('\n') || '',
@@ -113,6 +119,7 @@ export default function ServicesPage() {
             setFormData(initialFormData);
         }
         setIconFile(null);
+        setThumbnailFile(null);
         setIsModalOpen(true);
     };
 
@@ -129,6 +136,7 @@ export default function ServicesPage() {
         setViewingService(null);
         setFormData(initialFormData);
         setIconFile(null);
+        setThumbnailFile(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -152,6 +160,12 @@ export default function ServicesPage() {
         }
     };
 
+    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setThumbnailFile(e.target.files[0]);
+        }
+    };
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -163,7 +177,10 @@ export default function ServicesPage() {
         formDataToSend.append('overview', formData.overview);
         // formDataToSend.append('icon', formData.icon); // Icon is now handled via file upload
         if (iconFile) {
-            formDataToSend.append('icon', iconFile);
+            formDataToSend.append('image', iconFile);
+        }
+        if (thumbnailFile) {
+            formDataToSend.append('thumbnail', thumbnailFile);
         }
         formDataToSend.append('cta', formData.cta);
         formDataToSend.append('pricingHint', formData.pricingHint);
@@ -277,6 +294,7 @@ export default function ServicesPage() {
                     <table className="admin-table">
                         <thead>
                             <tr>
+                                <th style={{ width: '60px' }}>Image</th>
                                 <th>Service</th>
                                 <th>Category/Price</th>
                                 <th>Featured</th>
@@ -286,6 +304,24 @@ export default function ServicesPage() {
                         <tbody>
                             {filteredServices.map((service, index) => (
                                 <tr key={service._id || `service-${index}`}>
+                                    <td>
+                                        <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
+                                            {(service.thumbnail || service.image) ? (
+                                                <Image
+                                                    src={getImageUrl(service.thumbnail || service.image)}
+                                                    alt={service.title}
+                                                    fill
+                                                    unoptimized
+                                                    sizes="50px"
+                                                    style={{ objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                                    No Image
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{service.title}</span>
@@ -304,7 +340,7 @@ export default function ServicesPage() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(service._id)} title="View Detail">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(service.id || service._id || '')} title="View Detail">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(service)} title="Edit">
@@ -312,7 +348,7 @@ export default function ServicesPage() {
                                             </button>
                                             <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(service._id, service.title)}
+                                                onClick={() => handleDelete(service.id || service._id || '', service.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -369,11 +405,29 @@ export default function ServicesPage() {
                                     <input name="cta" className="form-input" value={formData.cta} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Icon (Upload File)</label>
+                                    <label className="form-label">Service Image</label>
                                     <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
-                                    {formData.icon && !iconFile && (
+                                    {formData.image && !iconFile && (
                                         <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            Current: {formData.icon}
+                                            Current: {formData.image.split('/').pop()}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Thumbnail</label>
+                                    <input type="file" accept="image/*" className="form-input" onChange={handleThumbnailChange} />
+                                    {formData.thumbnail && !thumbnailFile && (
+                                        <div style={{ marginTop: '0.5rem' }}>
+                                            <div style={{ width: '80px', height: '60px', borderRadius: '6px', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
+                                                <Image
+                                                    src={getImageUrl(formData.thumbnail)}
+                                                    alt="Current thumbnail"
+                                                    fill
+                                                    unoptimized
+                                                    sizes="80px"
+                                                    style={{ objectFit: 'cover' }}
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -450,7 +504,7 @@ export default function ServicesPage() {
                                     <div style={{ marginTop: '1rem' }}>
                                         <strong>Icon:</strong>
                                         {serviceDetailResponse.data.icon && (serviceDetailResponse.data.icon.startsWith('http') || serviceDetailResponse.data.icon.startsWith('/') || serviceDetailResponse.data.icon.match(/\.(jpeg|jpg|gif|png|svg)$/)) ? (
-                                            <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${serviceDetailResponse.data.icon.startsWith('/') ? '' : '/'}${serviceDetailResponse.data.icon}`} alt="Service Icon" style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', marginTop: '0.5rem' }} />
+                                            <img src={getImageUrl(serviceDetailResponse.data.icon)} alt="Service Icon" style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', marginTop: '0.5rem' }} />
                                         ) : (
                                             <span style={{ marginLeft: '0.5rem' }}>{serviceDetailResponse.data.icon}</span>
                                         )}

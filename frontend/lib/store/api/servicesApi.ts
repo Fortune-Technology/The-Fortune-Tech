@@ -6,7 +6,8 @@
 import { baseApi } from './baseApi';
 
 export interface Service {
-    _id: string;
+    id: string;
+    _id?: string; // Keep for backwards compatibility
     title: string;
     slug?: string;
     tagline?: string;
@@ -14,6 +15,7 @@ export interface Service {
     overview?: string;
     icon?: string;
     image?: string;
+    thumbnail?: string;
     features?: string[];
     deliverables?: string[];
     process?: string[];
@@ -67,7 +69,7 @@ export const servicesApi = baseApi.injectEndpoints({
             providesTags: (result) =>
                 result?.data
                     ? [
-                        ...result.data.map(({ _id }) => ({ type: 'Service' as const, id: _id })),
+                        ...result.data.map(({ id, _id }) => ({ type: 'Service' as const, id: id || _id })),
                         { type: 'Services' as const },
                     ]
                     : [{ type: 'Services' as const }],

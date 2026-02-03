@@ -16,7 +16,8 @@
 .btn-primary {
   background: var(--accent-gradient);
   color: white;
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 15px rgba(70, 102, 249, 0.25);
+  border: none;
 }
 
 .btn-primary:hover {

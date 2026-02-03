@@ -449,14 +449,30 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem;
+    padding: 1.5rem 2rem;
     border-bottom: 1px solid var(--glass-border);
+    position: relative;
+}
+
+.admin-card-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 2rem;
+    right: 2rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-start), transparent);
+    opacity: 0.3;
 }
 
 .admin-card-title {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.admin-card-body {
+    padding: 1.5rem 2rem;
 }
 
 .admin-card-actions {
@@ -2191,3 +2207,203 @@
     color: white !important;
 }
 
+
+/* ===== MODERN PROFILE STYLES ===== */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 5rem; /* Space for fixed buttons and better balance */
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.avatar-upload-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 2.5rem 0;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--glass-border);
+    position: relative;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .avatar-upload-section {
+        flex-direction: row;
+        align-items: center;
+        text-align: left;
+        padding: 2rem;
+        background: linear-gradient(to right, var(--accent-glow), transparent);
+        border-radius: var(--radius-lg);
+    }
+}
+
+.avatar-preview-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--glass-bg);
+}
+
+.avatar-placeholder-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    border: 4px solid var(--glass-bg);
+}
+
+.avatar-edit-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 36px;
+    height: 36px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    border: 3px solid var(--primary-light);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-edit-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-info h4 {
+    margin: 0 0 0.5rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.form-input-wrapper {
+    position: relative;
+}
+
+.form-input-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: var(--transition-base);
+}
+
+.form-input-with-icon:focus + .form-input-icon {
+    color: var(--accent-start);
+}
+
+.form-divider {
+    border: 0;
+    border-top: 1px solid var(--glass-border);
+    margin: 2rem 0;
+}
+
+.security-intro {
+    background: linear-gradient(135deg, rgba(70, 102, 249, 0.08), rgba(244, 106, 49, 0.05));
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--accent-start);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.security-footer-info {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background: var(--primary-lighter);
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    line-height: 1.5;
+    border: 1px solid var(--glass-border);
+}
+
+.security-footer-info::before {
+    content: '!';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-gradient);
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.w-full { width: 100%; }
+
+/* Glassmorphism Refinement */
+.admin-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 0 20px rgba(255, 255, 255, 0.02);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.admin-card:hover {
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.2),
+        0 10px 10px -5px rgba(0, 0, 0, 0.1),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='light'] .admin-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.role-badge.super_admin { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+.role-badge.admin { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.role-badge.editor { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.role-badge.client { background: rgba(107, 114, 128, 0.15); color: #6b7280; }
+
+.role-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}

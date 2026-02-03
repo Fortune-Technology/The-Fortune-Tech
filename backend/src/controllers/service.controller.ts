@@ -45,12 +45,23 @@ export class ServiceController {
      */
     static create = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         let imageUrl: string | undefined;
+        let thumbnailUrl: string | undefined;
 
-        if (req.file) {
+        // Handle file uploads - can be single file or multiple files
+        if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files['image'] && files['image'][0]) {
+                imageUrl = getFileUrl(files['image'][0].filename, 'images');
+            }
+            if (files['thumbnail'] && files['thumbnail'][0]) {
+                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, 'images');
+            }
+        } else if (req.file) {
+            // Single file upload (backward compatibility)
             imageUrl = getFileUrl(req.file.filename, 'images');
         }
 
-        const service = await ServiceService.create(req.body, imageUrl);
+        const service = await ServiceService.create(req.body, imageUrl, thumbnailUrl);
         sendCreated(res, service, 'Service created successfully');
     });
 
@@ -60,12 +71,23 @@ export class ServiceController {
      */
     static update = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         let imageUrl: string | undefined;
+        let thumbnailUrl: string | undefined;
 
-        if (req.file) {
+        // Handle file uploads - can be single file or multiple files
+        if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files['image'] && files['image'][0]) {
+                imageUrl = getFileUrl(files['image'][0].filename, 'images');
+            }
+            if (files['thumbnail'] && files['thumbnail'][0]) {
+                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, 'images');
+            }
+        } else if (req.file) {
+            // Single file upload (backward compatibility)
             imageUrl = getFileUrl(req.file.filename, 'images');
         }
 
-        const service = await ServiceService.update(req.params.id as string, req.body, imageUrl);
+        const service = await ServiceService.update(req.params.id as string, req.body, imageUrl, thumbnailUrl);
         sendSuccess(res, service, 'Service updated successfully');
     });
 

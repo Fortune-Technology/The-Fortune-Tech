@@ -6,6 +6,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { IUser } from '../interfaces';
+import { getFullUrl } from '../utils/helpers';
 import { USER_ROLES, USER_STATUSES, ROLE_PERMISSIONS, UserRole, Permission } from '../constants';
 
 export interface IUserDocument extends Omit<IUser, 'id'>, Document {
@@ -155,6 +156,7 @@ const UserSchema = new Schema<IUserDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.avatar = getFullUrl(ret.avatar);
                 delete ret._id;
                 delete ret.__v;
                 delete ret.password;
@@ -175,6 +177,7 @@ const UserSchema = new Schema<IUserDocument>(
             virtuals: true,
             transform: (_, ret: any) => {
                 ret.id = ret._id.toString();
+                ret.avatar = getFullUrl(ret.avatar);
                 delete ret._id;
                 delete ret.__v;
                 delete ret.password;
