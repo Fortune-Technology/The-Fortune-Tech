@@ -14,6 +14,7 @@ import {
 } from '../../../lib/store/api/careersApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import CareerDetailModal from '../../../components/admin/CareerDetailModal';
 
 interface CareerFormData {
     title: string;
@@ -274,7 +275,7 @@ export default function CareersPage() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career._id)} title="View">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career.id || career._id)} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(career)} title="Edit">
@@ -282,7 +283,7 @@ export default function CareersPage() {
                                             </button>
                                             <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(career._id, career.title)}
+                                                onClick={() => handleDelete(career.id || career._id, career.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -386,61 +387,12 @@ export default function CareersPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {isDetailOpen && careerDetailResponse?.data && (
-                <div className="modal-overlay">
-                    <div className="modal-content detail-view" data-lenis-prevent>
-                        <div className="admin-card-header">
-                            <h3 className="admin-card-title">{careerDetailResponse.data.title}</h3>
-                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                        </div>
-                        <div style={{ padding: '2rem' }}>
-                            <div className="detail-meta">
-                                <span><FaBriefcase /> {careerDetailResponse.data.department}</span>
-                                <span><FaMapMarkerAlt /> {careerDetailResponse.data.location || 'Remote'}</span>
-                                <span className="type-badge">{careerDetailResponse.data.type?.replace('-', ' ')}</span>
-                                <span className={`status-badge ${careerDetailResponse.data.isActive ? 'active' : 'inactive'}`}>
-                                    {careerDetailResponse.data.isActive ? 'Active' : 'Inactive'}
-                                </span>
-                            </div>
-                            <div className="detail-section">
-                                <h5>Description</h5>
-                                <p>{careerDetailResponse.data.description}</p>
-                            </div>
-                            {careerDetailResponse.data.requirements && careerDetailResponse.data.requirements.length > 0 && (
-                                <div className="detail-section">
-                                    <h5>Requirements</h5>
-                                    <ul>
-                                        {careerDetailResponse.data.requirements.map((req: string, idx: number) => (
-                                            <li key={idx}>{req}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            {careerDetailResponse.data.responsibilities && careerDetailResponse.data.responsibilities.length > 0 && (
-                                <div className="detail-section">
-                                    <h5>Responsibilities</h5>
-                                    <ul>
-                                        {careerDetailResponse.data.responsibilities.map((resp: string, idx: number) => (
-                                            <li key={idx}>{resp}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                            {careerDetailResponse.data.benefits && careerDetailResponse.data.benefits.length > 0 && (
-                                <div className="detail-section">
-                                    <h5>Benefits</h5>
-                                    <ul>
-                                        {careerDetailResponse.data.benefits.map((benefit: string, idx: number) => (
-                                            <li key={idx}>{benefit}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Premium Career Details Modal */}
+            <CareerDetailModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                career={careerDetailResponse?.data}
+            />
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>

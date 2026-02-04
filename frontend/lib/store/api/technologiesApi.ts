@@ -12,6 +12,7 @@ export interface TechnologyItem {
     description?: string;
     proficiency?: number;
     expertiseLevel?: string;
+    experienceYears?: number;
     useCases?: string[];
     featured?: boolean;
     order?: number;

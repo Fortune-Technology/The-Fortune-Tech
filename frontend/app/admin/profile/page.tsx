@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import {
     FaSave, FaLock, FaUser, FaEnvelope, FaPhone,
-    FaCamera, FaSpinner, FaShieldAlt
+    FaCamera, FaSpinner, FaShieldAlt, FaEye, FaEyeSlash
 } from 'react-icons/fa';
 import { useGetCurrentUserQuery } from '../../../lib/store/api/authApi';
 import {
@@ -16,6 +16,7 @@ import {
     showSuccessNotification,
     showErrorNotification
 } from '../../../lib/store/slices/notificationSlice';
+import { setUser } from '../../../lib/store/slices/authSlice';
 import Image from 'next/image';
 import { getImageUrl } from '../../../lib/utils';
 
@@ -44,6 +45,16 @@ export default function ProfilePage() {
         newPassword: '',
         confirmPassword: '',
     });
+
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false,
+    });
+
+    const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+        setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+    };
 
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -99,7 +110,11 @@ export default function ProfilePage() {
         }
 
         try {
-            await updateProfile({ id: user.id, data: formData }).unwrap();
+            const result = await updateProfile({ id: user.id, data: formData }).unwrap();
+            if (result.data) {
+                // Update global auth state with new user data (including avatar)
+                dispatch(setUser(result.data as any));
+            }
             dispatch(showSuccessNotification('Profile updated successfully'));
             refetch();
         } catch (err: any) {
@@ -294,20 +309,29 @@ export default function ProfilePage() {
                                 <p>Ensure your account is using a long, random password to stay secure.</p>
                             </div>
 
+
                             <form onSubmit={handleChangePassword}>
                                 <div className="form-group">
                                     <label className="form-label">Current Password</label>
                                     <div className="form-input-wrapper">
                                         <input
                                             name="currentPassword"
-                                            type="password"
-                                            className="form-input form-input-with-icon"
+                                            type={showPasswords.current ? 'text' : 'password'}
+                                            className="form-input form-input-with-icon has-toggle"
                                             value={passwordData.currentPassword}
                                             onChange={handlePasswordChange}
                                             placeholder="••••••••"
                                             required
                                         />
                                         <FaLock className="form-input-icon" />
+                                        <button
+                                            type="button"
+                                            className="password-toggle-btn"
+                                            onClick={() => togglePasswordVisibility('current')}
+                                            title={showPasswords.current ? "Hide password" : "Show password"}
+                                        >
+                                            {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -318,8 +342,8 @@ export default function ProfilePage() {
                                     <div className="form-input-wrapper">
                                         <input
                                             name="newPassword"
-                                            type="password"
-                                            className="form-input form-input-with-icon"
+                                            type={showPasswords.new ? 'text' : 'password'}
+                                            className="form-input form-input-with-icon has-toggle"
                                             value={passwordData.newPassword}
                                             onChange={handlePasswordChange}
                                             placeholder="••••••••"
@@ -327,6 +351,14 @@ export default function ProfilePage() {
                                             minLength={8}
                                         />
                                         <FaLock className="form-input-icon" />
+                                        <button
+                                            type="button"
+                                            className="password-toggle-btn"
+                                            onClick={() => togglePasswordVisibility('new')}
+                                            title={showPasswords.new ? "Hide password" : "Show password"}
+                                        >
+                                            {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -335,14 +367,22 @@ export default function ProfilePage() {
                                     <div className="form-input-wrapper">
                                         <input
                                             name="confirmPassword"
-                                            type="password"
-                                            className="form-input form-input-with-icon"
+                                            type={showPasswords.confirm ? 'text' : 'password'}
+                                            className="form-input form-input-with-icon has-toggle"
                                             value={passwordData.confirmPassword}
                                             onChange={handlePasswordChange}
                                             placeholder="••••••••"
                                             required
                                         />
                                         <FaLock className="form-input-icon" />
+                                        <button
+                                            type="button"
+                                            className="password-toggle-btn"
+                                            onClick={() => togglePasswordVisibility('confirm')}
+                                            title={showPasswords.confirm ? "Hide password" : "Show password"}
+                                        >
+                                            {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+                                        </button>
                                     </div>
                                 </div>
 

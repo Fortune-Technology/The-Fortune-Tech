@@ -28,9 +28,13 @@ interface CategoryFormData {
 interface ItemFormData {
     name: string;
     icon: string;
-    description: string;
-    proficiency: number;
+    expertiseLevel: string;
+    experienceYears: number;
+    useCases: string;
+    featured: boolean;
 }
+
+const expertiseLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
 
 const initialCategoryFormData: CategoryFormData = {
     name: '',
@@ -43,8 +47,10 @@ const initialCategoryFormData: CategoryFormData = {
 const initialItemFormData: ItemFormData = {
     name: '',
     icon: '',
-    description: '',
-    proficiency: 80,
+    expertiseLevel: 'Intermediate',
+    experienceYears: 1,
+    useCases: '',
+    featured: false,
 };
 
 export default function TechnologiesPage() {
@@ -179,8 +185,10 @@ export default function TechnologiesPage() {
             setItemFormData({
                 name: item.name || '',
                 icon: item.icon || '',
-                description: item.description || '',
-                proficiency: item.proficiency || 80,
+                expertiseLevel: item.expertiseLevel || 'Intermediate',
+                experienceYears: item.experienceYears || 1,
+                useCases: item.useCases?.join(', ') || '',
+                featured: item.featured || false,
             });
         } else {
             setEditingItemId(null);
@@ -198,9 +206,10 @@ export default function TechnologiesPage() {
         setItemIconFile(null);
     };
 
-    const handleItemInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleItemInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        setItemFormData(prev => ({ ...prev, [name]: type === 'number' ? Number(value) : value }));
+        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : (type === 'number' ? Number(value) : value);
+        setItemFormData(prev => ({ ...prev, [name]: val }));
     };
 
     const handleItemFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -215,12 +224,21 @@ export default function TechnologiesPage() {
 
         const formData = new FormData();
         formData.append('name', itemFormData.name);
-        formData.append('description', itemFormData.description);
-        // formData.append('icon', itemFormData.icon); // Handled via file
+        formData.append('expertiseLevel', itemFormData.expertiseLevel);
+        formData.append('experienceYears', String(itemFormData.experienceYears));
+
+        // Split useCases into array
+        if (itemFormData.useCases) {
+            itemFormData.useCases.split(',').forEach(uc => {
+                const trimmed = uc.trim();
+                if (trimmed) formData.append('useCases[]', trimmed);
+            });
+        }
+
+        formData.append('featured', String(itemFormData.featured));
         if (itemIconFile) {
             formData.append('icon', itemIconFile);
         }
-        formData.append('proficiency', String(itemFormData.proficiency));
 
         try {
             if (editingItemId) {
@@ -362,11 +380,11 @@ export default function TechnologiesPage() {
                                             <div className="tech-item-details">
                                                 <span className="tech-item-name">
                                                     {item.name}
-                                                    {(item.proficiency ?? 0) >= 90 && <FaStar className="featured-star" />}
+                                                    {item.featured && <FaStar className="featured-star" />}
                                                 </span>
                                                 <span className="tech-item-level">
-                                                    {(item.proficiency ?? 0) >= 90 ? 'Expert' : (item.proficiency ?? 0) >= 70 ? 'Advanced' : 'Intermediate'}
-                                                    {item.description && ` • ${item.description}`}
+                                                    {item.expertiseLevel ? item.expertiseLevel.charAt(0).toUpperCase() + item.expertiseLevel.slice(1) : 'Intermediate'}
+                                                    {item.experienceYears && ` • ${item.experienceYears} yrs`}
                                                 </span>
                                             </div>
                                         </div>
@@ -467,12 +485,26 @@ export default function TechnologiesPage() {
                                 )}
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Description</label>
-                                <textarea name="description" className="form-input" value={itemFormData.description} onChange={handleItemInputChange} rows={2} />
+                                <label className="form-label">Expertise Level</label>
+                                <select name="expertiseLevel" className="form-input" value={itemFormData.expertiseLevel} onChange={handleItemInputChange}>
+                                    {expertiseLevels.map(level => (
+                                        <option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Proficiency: {itemFormData.proficiency}%</label>
-                                <input type="range" name="proficiency" min="0" max="100" value={itemFormData.proficiency} onChange={handleItemInputChange} style={{ width: '100%' }} />
+                                <label className="form-label">Experience Years</label>
+                                <input type="number" name="experienceYears" className="form-input" min="0" max="50" value={itemFormData.experienceYears} onChange={handleItemInputChange} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Use Cases (comma separated)</label>
+                                <input name="useCases" className="form-input" value={itemFormData.useCases} onChange={handleItemInputChange} placeholder="e.g. Web Apps, APIs, Mobile" />
+                            </div>
+                            <div className="form-group">
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                    <input type="checkbox" name="featured" checked={itemFormData.featured} onChange={handleItemInputChange} />
+                                    Featured Technology
+                                </label>
                             </div>
                             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                                 <button type="button" className="btn btn-outline" onClick={handleCloseItemModal}>Cancel</button>

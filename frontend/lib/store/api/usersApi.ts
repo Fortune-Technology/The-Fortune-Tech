@@ -5,6 +5,7 @@
 
 import { baseApi } from './baseApi';
 import { User } from '../../../types';
+export type { User };
 
 interface UsersResponse {
     success: boolean;

@@ -16,8 +16,10 @@ import {
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
+import UserDetailsModal from '../../../components/admin/UserDetailsModal';
 
 interface UserFormData {
+    // ...
     firstName: string;
     lastName: string;
     email: string;
@@ -495,86 +497,12 @@ export default function UsersPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {
-                isDetailOpen && userDetailResponse?.data && (
-                    <div className="modal-overlay">
-                        <div className="modal-content" data-lenis-prevent>
-                            <div className="admin-card-header">
-                                <h3 className="admin-card-title">User Details</h3>
-                                <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                            </div>
-                            <div style={{ padding: '2rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
-                                    <div className="detail-avatar">
-                                        {userDetailResponse.data.avatar ? (
-                                            <img
-                                                src={getImageUrl(userDetailResponse.data.avatar)}
-                                                alt={userDetailResponse.data.name}
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                        ) : (
-                                            userDetailResponse.data.name ? userDetailResponse.data.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h4 style={{ margin: 0 }}>{userDetailResponse.data.name || 'Unknown'}</h4>
-                                        <p style={{ margin: '0.25rem 0 0', color: 'var(--text-muted)' }}>{userDetailResponse.data.email || 'N/A'}</p>
-                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                                            <span className={`role-badge ${userDetailResponse.data.role}`}>
-                                                <FaShieldAlt size={10} /> {userDetailResponse.data.role}
-                                            </span>
-                                            <span className={`status-badge ${userDetailResponse.data.status}`}>
-                                                {userDetailResponse.data.status}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="detail-grid">
-                                    <div className="detail-item">
-                                        <label>Phone</label>
-                                        <span>{userDetailResponse.data.phone || userDetailResponse.data.profile?.phone || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Company</label>
-                                        <span>{userDetailResponse.data.profile?.company || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Location</label>
-                                        <span>{userDetailResponse.data.profile?.location || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Department</label>
-                                        <span>{userDetailResponse.data.profile?.department || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Position</label>
-                                        <span>{userDetailResponse.data.profile?.position || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Last Login</label>
-                                        <span>{formatDate(userDetailResponse.data.lastLogin || userDetailResponse.data.security?.lastLogin)}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Created</label>
-                                        <span>{formatDate(userDetailResponse.data.createdAt)}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Updated</label>
-                                        <span>{formatDate(userDetailResponse.data.updatedAt)}</span>
-                                    </div>
-                                    {userDetailResponse.data.profile?.bio && (
-                                        <div className="detail-item" style={{ gridColumn: 'span 2' }}>
-                                            <label>Bio</label>
-                                            <p style={{ margin: 0, lineHeight: 1.5 }}>{userDetailResponse.data.profile.bio}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {/* Premium User Details Modal */}
+            <UserDetailsModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                user={userDetailResponse?.data}
+            />
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>

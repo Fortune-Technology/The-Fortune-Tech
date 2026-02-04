@@ -16,17 +16,23 @@ import {
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
+import PortfolioDetailModal from '../../../components/admin/PortfolioDetailModal';
 
 interface PortfolioFormData {
     title: string;
     description: string;
     category: string;
-    technologies: string;
-    client: string;
-    projectUrl: string;
+    industry: string;
+    clientName: string;
+    clientLocation: string;
+    keyFeatures: string;
+    techStack: string;
+    timeline: string;
+    status: string;
+    servicesProvided: string;
+    liveUrl: string;
+    caseStudyUrl: string;
     githubUrl: string;
-    duration: string;
-    year: string;
     featured: boolean;
 }
 
@@ -34,16 +40,22 @@ const initialFormData: PortfolioFormData = {
     title: '',
     description: '',
     category: 'web-app',
-    technologies: '',
-    client: '',
-    projectUrl: '',
+    industry: '',
+    clientName: '',
+    clientLocation: '',
+    keyFeatures: '',
+    techStack: '',
+    timeline: '',
+    status: 'Completed',
+    servicesProvided: '',
+    liveUrl: '',
+    caseStudyUrl: '',
     githubUrl: '',
-    duration: '',
-    year: new Date().getFullYear().toString(),
     featured: false,
 };
 
 const categories = ['web-app', 'mobile-app', 'e-commerce', 'saas', 'website', 'other'];
+const statusOptions = ['In Progress', 'Completed', 'Live', 'Archived'];
 
 export default function PortfolioPage() {
     const dispatch = useAppDispatch();
@@ -82,12 +94,19 @@ export default function PortfolioPage() {
                 title: project.title || '',
                 description: project.description || '',
                 category: project.category || 'web-app',
-                technologies: project.technologies?.join(', ') || '',
-                client: (typeof project.client === 'object' ? project.client?.name : project.client) || '',
-                projectUrl: project.projectUrl || '',
-                githubUrl: project.githubUrl || '',
-                duration: project.duration || '',
-                year: project.year?.toString() || new Date().getFullYear().toString(),
+                industry: project.industry || '',
+                clientName: (typeof project.client === 'object' ? project.client?.name : project.client) || '',
+                clientLocation: (typeof project.client === 'object' ? project.client?.location : '') || '',
+                keyFeatures: project.keyFeatures?.join('\n') || '',
+                techStack: typeof project.techStack === 'object'
+                    ? Object.entries(project.techStack).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n')
+                    : '',
+                timeline: project.timeline || '',
+                status: project.status || 'Completed',
+                servicesProvided: project.servicesProvided?.join('\n') || '',
+                liveUrl: project.links?.live || '',
+                caseStudyUrl: project.links?.caseStudy || '',
+                githubUrl: project.links?.github || '',
                 featured: project.featured || false,
             });
         } else {
@@ -131,16 +150,28 @@ export default function PortfolioPage() {
         formDataToSend.append('title', formData.title);
         formDataToSend.append('description', formData.description);
         formDataToSend.append('category', formData.category);
-        formDataToSend.append('client', formData.client);
-        formDataToSend.append('projectUrl', formData.projectUrl);
-        formDataToSend.append('githubUrl', formData.githubUrl);
-        formDataToSend.append('duration', formData.duration);
-        formDataToSend.append('year', formData.year);
+        formDataToSend.append('industry', formData.industry);
+        formDataToSend.append('client[name]', formData.clientName);
+        formDataToSend.append('client[location]', formData.clientLocation);
+        formDataToSend.append('timeline', formData.timeline);
+        formDataToSend.append('status', formData.status);
+        formDataToSend.append('links[live]', formData.liveUrl);
+        formDataToSend.append('links[caseStudy]', formData.caseStudyUrl);
+        formDataToSend.append('links[github]', formData.githubUrl);
         formDataToSend.append('featured', String(formData.featured));
 
-        // Technologies array
-        const technologies = formData.technologies.split(',').map(t => t.trim()).filter(t => t);
-        technologies.forEach(tech => formDataToSend.append('technologies[]', tech));
+        // Array fields (one per line)
+        formData.keyFeatures.split('\n').map((s: string) => s.trim()).filter((s: string) => s).forEach((item: string) =>
+            formDataToSend.append('keyFeatures[]', item)
+        );
+        formData.servicesProvided.split('\n').map((s: string) => s.trim()).filter((s: string) => s).forEach((item: string) =>
+            formDataToSend.append('servicesProvided[]', item)
+        );
+
+        // TechStack as JSON object
+        if (formData.techStack.trim()) {
+            formDataToSend.append('techStack', formData.techStack);
+        }
 
         if (thumbnailFile) {
             formDataToSend.append('thumbnail', thumbnailFile);
@@ -335,37 +366,49 @@ export default function PortfolioPage() {
                                         ))}
                                     </select>
                                 </div>
+                                <div className="form-group">
+                                    <label className="form-label">Industry</label>
+                                    <input name="industry" className="form-input" value={formData.industry} onChange={handleInputChange} placeholder="e.g. Healthcare, Fintech" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Status</label>
+                                    <select name="status" className="form-input" value={formData.status} onChange={handleInputChange}>
+                                        {statusOptions.map(status => (
+                                            <option key={status} value={status}>{status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Description</label>
                                     <textarea name="description" className="form-input" value={formData.description} onChange={handleInputChange} required rows={3} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Technologies (comma separated)</label>
-                                    <input name="technologies" className="form-input" value={formData.technologies} onChange={handleInputChange} placeholder="React, Node.js, MongoDB" />
+                                    <label className="form-label">Client Name</label>
+                                    <input name="clientName" className="form-input" value={formData.clientName} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Client</label>
-                                    <input name="client" className="form-input" value={formData.client} onChange={handleInputChange} />
+                                    <label className="form-label">Client Location</label>
+                                    <input name="clientLocation" className="form-input" value={formData.clientLocation} onChange={handleInputChange} placeholder="e.g. New York, USA" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Project URL</label>
-                                    <input name="projectUrl" className="form-input" value={formData.projectUrl} onChange={handleInputChange} placeholder="https://" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">GitHub URL</label>
-                                    <input name="githubUrl" className="form-input" value={formData.githubUrl} onChange={handleInputChange} placeholder="https://github.com/" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Duration</label>
-                                    <input name="duration" className="form-input" value={formData.duration} onChange={handleInputChange} placeholder="e.g. 3 months" />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Year</label>
-                                    <input name="year" type="number" className="form-input" value={formData.year} onChange={handleInputChange} />
+                                    <label className="form-label">Timeline</label>
+                                    <input name="timeline" className="form-input" value={formData.timeline} onChange={handleInputChange} placeholder="e.g. 3 months" />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Thumbnail</label>
                                     <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Live URL</label>
+                                    <input name="liveUrl" className="form-input" value={formData.liveUrl} onChange={handleInputChange} placeholder="https://" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Case Study URL</label>
+                                    <input name="caseStudyUrl" className="form-input" value={formData.caseStudyUrl} onChange={handleInputChange} placeholder="https://" />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">GitHub URL</label>
+                                    <input name="githubUrl" className="form-input" value={formData.githubUrl} onChange={handleInputChange} placeholder="https://github.com/" />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Featured</label>
@@ -373,6 +416,18 @@ export default function PortfolioPage() {
                                         <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
                                         <span>Show on homepage</span>
                                     </div>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Key Features (one per line)</label>
+                                    <textarea name="keyFeatures" className="form-input" value={formData.keyFeatures} onChange={handleInputChange} rows={3} placeholder="AI-powered recommendations&#10;Real-time inventory&#10;Multi-currency support" />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Tech Stack (format: category: tech1, tech2)</label>
+                                    <textarea name="techStack" className="form-input" value={formData.techStack} onChange={handleInputChange} rows={3} placeholder="frontend: React, Next.js&#10;backend: Node.js, MongoDB&#10;devops: Docker, AWS" />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Services Provided (one per line)</label>
+                                    <textarea name="servicesProvided" className="form-input" value={formData.servicesProvided} onChange={handleInputChange} rows={2} placeholder="Web Development&#10;UI/UX Design&#10;Cloud Deployment" />
                                 </div>
                             </div>
 
@@ -388,60 +443,12 @@ export default function PortfolioPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {isDetailOpen && portfolioDetailResponse?.data && (
-                <div className="modal-overlay">
-                    <div className="modal-content detail-view" data-lenis-prevent>
-                        <div className="admin-card-header">
-                            <h3 className="admin-card-title">{portfolioDetailResponse.data.title}</h3>
-                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                        </div>
-                        <div style={{ padding: '2rem' }}>
-                            {portfolioDetailResponse.data.thumbnail && (
-                                <div style={{ position: 'relative', height: '300px', marginBottom: '2rem', borderRadius: '12px', overflow: 'hidden' }}>
-                                    <Image src={getImageUrl(portfolioDetailResponse.data.thumbnail)} alt={portfolioDetailResponse.data.title} fill unoptimized style={{ objectFit: 'cover' }} />
-                                </div>
-                            )}
-                            <div className="detail-grid">
-                                <div className="detail-section">
-                                    <h5>Project Info</h5>
-                                    <p><strong>Category:</strong> {portfolioDetailResponse.data.category}</p>
-                                    <p><strong>Client:</strong> {portfolioDetailResponse.data.client && typeof portfolioDetailResponse.data.client === 'object' ? (portfolioDetailResponse.data.client as any).name : (portfolioDetailResponse.data.client || 'N/A')}</p>
-                                    <p><strong>Duration:</strong> {portfolioDetailResponse.data.duration || 'N/A'}</p>
-                                    <p><strong>Year:</strong> {portfolioDetailResponse.data.year}</p>
-                                    <p><strong>Featured:</strong> {portfolioDetailResponse.data.featured ? 'Yes' : 'No'}</p>
-                                </div>
-                                <div className="detail-section">
-                                    <h5>Description</h5>
-                                    <p>{portfolioDetailResponse.data.description}</p>
-                                    {portfolioDetailResponse.data.technologies && portfolioDetailResponse.data.technologies.length > 0 && (
-                                        <>
-                                            <h5 style={{ marginTop: '1rem' }}>Technologies</h5>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                {portfolioDetailResponse.data.technologies.map((tech: string, idx: number) => (
-                                                    <span key={idx} className="tech-badge">{tech}</span>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                                {portfolioDetailResponse.data.projectUrl && (
-                                    <a href={portfolioDetailResponse.data.projectUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                                        <FaExternalLinkAlt /> Live Demo
-                                    </a>
-                                )}
-                                {portfolioDetailResponse.data.githubUrl && (
-                                    <a href={portfolioDetailResponse.data.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline">
-                                        <FaGithub /> GitHub
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Premium Portfolio Details Modal */}
+            <PortfolioDetailModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                project={portfolioDetailResponse?.data}
+            />
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>

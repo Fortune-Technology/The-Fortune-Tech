@@ -3,14 +3,17 @@
 import AdminLayout from '../../components/admin/AdminLayout';
 import {
     FaUsers, FaArrowUp, FaArrowDown, FaUser, FaExclamationTriangle,
-    FaBriefcase, FaProjectDiagram, FaServicestack, FaQuoteLeft, FaSpinner
+    FaBriefcase, FaProjectDiagram, FaServicestack, FaQuoteLeft, FaSpinner, FaEye
 } from 'react-icons/fa';
+import { getImageUrl } from '../../lib/utils';
 import { useGetUsersQuery } from '../../lib/store/api/usersApi';
 import { useGetPortfoliosQuery } from '../../lib/store/api/portfolioApi';
 import { useGetServicesQuery } from '../../lib/store/api/servicesApi';
 import { useGetCareersQuery } from '../../lib/store/api/careersApi';
 import { useGetTestimonialsQuery } from '../../lib/store/api/testimonialsApi';
 import Link from 'next/link';
+import { useState } from 'react';
+import UserDetailsModal from '../../components/admin/UserDetailsModal';
 
 const getRelativeTime = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never';
@@ -34,6 +37,9 @@ export default function AdminDashboard() {
     const { data: careersResponse, isLoading: isLoadingCareers } = useGetCareersQuery();
     const { data: testimonialsResponse, isLoading: isLoadingTestimonials } = useGetTestimonialsQuery();
 
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const users = usersResponse?.data || [];
     const portfolios = portfolioResponse?.data || [];
     const services = servicesResponse?.data || [];
@@ -44,6 +50,11 @@ export default function AdminDashboard() {
 
     const activeUsers = users.filter(u => u.status === 'active');
     const activePositions = careers.filter(c => c.isActive);
+
+    const handleViewUser = (user: any) => {
+        setSelectedUser(user);
+        setIsModalOpen(true);
+    };
 
     const stats = [
         {
@@ -103,14 +114,15 @@ export default function AdminDashboard() {
     ];
 
     const recentUsers = users.slice(0, 5).map(user => ({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        status: user.status || 'active',
-        role: user.role || 'user',
-        role: user.role || 'user',
-        joined: getRelativeTime(user.lastLogin || user.createdAt),
-        avatar: user.avatar
+        ...user, // Keep all user properties for the modal
+        // Add mapped properties for the table if needed, but keeping original object is better for modal
+        displayId: user._id,
+        displayName: user.name,
+        displayEmail: user.email,
+        displayStatus: user.status || 'active',
+        displayRole: user.role || 'user',
+        displayJoined: getRelativeTime(user.lastLogin || user.createdAt),
+        displayAvatar: user.avatar
     }));
 
     return (
@@ -179,40 +191,43 @@ export default function AdminDashboard() {
                                 </tr>
                             ) : (
                                 recentUsers.map((user, index) => (
-                                    <tr key={user.id || `user-${index}`}>
+                                    <tr key={user.displayId || `user-${index}`}>
                                         <td>
                                             <div className="table-user">
                                                 <div className="table-user-avatar">
-                                                    {user.avatar ? (
+                                                    {user.displayAvatar ? (
                                                         <img
-                                                            src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${user.avatar.startsWith('/') ? '' : '/'}${user.avatar}`}
-                                                            alt={user.name}
+                                                            src={getImageUrl(user.displayAvatar)}
+                                                            alt={user.displayName}
                                                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                         />
                                                     ) : (
-                                                        user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2) : '?'
+                                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-gradient)', color: 'white', fontWeight: 600 }}>
+                                                            {user.displayName ? user.displayName.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'}
+                                                        </div>
                                                     )}
                                                 </div>
                                                 <div className="table-user-info">
-                                                    <span className="table-user-name">{user.name}</span>
-                                                    <span className="table-user-email">{user.email}</span>
+                                                    <span className="table-user-name">{user.displayName}</span>
+                                                    <span className="table-user-email">{user.displayEmail}</span>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span className={`status-badge ${user.status}`}>
-                                                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                                            <span className={`status-badge ${user.displayStatus}`}>
+                                                {user.displayStatus.charAt(0).toUpperCase() + user.displayStatus.slice(1)}
                                             </span>
                                         </td>
-                                        <td style={{ textTransform: 'capitalize' }}>{user.role}</td>
-                                        <td>{user.joined}</td>
+                                        <td style={{ textTransform: 'capitalize' }}>{user.displayRole}</td>
+                                        <td>{user.displayJoined}</td>
                                         <td>
                                             <div className="table-actions">
-                                                <Link href={`/admin/users?edit=${user.id}`} className="table-action-btn" title="Edit">
-                                                    <FaUser />
-                                                </Link>
-                                                <button className="table-action-btn delete" title="View Details">
-                                                    <FaExclamationTriangle />
+                                                <button
+                                                    className="table-action-btn"
+                                                    title="View Details"
+                                                    onClick={() => handleViewUser(user)}
+                                                >
+                                                    <FaEye />
                                                 </button>
                                             </div>
                                         </td>
@@ -228,6 +243,13 @@ export default function AdminDashboard() {
                     </span>
                 </div>
             </div>
+
+            {/* Premium User Details Modal */}
+            <UserDetailsModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                user={selectedUser}
+            />
 
         </AdminLayout>
     );

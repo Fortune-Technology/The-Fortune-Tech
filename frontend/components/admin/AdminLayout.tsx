@@ -157,7 +157,7 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
                                     ) : (
                                         user?.firstName && user?.lastName
                                             ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
-                                            : user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AD'
+                                            : user?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AD'
                                     )}
                                 </div>
                             </button>

@@ -16,6 +16,7 @@ import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
 import Image from 'next/image';
+import ServiceDetailModal from '../../../components/admin/ServiceDetailModal';
 
 interface ServiceFormData {
     title: string;
@@ -486,65 +487,12 @@ export default function ServicesPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {isDetailOpen && serviceDetailResponse?.data && (
-                <div className="modal-overlay">
-                    <div className="modal-content admin-card detail-view" data-lenis-prevent>
-                        <div className="admin-card-header">
-                            <h3 className="admin-card-title">Service Details: {serviceDetailResponse.data.title}</h3>
-                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                        </div>
-                        <div style={{ padding: '2rem' }}>
-                            <div className="detail-grid">
-                                <div className="detail-section">
-                                    <h5>Basic Info</h5>
-                                    <p><strong>Tagline:</strong> {serviceDetailResponse.data.tagline}</p>
-                                    <p><strong>Pricing:</strong> {serviceDetailResponse.data.pricingHint}</p>
-                                    <p><strong>CTA:</strong> {serviceDetailResponse.data.cta}</p>
-                                    <div style={{ marginTop: '1rem' }}>
-                                        <strong>Icon:</strong>
-                                        {serviceDetailResponse.data.icon && (serviceDetailResponse.data.icon.startsWith('http') || serviceDetailResponse.data.icon.startsWith('/') || serviceDetailResponse.data.icon.match(/\.(jpeg|jpg|gif|png|svg)$/)) ? (
-                                            <img src={getImageUrl(serviceDetailResponse.data.icon)} alt="Service Icon" style={{ width: '48px', height: '48px', objectFit: 'contain', display: 'block', marginTop: '0.5rem' }} />
-                                        ) : (
-                                            <span style={{ marginLeft: '0.5rem' }}>{serviceDetailResponse.data.icon}</span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="detail-section">
-                                    <h5>Description</h5>
-                                    <p>{serviceDetailResponse.data.description}</p>
-                                    <h5 style={{ marginTop: '1rem' }}>Overview</h5>
-                                    <p style={{ fontSize: '0.875rem' }}>{serviceDetailResponse.data.overview}</p>
-                                </div>
-                            </div>
-
-                            <div className="detail-lists-grid">
-                                {[
-                                    { label: 'Features', data: serviceDetailResponse.data.features },
-                                    { label: 'Deliverables', data: serviceDetailResponse.data.deliverables },
-                                    { label: 'Process', data: serviceDetailResponse.data.process },
-                                    { label: 'Tech Stack', data: serviceDetailResponse.data.techStack },
-                                    { label: 'Benefits', data: serviceDetailResponse.data.benefits },
-                                    { label: 'Ideal For', data: serviceDetailResponse.data.idealFor },
-                                ].map((list) => list.data && list.data.length > 0 && (
-                                    <div key={list.label} className="detail-list-item">
-                                        <h6>{list.label}</h6>
-                                        <ul>
-                                            {list.data.map((item: string, idx: number) => <li key={`${list.label}-${idx}`}><FaChevronRight size={10} /> {item}</li>)}
-                                        </ul>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="detail-section" style={{ marginTop: '1.5rem', background: 'var(--primary)', padding: '1rem', borderRadius: '8px' }}>
-                                <h6 style={{ marginBottom: '0.5rem' }}>SEO Information</h6>
-                                <p style={{ fontSize: '0.8125rem' }}><strong>Title:</strong> {serviceDetailResponse.data.seo?.metaTitle}</p>
-                                <p style={{ fontSize: '0.8125rem' }}><strong>Description:</strong> {serviceDetailResponse.data.seo?.metaDescription}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Premium Service Details Modal */}
+            <ServiceDetailModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                service={serviceDetailResponse?.data}
+            />
 
             {/* Delete Confirmation Modal */}
             <DeleteConfirmModal {...deleteConfirm.modalProps} />

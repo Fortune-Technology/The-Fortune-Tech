@@ -16,6 +16,7 @@ import {
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
+import TestimonialDetailModal from '../../../components/admin/TestimonialDetailModal';
 
 interface TestimonialFormData {
     name: string;
@@ -274,7 +275,7 @@ export default function TestimonialsPage() {
                                                     />
                                                 ) : (
                                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-start)', fontWeight: 600, fontSize: '1rem' }}>
-                                                        {testimonial.name ? testimonial.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?'}
+                                                        {testimonial.name ? testimonial.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : '?'}
                                                     </div>
                                                 )}
                                             </div>
@@ -407,53 +408,12 @@ export default function TestimonialsPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {isDetailOpen && testimonialDetailResponse?.data && (
-                <div className="modal-overlay">
-                    <div className="modal-content admin-card">
-                        <div className="admin-card-header">
-                            <h3 className="admin-card-title">Testimonial Details</h3>
-                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                        </div>
-                        <div style={{ padding: '2rem' }}>
-                            <div className="detail-header">
-                                <div className="detail-avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
-                                    {(testimonialDetailResponse.data.thumbnail || testimonialDetailResponse.data.avatar) ? (
-                                        <Image
-                                            src={getImageUrl(testimonialDetailResponse.data.thumbnail || testimonialDetailResponse.data.avatar)}
-                                            alt={testimonialDetailResponse.data.name}
-                                            fill
-                                            unoptimized
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    ) : (
-                                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-start)', fontWeight: 600, fontSize: '1.5rem' }}>
-                                            {testimonialDetailResponse.data.name ? testimonialDetailResponse.data.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : '?'}
-                                        </div>
-                                    )}
-                                </div>
-                                <div>
-                                    <h4>{testimonialDetailResponse.data.name || 'Unknown'}</h4>
-                                    <p>{testimonialDetailResponse.data.role || ''} at {testimonialDetailResponse.data.company || 'N/A'}</p>
-                                    {testimonialDetailResponse.data.industry && <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{testimonialDetailResponse.data.industry}</p>}
-                                    <div style={{ marginTop: '0.5rem' }}>{renderStars(testimonialDetailResponse.data.rating || 5)}</div>
-                                </div>
-                            </div>
-                            <div className="detail-content" style={{ marginTop: '1.5rem' }}>
-                                <FaQuoteLeft style={{ fontSize: '1.5rem', color: 'var(--accent-start)', marginBottom: '1rem' }} />
-                                <p style={{ lineHeight: 1.7 }}>{testimonialDetailResponse.data.content}</p>
-                            </div>
-                            {testimonialDetailResponse.data.serviceProvided && (
-                                <div style={{ marginTop: '1rem' }}>
-                                    <span className="status-badge" style={{ backgroundColor: 'var(--accent-start)', color: 'white' }}>
-                                        {testimonialDetailResponse.data.serviceProvided}
-                                    </span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Premium Testimonial Details Modal */}
+            <TestimonialDetailModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                testimonial={testimonialDetailResponse?.data}
+            />
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>

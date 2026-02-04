@@ -16,6 +16,7 @@ import {
 } from '../../../lib/store/api/cmsApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import CMSDetailModal from '../../../components/admin/CMSDetailModal';
 
 interface CMSFormData {
     title: string;
@@ -316,7 +317,7 @@ export default function CMSPage() {
                                     <td>{formatDate(page.updatedAt || '')}</td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(page._id)} title="View">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(page.id || page._id)} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(page)} title="Edit">
@@ -332,7 +333,7 @@ export default function CMSPage() {
                                             </button>
                                             <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(page._id, page.title)}
+                                                onClick={() => handleDelete(page.id || page._id, page.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -434,42 +435,12 @@ export default function CMSPage() {
                 </div>
             )}
 
-            {/* Detail View Modal */}
-            {isDetailOpen && pageDetailResponse?.data && (
-                <div className="modal-overlay">
-                    <div className="modal-content admin-card detail-view">
-                        <div className="admin-card-header">
-                            <h3 className="admin-card-title">{pageDetailResponse.data.title}</h3>
-                            <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
-                        </div>
-                        <div style={{ padding: '2rem' }}>
-                            <div className="detail-meta">
-                                <span className="type-badge">{pageDetailResponse.data.type}</span>
-                                <span className={`status-badge ${pageDetailResponse.data.status}`}>{pageDetailResponse.data.status}</span>
-                                <span style={{ color: 'var(--text-muted)' }}>/{pageDetailResponse.data.slug}</span>
-                            </div>
-                            {pageDetailResponse.data.excerpt && (
-                                <div className="detail-section">
-                                    <h5>Excerpt</h5>
-                                    <p>{pageDetailResponse.data.excerpt}</p>
-                                </div>
-                            )}
-                            <div className="detail-section">
-                                <h5>Content</h5>
-                                <div className="content-preview" dangerouslySetInnerHTML={{ __html: pageDetailResponse.data.content }} />
-                            </div>
-                            {pageDetailResponse.data.seo && (
-                                <div className="detail-section seo-info">
-                                    <h5>SEO Information</h5>
-                                    <p><strong>Meta Title:</strong> {pageDetailResponse.data.seo.metaTitle || 'Not set'}</p>
-                                    <p><strong>Meta Description:</strong> {pageDetailResponse.data.seo.metaDescription || 'Not set'}</p>
-                                    <p><strong>Keywords:</strong> {pageDetailResponse.data.seo.keywords?.join(', ') || 'None'}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Premium CMS Page Details Modal */}
+            <CMSDetailModal
+                isOpen={isDetailOpen}
+                onClose={handleCloseModals}
+                page={pageDetailResponse?.data}
+            />
 
             <DeleteConfirmModal {...deleteConfirm.modalProps} />
         </AdminLayout>
