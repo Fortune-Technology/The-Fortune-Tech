@@ -42,7 +42,7 @@ export default function AuthPersist() {
                     }
                 } catch (error) {
                     // Auth failed, silently fail - user stays logged out
-                    console.log('Auth check failed or user not logged in');
+
                 }
             }
         };

@@ -112,6 +112,19 @@ Import the `the-fortune-tech.postman_collection.json` file into Postman to explo
 - Sample request bodies
 - Authentication headers (automatically handled via cookies in Postman)
 
+## 📏 Engineering Principles & Standards
+
+This project strictly follows the guidelines outlined in `ENGINEERING_PRINCIPLES.md`. Key implementations include:
+
+- **DRY (Don't Repeat Yourself)**: Centralized utilities (`utils/helpers.ts`), response formatting (`utils/response.ts`), and configuration.
+- **SOLID Principles**: Adhered to in controller design, service layer abstraction, and interface segregation.
+- **Security First**: 
+  - JWT HttpOnly cookies
+  - Helmet security headers
+  - Rate limiting
+  - Input validation (Joi)
+- **Standardized API Responses**: All endpoints return a consistent JSON structure `{ success: boolean, data?: any, message?: string, error?: any }`.
+
 ## 📡 Health Check
 
 Verify API status at: `GET http://localhost:5000/api/health`

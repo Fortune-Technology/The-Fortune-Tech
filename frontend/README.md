@@ -161,6 +161,19 @@ Centralized icon utility (`lib/icons.ts`) ensures only used icons are bundled, l
 | **Fail Fast** | Early validation in `lib/validation.ts` | Prevents propagation of invalid data |
 | **Type Safety** | Shared `types/index.ts` | Frontend-backend type contracts, compile-time safety |
 
+## 📏 Engineering Principles & Standards
+
+This project strictly follows the guidelines outlined in `ENGINEERING_PRINCIPLES.md`. Key implementations include:
+
+- **Component Architecture**: Atomic component structure with clear separation of concerns (Smart vs Dumb components).
+- **Performance**: 
+  - Server Components where applicable
+  - Image optimization
+  - Code splitting
+  - Lazy loading
+- **Type Safety**: strict TypeScript usage with shared types (`types/index.ts`) matching backend contracts.
+- **Maintainability**: Custom hooks, centralized constants, and utility functions to avoid code duplication.
+
 ## 🧰 Utilities & Helpers
 
 ### Constants (`lib/constants.ts`)

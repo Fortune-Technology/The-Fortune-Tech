@@ -33,7 +33,7 @@ export default function ContactPage() {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        console.log('Form Submitted:', formData);
+
         alert('Thank you for reaching out! We\'ll get back to you within 24 hours.');
         setFormData({ name: '', email: '', phone: '', company: '', service: '', budget: '', message: '' });
         setIsSubmitting(false);

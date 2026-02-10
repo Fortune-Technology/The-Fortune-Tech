@@ -12,7 +12,7 @@ import { useGetServicesQuery } from '../../lib/store/api/servicesApi';
 export default function ServicesPage() {
   const { data: servicesResponse, isLoading, isError } = useGetServicesQuery();
   const services = servicesResponse?.data || [];
-  console.log(services);
+
 
   if (isLoading) {
     return (

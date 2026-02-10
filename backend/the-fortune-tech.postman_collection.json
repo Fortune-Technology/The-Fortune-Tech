@@ -2,7 +2,7 @@
     "info": {
         "_postman_id": "7a3b4c12-9d8e-4f5a-b6c7-d8e9f0a1b2c3",
         "name": "The Fortune Tech API",
-        "description": "API collection for The Fortune Tech backend services. This collection includes all public and protected endpoints for managing services, portfolio, technologies, testimonials, careers, CMS, and user management.",
+        "description": "API collection for The Fortune Tech backend services. This collection includes all public and protected endpoints for managing services, portfolio, technologies, testimonials, careers, CMS, and user management. Verified for compliance with Engineering Principles.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
