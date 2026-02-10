@@ -11,9 +11,11 @@ export default function SettingsPage() {
     const dispatch = useAppDispatch();
     const [activeTab, setActiveTab] = useState('site');
     const [formData, setFormData] = useState<Record<string, any>>({});
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [faviconFile, setFaviconFile] = useState<File | null>(null);
 
     // RTK Query hooks
-    const { data: settingsResponse, isLoading } = useGetSettingsQuery();
+    const { data: settingsResponse, isLoading, refetch } = useGetSettingsQuery();
     const [updateSettings, { isLoading: isSaving }] = useUpdateSettingsMutation();
 
     useEffect(() => {
@@ -21,35 +23,35 @@ export default function SettingsPage() {
             const settings = settingsResponse.data;
             setFormData({
                 site: {
-                    siteName: settings.siteName || '',
-                    siteDescription: settings.siteDescription || '',
-                    logo: settings.logo || '',
-                    favicon: settings.favicon || '',
+                    name: settings.site?.name || '',
+                    description: settings.site?.description || '',
+                    logo: settings.site?.logo || '',
+                    favicon: settings.site?.favicon || '',
                 },
                 company: {
-                    email: settings.email || '',
-                    phone: settings.phone || '',
-                    address: settings.address || '',
+                    email: settings.company?.email || '',
+                    phone: settings.company?.phone || '',
+                    address: typeof settings.company?.address === 'string' ? settings.company.address : '',
                 },
                 social: {
-                    facebook: settings.socialMedia?.facebook || '',
-                    twitter: settings.socialMedia?.twitter || '',
-                    instagram: settings.socialMedia?.instagram || '',
-                    linkedin: settings.socialMedia?.linkedin || '',
-                    github: settings.socialMedia?.github || '',
-                    youtube: settings.socialMedia?.youtube || '',
+                    facebook: settings.social?.facebook || '',
+                    twitter: settings.social?.twitter || '',
+                    instagram: settings.social?.instagram || '',
+                    linkedin: settings.social?.linkedin || '',
+                    github: settings.social?.github || '',
+                    youtube: settings.social?.youtube || '',
                 },
                 seo: {
-                    defaultTitle: settings.seo?.defaultTitle || '',
-                    defaultDescription: settings.seo?.defaultDescription || '',
+                    title: settings.seo?.title || '',
+                    description: settings.seo?.description || '',
                     keywords: settings.seo?.keywords?.join(', ') || '',
                     ogImage: settings.seo?.ogImage || '',
                 },
                 features: {
-                    maintenanceMode: settings.maintenance?.enabled || false,
-                    maintenanceMessage: settings.maintenance?.message || '',
-                    googleAnalytics: settings.analytics?.googleAnalyticsId || '',
-                    facebookPixel: settings.analytics?.facebookPixelId || '',
+                    maintenanceMode: settings.features?.maintenanceMode || false,
+                    maintenanceMessage: settings.features?.maintenanceMessage || '',
+                    googleAnalytics: settings.features?.googleAnalytics || '',
+                    facebookPixel: settings.features?.facebookPixel || '',
                 },
             });
         }
@@ -59,34 +61,53 @@ export default function SettingsPage() {
         e.preventDefault();
 
         // Transform form data back to Settings structure
-        const dataToSend: Partial<Settings> = {
-            siteName: formData.site?.siteName,
-            siteDescription: formData.site?.siteDescription,
-            logo: formData.site?.logo,
-            favicon: formData.site?.favicon,
-            email: formData.company?.email,
-            phone: formData.company?.phone,
-            address: formData.company?.address,
-            socialMedia: formData.social,
+        const dataToSend: any = { // Using any temporarily to bypass strict typing during migration
+            site: {
+                name: formData.site?.name,
+                description: formData.site?.description,
+                // Logo and favicon handled separately
+            },
+            company: {
+                email: formData.company?.email,
+                phone: formData.company?.phone,
+                address: formData.company?.address, // Simple string address
+            },
+            social: formData.social,
             seo: {
-                defaultTitle: formData.seo?.defaultTitle,
-                defaultDescription: formData.seo?.defaultDescription,
-                keywords: formData.seo?.keywords?.split(',').map((k: string) => k.trim()).filter((k: string) => k),
+                title: formData.seo?.title,
+                description: formData.seo?.description,
+                keywords: typeof formData.seo?.keywords === 'string'
+                    ? formData.seo?.keywords?.split(',').map((k: string) => k.trim()).filter((k: string) => k)
+                    : formData.seo?.keywords,
                 ogImage: formData.seo?.ogImage,
             },
-            analytics: {
-                googleAnalyticsId: formData.features?.googleAnalytics,
-                facebookPixelId: formData.features?.facebookPixel,
-            },
-            maintenance: {
-                enabled: formData.features?.maintenanceMode,
-                message: formData.features?.maintenanceMessage,
+            features: {
+                maintenanceMode: formData.features?.maintenanceMode,
+                maintenanceMessage: formData.features?.maintenanceMessage,
+                googleAnalytics: formData.features?.googleAnalytics,
+                facebookPixel: formData.features?.facebookPixel,
             },
         };
 
         try {
-            await updateSettings(dataToSend).unwrap();
+            const submitData = new FormData();
+            submitData.append('data', JSON.stringify(dataToSend));
+
+            if (logoFile) {
+                submitData.append('logo', logoFile);
+            }
+
+            if (faviconFile) {
+                submitData.append('favicon', faviconFile);
+            }
+
+            await updateSettings(submitData as any).unwrap();
             dispatch(showSuccessNotification('Settings saved successfully'));
+            // Clear file inputs state
+            setLogoFile(null);
+            setFaviconFile(null);
+            // Refetch to get updated URLs
+            refetch();
         } catch (err: any) {
             dispatch(showErrorNotification(err?.data?.message || 'Failed to save settings'));
         }
@@ -102,6 +123,13 @@ export default function SettingsPage() {
         }));
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
+        if (e.target.files && e.target.files[0]) {
+            if (type === 'logo') setLogoFile(e.target.files[0]);
+            else setFaviconFile(e.target.files[0]);
+        }
+    };
+
     const tabs = [
         { id: 'site', label: 'General', icon: FaGlobe },
         { id: 'company', label: 'Company', icon: FaBuilding },
@@ -112,6 +140,33 @@ export default function SettingsPage() {
 
     const renderField = (section: string, key: string, value: any, label: string) => {
         const type = typeof value;
+
+        // Custom render for logo and favicon
+        if (section === 'site' && (key === 'logo' || key === 'favicon')) {
+            return (
+                <div key={key} className="form-group">
+                    <label className="form-label">{label}</label>
+                    <div className="file-input-wrapper">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="form-input"
+                            onChange={(e) => handleFileChange(e, key as 'logo' | 'favicon')}
+                        />
+                        {value && (
+                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                Current: <a href={value.startsWith('http') || value.startsWith('/') ? `${value.startsWith('http') ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')}${value.startsWith('/') ? '' : '/'}${value}` : value} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>View Current Image</a>
+                            </div>
+                        )}
+                        {(key === 'logo' ? logoFile : faviconFile) && (
+                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--success)' }}>
+                                Selected: {(key === 'logo' ? logoFile : faviconFile)?.name}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
 
         return (
             <div key={key} className="form-group">

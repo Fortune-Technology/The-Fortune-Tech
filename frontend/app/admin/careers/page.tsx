@@ -34,7 +34,7 @@ const initialFormData: CareerFormData = {
     title: '',
     department: '',
     location: '',
-    type: 'full-time',
+    type: 'Full-time',
     experience: '',
     description: '',
     requirements: '',
@@ -44,7 +44,7 @@ const initialFormData: CareerFormData = {
     featured: false,
 };
 
-const jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'remote'];
+const jobTypes = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'];
 const departments = ['Engineering', 'Design', 'Marketing', 'Sales', 'Operations', 'HR', 'Finance', 'Other'];
 
 export default function CareersPage() {
@@ -78,7 +78,7 @@ export default function CareersPage() {
 
     const handleOpenModal = (career: any = null) => {
         if (career) {
-            setEditingCareerId(career._id);
+            setEditingCareerId(career.id);
             setFormData({
                 title: career.title || '',
                 department: career.department || '',
@@ -246,7 +246,7 @@ export default function CareersPage() {
                         </thead>
                         <tbody>
                             {filteredCareers.map((career, index) => (
-                                <tr key={career._id || `career-${index}`}>
+                                <tr key={career.id || `career-${index}`}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                             <div className="position-icon">
@@ -275,7 +275,7 @@ export default function CareersPage() {
                                     </td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career.id || career._id)} title="View">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(career.id)} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(career)} title="Edit">
@@ -283,7 +283,7 @@ export default function CareersPage() {
                                             </button>
                                             <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(career.id || career._id, career.title)}
+                                                onClick={() => handleDelete(career.id, career.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -336,7 +336,7 @@ export default function CareersPage() {
                                     <label className="form-label">Job Type</label>
                                     <select name="type" className="form-input" value={formData.type} onChange={handleInputChange}>
                                         {jobTypes.map(type => (
-                                            <option key={type} value={type}>{type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
+                                            <option key={type} value={type}>{type}</option>
                                         ))}
                                     </select>
                                 </div>

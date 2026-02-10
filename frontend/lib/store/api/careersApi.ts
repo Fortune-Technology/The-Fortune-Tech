@@ -6,7 +6,7 @@
 import { baseApi } from './baseApi';
 
 export interface Career {
-    _id: string;
+    id: string;
     title: string;
     slug?: string;
     department?: string;
@@ -65,7 +65,7 @@ export const careersApi = baseApi.injectEndpoints({
             providesTags: (result) =>
                 result?.data
                     ? [
-                        ...result.data.map(({ _id }) => ({ type: 'Career' as const, id: _id })),
+                        ...result.data.map(({ id }) => ({ type: 'Career' as const, id: id })),
                         { type: 'Careers' as const },
                     ]
                     : [{ type: 'Careers' as const }],

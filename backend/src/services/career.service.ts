@@ -51,6 +51,7 @@ export class CareerService {
             type: data.type,
             description: data.description,
             requirements: parseArrayFromString(data.requirements as unknown as string),
+            responsibilities: parseArrayFromString(data.responsibilities as unknown as string),
             benefits: parseArrayFromString(data.benefits as unknown as string),
             applyLink: data.applyLink,
         });
@@ -66,6 +67,9 @@ export class CareerService {
 
         if (data.requirements !== undefined) {
             updateData.requirements = parseArrayFromString(data.requirements as unknown as string);
+        }
+        if (data.responsibilities !== undefined) {
+            updateData.responsibilities = parseArrayFromString(data.responsibilities as unknown as string);
         }
         if (data.benefits !== undefined) {
             updateData.benefits = parseArrayFromString(data.benefits as unknown as string);

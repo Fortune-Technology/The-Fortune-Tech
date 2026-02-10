@@ -257,35 +257,68 @@ const seedData = async (): Promise<void> => {
         console.log('⚙️  Creating website config...');
         await WebsiteConfig.create({
             site: {
-                name: 'The Fortune Tech',
-                tagline: 'Transforming Ideas into Digital Reality',
-                description: 'We build exceptional web and mobile applications for businesses of all sizes.',
-                url: 'https://thefortunetech.com',
+                name: 'Fortune Tech',
+                tagline: 'Premium IT Consulting & Development',
+                description: 'Transform your business with cutting-edge technology solutions. We craft premium web and mobile experiences that drive growth, engage users, and deliver measurable results.',
+                url: 'https://fortunetech.com',
+                logo: '/uploads/images/logo.png',
+                favicon: '/uploads/images/favicon.ico',
             },
             company: {
-                legalName: 'The Fortune Tech',
-                email: 'info@thefortunetech.com',
+                legalName: 'Fortune Tech Solutions Pvt. Ltd.',
+                email: 'hello@fortunetech.com',
                 phone: '+1 (555) 123-4567',
                 address: {
-                    city: 'San Francisco',
+                    street: '123 Tech Avenue',
+                    city: 'Silicon Valley',
                     state: 'CA',
+                    postalCode: '94000',
                     country: 'USA',
                 },
+                businessHours: {
+                    weekdays: '9:00 AM - 6:00 PM',
+                    saturday: '10:00 AM - 2:00 PM',
+                    sunday: 'Closed',
+                    timezone: 'PST'
+                }
             },
             social: {
-                linkedin: 'https://linkedin.com/company/thefortunetech',
-                github: 'https://github.com/thefortunetech',
-                twitter: 'https://twitter.com/thefortunetech',
+                linkedin: 'https://linkedin.com/company/fortunetech',
+                twitter: 'https://twitter.com/fortunetech',
+                github: 'https://github.com/fortunetech',
+                dribbble: 'https://dribbble.com/fortunetech',
+                instagram: '',
+                facebook: '',
             },
             seo: {
-                title: 'The Fortune Tech | Web & Mobile Development',
-                description: 'Expert web and mobile development services.',
-                keywords: ['web development', 'mobile apps', 'software development'],
+                title: 'Fortune Tech - Premium IT Consulting & Development',
+                description: 'Transform your business with cutting-edge technology solutions. We build premium web and mobile experiences that drive growth and deliver results.',
+                keywords: [
+                    "IT Consulting",
+                    "Web Development",
+                    "Mobile App Development",
+                    "UI/UX Design",
+                    "Cloud Solutions",
+                    "DevOps",
+                    "Software Development",
+                    "Next.js",
+                    "React",
+                    "Node.js"
+                ],
+                ogImage: '/images/og-image.png',
             },
             features: {
-                blog: true,
-                careers: true,
-                testimonials: true,
+                themeToggle: true,
+                smoothScroll: true,
+                animations: true,
+                newsletter: false,
+                blog: false,
+                chat: false,
+                analytics: {
+                    enabled: false,
+                    googleAnalyticsId: null,
+                    hotjarId: null
+                }
             },
         });
         console.log(`  ✅ Created website config`);

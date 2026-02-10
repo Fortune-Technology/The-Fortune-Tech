@@ -6,7 +6,7 @@
 import { baseApi } from './baseApi';
 
 export interface CMSPage {
-    _id: string;
+    id: string;
     title: string;
     slug: string;
     content: string;
@@ -62,7 +62,7 @@ export const cmsApi = baseApi.injectEndpoints({
             providesTags: (result) =>
                 result?.data
                     ? [
-                        ...result.data.map(({ _id }) => ({ type: 'CMS' as const, id: _id })),
+                        ...result.data.map(({ id }) => ({ type: 'CMS' as const, id: id })),
                         { type: 'CMSPages' as const },
                     ]
                     : [{ type: 'CMSPages' as const }],
@@ -81,7 +81,7 @@ export const cmsApi = baseApi.injectEndpoints({
         getCMSPageBySlug: builder.query<CMSPageResponse, string>({
             query: (slug) => `/cms/page/${slug}`,
             providesTags: (result) =>
-                result?.data ? [{ type: 'CMS', id: result.data._id }] : [],
+                result?.data ? [{ type: 'CMS', id: result.data.id }] : [],
         }),
 
         createCMSPage: builder.mutation<CMSPageResponse, Partial<CMSPage>>({

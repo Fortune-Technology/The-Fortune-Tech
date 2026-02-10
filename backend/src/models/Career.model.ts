@@ -56,6 +56,10 @@ const CareerSchema = new Schema<ICareerDocument>(
             type: String,
             trim: true,
         },
+        responsibilities: {
+            type: [String],
+            default: [],
+        },
     },
     {
         timestamps: true,

@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaGlobe, FaSpinner, FaFileAlt, FaCheck, FaTimes as FaTimesSolid } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
 import {
@@ -86,7 +90,7 @@ export default function CMSPage() {
 
     const handleOpenModal = (page: any = null) => {
         if (page) {
-            setEditingPageId(page._id);
+            setEditingPageId(page.id);
             setFormData({
                 title: page.title || '',
                 slug: page.slug || '',
@@ -191,19 +195,7 @@ export default function CMSPage() {
         });
     };
 
-    const handlePublishToggle = async (page: any) => {
-        try {
-            if (page.status === 'published') {
-                await unpublishPage(page._id).unwrap();
-                dispatch(showSuccessNotification('Page unpublished'));
-            } else {
-                await publishPage(page._id).unwrap();
-                dispatch(showSuccessNotification('Page published successfully'));
-            }
-        } catch (err: any) {
-            dispatch(showErrorNotification(err?.data?.message || 'Failed to update page status'));
-        }
-    };
+
 
     const formatDate = (dateString: string) => {
         if (!dateString) return 'N/A';
@@ -294,7 +286,7 @@ export default function CMSPage() {
                         </thead>
                         <tbody>
                             {filteredPages.map((page, index) => (
-                                <tr key={page._id || index}>
+                                <tr key={page.id || index}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                             <div className="page-icon">
@@ -317,23 +309,15 @@ export default function CMSPage() {
                                     <td>{formatDate(page.updatedAt || '')}</td>
                                     <td>
                                         <div className="table-actions">
-                                            <button className="table-action-btn" onClick={() => handleOpenDetail(page.id || page._id)} title="View">
+                                            <button className="table-action-btn" onClick={() => handleOpenDetail(page.id)} title="View">
                                                 <FaEye />
                                             </button>
                                             <button className="table-action-btn" onClick={() => handleOpenModal(page)} title="Edit">
                                                 <FaEdit />
                                             </button>
                                             <button
-                                                className={`table-action-btn ${page.status === 'published' ? 'unpublish' : 'publish'}`}
-                                                onClick={() => handlePublishToggle(page)}
-                                                title={page.status === 'published' ? 'Unpublish' : 'Publish'}
-                                                disabled={isPublishing || isUnpublishing}
-                                            >
-                                                {page.status === 'published' ? <FaTimesSolid /> : <FaGlobe />}
-                                            </button>
-                                            <button
                                                 className="table-action-btn delete"
-                                                onClick={() => handleDelete(page.id || page._id, page.title)}
+                                                onClick={() => handleDelete(page.id, page.title)}
                                                 title="Delete"
                                                 disabled={isDeleting}
                                             >
@@ -358,7 +342,7 @@ export default function CMSPage() {
             {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content admin-card">
+                    <div className="modal-content admin-card" data-lenis-prevent>
                         <div className="admin-card-header">
                             <h3 className="admin-card-title">{editingPageId ? 'Edit Page' : 'Add Page'}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
@@ -395,7 +379,29 @@ export default function CMSPage() {
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Content</label>
-                                    <textarea name="content" className="form-input" value={formData.content} onChange={handleInputChange} required rows={8} />
+                                    <div className="quill-wrapper" style={{ minHeight: '300px', marginBottom: '2rem' }}>
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData.content}
+                                            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                                            style={{ height: '300px', marginBottom: '50px' }}
+                                            modules={{
+                                                toolbar: [
+                                                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                                    [{ 'font': [] }],
+                                                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                                                    ['bold', 'italic', 'underline', 'strike'],
+                                                    [{ 'color': [] }, { 'background': [] }],
+                                                    [{ 'script': 'sub' }, { 'script': 'super' }],
+                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                                                    [{ 'direction': 'rtl' }, { 'align': [] }],
+                                                    ['blockquote', 'code-block'],
+                                                    ['link', 'image', 'video'],
+                                                    ['clean']
+                                                ],
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Featured</label>

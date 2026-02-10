@@ -22,23 +22,14 @@ const SiteSettingsSchema = new Schema(
     { _id: false }
 );
 
-const AddressSchema = new Schema(
-    {
-        street: { type: String, trim: true },
-        city: { type: String, trim: true },
-        state: { type: String, trim: true },
-        postalCode: { type: String, trim: true },
-        country: { type: String, trim: true },
-    },
-    { _id: false }
-);
+
 
 const CompanySettingsSchema = new Schema(
     {
         legalName: { type: String, trim: true },
         email: { type: String, trim: true },
         phone: { type: String, trim: true },
-        address: { type: AddressSchema, default: {} },
+        address: { type: Schema.Types.Mixed, default: {} }, // Changed to Mixed to support object or string
         businessHours: { type: Schema.Types.Mixed, default: {} },
     },
     { _id: false }

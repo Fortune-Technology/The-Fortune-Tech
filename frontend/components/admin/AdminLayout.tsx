@@ -42,6 +42,7 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
@@ -55,6 +56,7 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
     };
 
     useEffect(() => {
+        setIsMounted(true);
         const handleClickOutside = (event: MouseEvent) => {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
                 setProfileOpen(false);
@@ -145,7 +147,7 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
                                 onClick={() => setProfileOpen(!profileOpen)}
                             >
                                 <div className="header-profile-avatar">
-                                    {user?.avatar ? (
+                                    {isMounted && user?.avatar ? (
                                         <Image
                                             src={getImageUrl(user.avatar)}
                                             alt={user.displayName || 'User'}
@@ -155,9 +157,11 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
                                             unoptimized
                                         />
                                     ) : (
-                                        user?.firstName && user?.lastName
-                                            ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
-                                            : user?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AD'
+                                        <div className="avatar-placeholder">
+                                            {isMounted && (user?.firstName && user?.lastName
+                                                ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
+                                                : user?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'AD')}
+                                        </div>
                                     )}
                                 </div>
                             </button>

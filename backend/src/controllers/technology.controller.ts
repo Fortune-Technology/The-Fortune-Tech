@@ -26,11 +26,17 @@ export class TechnologyController {
     });
 
     static createCategory = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+        if (req.file) {
+            req.body.icon = `/uploads/images/${req.file.filename}`;
+        }
         const category = await TechnologyService.createCategory(req.body);
         sendCreated(res, category, 'Technology category created successfully');
     });
 
     static updateCategory = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+        if (req.file) {
+            req.body.icon = `/uploads/images/${req.file.filename}`;
+        }
         const category = await TechnologyService.updateCategory(req.params.id as string, req.body);
         sendSuccess(res, category, 'Technology category updated successfully');
     });

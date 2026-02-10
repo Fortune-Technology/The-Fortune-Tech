@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { TechnologyController } from '../controllers';
-import { validate, authenticate, requirePermissions, formDataOnly, singleImage } from '../middlewares';
+import { validate, authenticate, requirePermissions, singleImage } from '../middlewares';
 import {
     createTechnologyCategorySchema,
     updateTechnologyCategorySchema,
@@ -28,7 +28,7 @@ router.post(
     '/',
     authenticate,
     requirePermissions(PERMISSIONS.CREATE_TECHNOLOGIES),
-    formDataOnly(),
+    singleImage('icon'),
     validate(createTechnologyCategorySchema),
     TechnologyController.createCategory
 );
@@ -37,7 +37,7 @@ router.put(
     '/:id',
     authenticate,
     requirePermissions(PERMISSIONS.EDIT_TECHNOLOGIES),
-    formDataOnly(),
+    singleImage('icon'),
     validate(technologyCategoryIdSchema, 'params'),
     validate(updateTechnologyCategorySchema),
     TechnologyController.updateCategory

@@ -99,9 +99,9 @@ export default function TechnologiesPage() {
     // Category handlers
     const handleOpenCategoryModal = (category: any = null) => {
         if (category) {
-            setEditingCategoryId(category._id);
+            setEditingCategoryId(category.id || category._id);
             setCategoryFormData({
-                name: category.name || '',
+                name: category.name || category.category || '',
                 description: category.description || '',
                 icon: category.icon || '',
                 featured: category.featured || false,
@@ -138,7 +138,7 @@ export default function TechnologiesPage() {
         e.preventDefault();
 
         const formData = new FormData();
-        formData.append('name', categoryFormData.name);
+        formData.append('category', categoryFormData.name);
         formData.append('description', categoryFormData.description);
         // formData.append('icon', categoryFormData.icon); // Handled via file
         if (categoryIconFile) {
@@ -329,7 +329,7 @@ export default function TechnologiesPage() {
                 </div>
             ) : (
                 filteredCategories.map((category, index) => (
-                    <div key={category._id || `cat-${index}`} className="admin-card category-card">
+                    <div key={(category as any).id || category._id || `cat-${index}`} className="admin-card category-card">
                         {/* Category Header */}
                         <div className="category-section-header">
                             <div className="category-section-info">
@@ -337,7 +337,7 @@ export default function TechnologiesPage() {
                                 <p className="category-section-description">{category.description || `Modern ${(category.name || (category as any).category || '').toLowerCase()} technologies`}</p>
                             </div>
                             <div className="category-section-actions">
-                                <button className="btn btn-outline btn-sm" onClick={() => handleOpenItemModal(category._id)}>
+                                <button className="btn btn-outline btn-sm" onClick={() => handleOpenItemModal((category as any).id || category._id)}>
                                     <FaPlus /> Add Tech
                                 </button>
                                 <button className="icon-btn" onClick={() => handleOpenCategoryModal(category)} title="Edit Category">
@@ -345,7 +345,7 @@ export default function TechnologiesPage() {
                                 </button>
                                 <button
                                     className="icon-btn delete"
-                                    onClick={() => handleDeleteCategory(category._id, category.name || (category as any).category)}
+                                    onClick={() => handleDeleteCategory((category as any).id || category._id, category.name || (category as any).category)}
                                     title="Delete Category"
                                     disabled={isDeletingCategory}
                                 >
@@ -389,12 +389,12 @@ export default function TechnologiesPage() {
                                             </div>
                                         </div>
                                         <div className="tech-item-actions">
-                                            <button className="icon-btn" onClick={() => handleOpenItemModal(category._id, item)} title="Edit">
+                                            <button className="icon-btn" onClick={() => handleOpenItemModal((category as any).id || category._id, item)} title="Edit">
                                                 <FaEdit />
                                             </button>
                                             <button
                                                 className="icon-btn delete"
-                                                onClick={() => handleDeleteItem(category._id, item._id, item.name)}
+                                                onClick={() => handleDeleteItem((category as any).id || category._id, item._id, item.name)}
                                                 title="Delete"
                                                 disabled={isDeletingItem}
                                             >
@@ -406,7 +406,7 @@ export default function TechnologiesPage() {
                             ) : (
                                 <div className="empty-items">
                                     No items in this category.{' '}
-                                    <button className="link-btn" onClick={() => handleOpenItemModal(category._id)}>Add one</button>
+                                    <button className="link-btn" onClick={() => handleOpenItemModal((category as any).id || category._id)}>Add one</button>
                                 </div>
                             )}
                         </div>

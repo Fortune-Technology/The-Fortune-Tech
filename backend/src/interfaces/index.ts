@@ -291,6 +291,7 @@ export interface ICareer extends Timestamps {
     type: JobType;
     description: string;
     requirements: string[];
+    responsibilities: string[];
     benefits: string[];
     applyLink?: string;
 }
@@ -303,6 +304,7 @@ export interface CreateCareerDTO {
     type?: string;
     description: string;
     requirements?: string[];
+    responsibilities?: string[];
     benefits?: string[];
     applyLink?: string;
 }
