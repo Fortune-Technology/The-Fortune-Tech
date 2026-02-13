@@ -982,13 +982,29 @@
                             }
                         ],
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"category\": \"Frontend Development\",\n    \"description\": \"Technologies we use for web UI\",\n    \"featured\": true\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "category",
+                                    "value": "Frontend Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Technologies we use for web UI",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": []
                                 }
-                            }
+                            ]
                         },
                         "url": {
                             "raw": "{{base_url}}/api/technologies",
@@ -1015,13 +1031,20 @@
                             }
                         ],
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"category\": \"Updated Frontend Development\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "category",
+                                    "value": "Updated Frontend Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
                                 }
-                            }
+                            ]
                         },
                         "url": {
                             "raw": "{{base_url}}/api/technologies/category-id",
@@ -1145,13 +1168,20 @@
                             }
                         ],
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"name\": \"React.js\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "React.js",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
                                 }
-                            }
+                            ]
                         },
                         "url": {
                             "raw": "{{base_url}}/api/technologies/category-id/items/item-id",
@@ -2092,13 +2122,26 @@
                             }
                         ],
                         "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"site\": {\n        \"name\": \"The Fortune Tech\",\n        \"tagline\": \"Innovating the Future of IT\",\n        \"description\": \"Global IT Consulting & Software Development Company\",\n        \"url\": \"https://thefortunetech.com\"\n    },\n    \"company\": {\n        \"legalName\": \"The Fortune Tech Solutions Pvt Ltd\",\n        \"email\": \"contact@thefortunetech.com\",\n        \"phone\": \"+91 1234567890\",\n        \"address\": {\n            \"street\": \"Technology Park\",\n            \"city\": \"Surat\",\n            \"state\": \"Gujarat\",\n            \"postalCode\": \"395001\",\n            \"country\": \"India\"\n        }\n    },\n    \"social\": {\n        \"linkedin\": \"https://linkedin.com/company/thefortunetech\",\n        \"facebook\": \"https://facebook.com/thefortunetech\",\n        \"twitter\": \"https://twitter.com/thefortunetech\"\n    },\n    \"seo\": {\n        \"title\": \"The Fortune Tech | IT Consulting\",\n        \"description\": \"Top-tier IT consulting and software development services.\",\n        \"keywords\": [\"IT Consulting\", \"Software Development\", \"Digital Transformation\"]\n    },\n    \"features\": {\n        \"maintenanceMode\": false,\n        \"blogEnabled\": true\n    }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "data",
+                                    "value": "{\n    \"site\": {\n        \"name\": \"The Fortune Tech\",\n        \"tagline\": \"Innovating the Future of IT\",\n        \"description\": \"Global IT Consulting & Software Development Company\",\n        \"url\": \"https://thefortunetech.com\"\n    },\n    \"company\": {\n        \"legalName\": \"The Fortune Tech Solutions Pvt Ltd\",\n        \"email\": \"contact@thefortunetech.com\",\n        \"phone\": \"+91 1234567890\",\n        \"address\": {\n            \"street\": \"Technology Park\",\n            \"city\": \"Surat\",\n            \"state\": \"Gujarat\",\n            \"postalCode\": \"395001\",\n            \"country\": \"India\"\n        }\n    },\n    \"social\": {\n        \"linkedin\": \"https://linkedin.com/company/thefortunetech\",\n        \"facebook\": \"https://facebook.com/thefortunetech\",\n        \"twitter\": \"https://twitter.com/thefortunetech\"\n    },\n    \"seo\": {\n        \"title\": \"The Fortune Tech | IT Consulting\",\n        \"description\": \"Top-tier IT consulting and software development services.\",\n        \"keywords\": [\"IT Consulting\", \"Software Development\", \"Digital Transformation\"]\n    },\n    \"features\": {\n        \"maintenanceMode\": false,\n        \"blogEnabled\": true\n    }\n}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "logo",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "favicon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
                                 }
-                            }
+                            ]
                         },
                         "url": {
                             "raw": "{{base_url}}/api/settings",
