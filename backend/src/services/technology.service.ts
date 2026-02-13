@@ -140,8 +140,7 @@ export class TechnologyService {
         const newItem: ITechnologyItem = {
             name: data.name,
             icon: data.icon,
-            expertiseLevel: data.expertiseLevel as ITechnologyItem['expertiseLevel'] || 'Intermediate',
-            experienceYears: data.experienceYears,
+
             useCases: parseArrayFromString(data.useCases as unknown as string),
             featured: parseBoolean(data.featured as unknown as string),
         };
@@ -174,8 +173,7 @@ export class TechnologyService {
 
         if (data.name !== undefined) item.name = data.name;
         if (data.icon !== undefined) item.icon = data.icon;
-        if (data.expertiseLevel !== undefined) item.expertiseLevel = data.expertiseLevel as ITechnologyItem['expertiseLevel'];
-        if (data.experienceYears !== undefined) item.experienceYears = data.experienceYears;
+
         if (data.useCases !== undefined) {
             item.useCases = parseArrayFromString(data.useCases as unknown as string);
         }

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     FaHome, FaUsers, FaCog, FaChartBar, FaBox, FaEnvelope,
     FaBell, FaSignOutAlt, FaTimes, FaBars, FaSearch, FaSun, FaMoon,
@@ -36,6 +36,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
     const dispatch = useAppDispatch();
     const pathname = usePathname();
+    const router = useRouter();
     const { theme, toggleTheme } = useTheme();
     const user = useAppSelector(selectCurrentUser);
     const [logoutApi] = useLogoutMutation();
@@ -50,8 +51,10 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
             await logoutApi().unwrap();
             dispatch(logOut());
             dispatch(showSuccessNotification('Logged out successfully'));
+            router.push('/login');
         } catch (err) {
             dispatch(logOut()); // Force logout anyway
+            router.push('/login');
         }
     };
 

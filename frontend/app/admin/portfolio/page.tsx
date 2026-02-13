@@ -151,13 +151,13 @@ export default function PortfolioPage() {
         formDataToSend.append('description', formData.description);
         formDataToSend.append('category', formData.category);
         formDataToSend.append('industry', formData.industry);
-        formDataToSend.append('client[name]', formData.clientName);
-        formDataToSend.append('client[location]', formData.clientLocation);
+        formDataToSend.append('clientName', formData.clientName);
+        formDataToSend.append('clientLocation', formData.clientLocation);
         formDataToSend.append('timeline', formData.timeline);
         formDataToSend.append('status', formData.status);
-        formDataToSend.append('links[live]', formData.liveUrl);
-        formDataToSend.append('links[caseStudy]', formData.caseStudyUrl);
-        formDataToSend.append('links[github]', formData.githubUrl);
+        formDataToSend.append('liveLink', formData.liveUrl);
+        formDataToSend.append('caseStudyLink', formData.caseStudyUrl);
+        formDataToSend.append('githubLink', formData.githubUrl);
         formDataToSend.append('featured', String(formData.featured));
 
         // Array fields (one per line)
@@ -170,7 +170,18 @@ export default function PortfolioPage() {
 
         // TechStack as JSON object
         if (formData.techStack.trim()) {
-            formDataToSend.append('techStack', formData.techStack);
+            const techStackObj: Record<string, string[]> = {};
+            formData.techStack.split('\n').forEach(line => {
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                    const category = parts[0].trim();
+                    const techs = parts.slice(1).join(':').split(',').map(t => t.trim()).filter(Boolean);
+                    if (category && techs.length > 0) {
+                        techStackObj[category] = techs;
+                    }
+                }
+            });
+            formDataToSend.append('techStack', JSON.stringify(techStackObj));
         }
 
         if (thumbnailFile) {

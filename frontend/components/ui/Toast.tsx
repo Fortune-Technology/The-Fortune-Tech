@@ -52,7 +52,7 @@ export default function Toast({ notification }: ToastProps) {
             <style jsx>{`
                 .toast {
                     display: flex;
-                    align-items: flex-start;
+                    align-items: center;
                     gap: 0.75rem;
                     padding: 1rem 1.25rem;
                     background: var(--primary-light);
@@ -64,6 +64,7 @@ export default function Toast({ notification }: ToastProps) {
                     max-width: 450px;
                 }
 
+                /* ... (keyframes omitted as they are unchanged) ... */
                 @keyframes slideIn {
                     from {
                         opacity: 0;
@@ -106,7 +107,7 @@ export default function Toast({ notification }: ToastProps) {
                 .toast-icon {
                     font-size: 1.25rem;
                     flex-shrink: 0;
-                    margin-top: 0.125rem;
+                    margin-top: 0;
                 }
 
                 .toast-content {

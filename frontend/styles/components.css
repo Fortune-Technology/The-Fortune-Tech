@@ -4358,3 +4358,47 @@
   height: 200px;
 }
 
+
+/* ===== TECH PAGE CUSTOMIZATIONS ===== */
+
+/* Responsive Grid for Technologies */
+.tech-cards-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 640px) {
+  .tech-cards-grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .tech-cards-grid-responsive {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .tech-cards-grid-responsive {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Tab Icon Improvements */
+.tech-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+  font-size: 1.1em;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.tech-tab.active .tech-tab-icon {
+  opacity: 1;
+}
+

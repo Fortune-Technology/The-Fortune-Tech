@@ -4,7 +4,6 @@
  */
 
 import Joi from 'joi';
-import { EXPERTISE_LEVELS } from '../constants';
 
 export const createTechnologyCategorySchema = Joi.object({
     category: Joi.string().required().trim().messages({
@@ -20,10 +19,7 @@ export const createTechnologyCategorySchema = Joi.object({
                     'any.required': 'Technology name is required',
                 }),
                 icon: Joi.string().trim().allow(''),
-                expertiseLevel: Joi.string()
-                    .valid(...Object.values(EXPERTISE_LEVELS))
-                    .default(EXPERTISE_LEVELS.INTERMEDIATE),
-                experienceYears: Joi.number().integer().min(0).max(50),
+
                 useCases: Joi.alternatives()
                     .try(Joi.array().items(Joi.string().trim()), Joi.string().allow(''))
                     .default([]),
@@ -42,8 +38,7 @@ export const updateTechnologyCategorySchema = Joi.object({
         Joi.object({
             name: Joi.string().required().trim(),
             icon: Joi.string().trim().allow(''),
-            expertiseLevel: Joi.string().valid(...Object.values(EXPERTISE_LEVELS)),
-            experienceYears: Joi.number().integer().min(0).max(50),
+
             useCases: Joi.alternatives()
                 .try(Joi.array().items(Joi.string().trim()), Joi.string().allow('')),
             featured: Joi.alternatives()
@@ -58,10 +53,7 @@ export const createTechnologyItemSchema = Joi.object({
         'any.required': 'Technology name is required',
     }),
     icon: Joi.string().trim().allow(''),
-    expertiseLevel: Joi.string()
-        .valid(...Object.values(EXPERTISE_LEVELS))
-        .default(EXPERTISE_LEVELS.INTERMEDIATE),
-    experienceYears: Joi.number().integer().min(0).max(50),
+
     useCases: Joi.alternatives()
         .try(Joi.array().items(Joi.string().trim()), Joi.string().allow(''))
         .default([]),
@@ -73,8 +65,7 @@ export const createTechnologyItemSchema = Joi.object({
 export const updateTechnologyItemSchema = Joi.object({
     name: Joi.string().trim(),
     icon: Joi.string().trim().allow(''),
-    expertiseLevel: Joi.string().valid(...Object.values(EXPERTISE_LEVELS)),
-    experienceYears: Joi.number().integer().min(0).max(50),
+
     useCases: Joi.alternatives()
         .try(Joi.array().items(Joi.string().trim()), Joi.string().allow('')),
     featured: Joi.alternatives()

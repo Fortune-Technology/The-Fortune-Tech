@@ -115,7 +115,13 @@ export default function TestimonialsPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
-        setFormData(prev => ({ ...prev, [name]: val }));
+
+        // Handle checkbox state correctly
+        if (type === 'checkbox') {
+            setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: val }));
+        }
     };
 
     const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -385,11 +391,11 @@ export default function TestimonialsPage() {
                                 <div className="form-group">
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <input type="checkbox" name="featured" checked={formData.featured} onChange={handleInputChange} />
+                                            <input type="checkbox" name="featured" checked={formData.featured} onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))} />
                                             <span>Featured (show on homepage)</span>
                                         </label>
                                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <input type="checkbox" name="verified" checked={formData.verified} onChange={handleInputChange} />
+                                            <input type="checkbox" name="verified" checked={formData.verified} onChange={(e) => setFormData(prev => ({ ...prev, verified: e.target.checked }))} />
                                             <span>Verified</span>
                                         </label>
                                     </div>

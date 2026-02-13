@@ -11,8 +11,6 @@ export interface TechnologyItem {
     icon?: string;
     description?: string;
     proficiency?: number;
-    expertiseLevel?: string;
-    experienceYears?: number;
     useCases?: string[];
     featured?: boolean;
     order?: number;
@@ -20,7 +18,7 @@ export interface TechnologyItem {
 
 export interface TechnologyCategory {
     _id: string;
-    name: string;
+    category: string;
     slug?: string;
     description?: string;
     icon?: string;

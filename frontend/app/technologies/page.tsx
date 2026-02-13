@@ -11,7 +11,10 @@ const categoryIcons: { [key: string]: React.ComponentType } = {
   'Frontend': FaCode,
   'Backend': FaServer,
   'Database': FaDatabase,
-  'Cloud & Tools': FaCloud,
+  'Cloud & DevOps': FaCloud,
+  'Mobile App Development': FaCheckCircle,
+  'CMS': FaCode,
+  'UI/UX Design': FaStar,
 };
 
 // Category colors
@@ -19,7 +22,10 @@ const categoryColors: { [key: string]: { primary: string; glow: string } } = {
   'Frontend': { primary: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.2)' },
   'Backend': { primary: '#06b6d4', glow: 'rgba(6, 182, 212, 0.2)' },
   'Database': { primary: '#22c55e', glow: 'rgba(34, 197, 94, 0.2)' },
-  'Cloud & Tools': { primary: '#f59e0b', glow: 'rgba(245, 158, 11, 0.2)' },
+  'Cloud & DevOps': { primary: '#f59e0b', glow: 'rgba(245, 158, 11, 0.2)' },
+  'Mobile App Development': { primary: '#ec4899', glow: 'rgba(236, 72, 153, 0.2)' },
+  'CMS': { primary: '#6366f1', glow: 'rgba(99, 102, 241, 0.2)' },
+  'UI/UX Design': { primary: '#ef4444', glow: 'rgba(239, 68, 68, 0.2)' },
 };
 
 // Expertise level colors
@@ -39,9 +45,32 @@ export default function TechnologiesPage() {
 
   // Calculate stats
   const totalTech = technologies.reduce((acc, cat) => acc + (cat.items?.length || 0), 0);
-  const expertCount = technologies.reduce((acc, cat) =>
-    acc + (cat.items || []).filter(item => item.expertiseLevel === 'Expert' || item.expertiseLevel === 'Advanced').length, 0
-  );
+
+  // Sort categories
+  const categoryOrder = [
+    'UI/UX Design',
+    'Frontend',
+    'Backend',
+    'Database',
+    'CMS',
+    'Mobile App Development',
+    'Cloud & DevOps',
+  ];
+
+  // Create a copy and sort categories
+  const sortedTechnologies = [...technologies].sort((a, b) => {
+    const indexA = categoryOrder.indexOf(a.category);
+    const indexB = categoryOrder.indexOf(b.category);
+    // If both are found in the list, sort by index
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    // If only A is found, it comes first
+    if (indexA !== -1) return -1;
+    // If only B is found, it comes first
+    if (indexB !== -1) return 1;
+    // If neither is found, sort alphabetically
+    return a.category.localeCompare(b.category);
+  });
+
 
   if (isLoading) {
     return (
@@ -64,6 +93,7 @@ export default function TechnologiesPage() {
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
+                        min-height: 50vh;
                         padding: 4rem;
                         gap: 1rem;
                         color: var(--text-muted);
@@ -118,10 +148,10 @@ export default function TechnologiesPage() {
           {/* Interactive Tabs */}
           <div className="tech-tabs-container">
             <div className="tech-tabs">
-              {technologies.map((category, index) => {
-                const CategoryIcon = categoryIcons[category.name] || FaCode;
+              {sortedTechnologies.map((category, index) => {
+                const CategoryIcon = categoryIcons[category.category] || FaCode;
                 const isActive = activeTab === index;
-                const colors = categoryColors[category.name];
+                const colors = categoryColors[category.category];
 
                 return (
                   <button
@@ -136,7 +166,7 @@ export default function TechnologiesPage() {
                     <span className="tech-tab-icon">
                       <CategoryIcon />
                     </span>
-                    <span className="tech-tab-label">{category.name}</span>
+                    <span className="tech-tab-label">{category.category}</span>
                     <span className="tech-tab-count">{category.items?.length || 0}</span>
                     {isActive && <span className="tech-tab-indicator" />}
                   </button>
@@ -146,9 +176,9 @@ export default function TechnologiesPage() {
 
             {/* Active Tab Content */}
             <div className="tech-content">
-              {technologies.map((category, index) => {
+              {sortedTechnologies.map((category, index) => {
                 if (activeTab !== index) return null;
-                const colors = categoryColors[category.name];
+                const colors = categoryColors[category.category];
 
                 return (
                   <div key={index} className="tech-content-inner">
@@ -160,7 +190,7 @@ export default function TechnologiesPage() {
                     </div>
 
                     {/* Technology Cards */}
-                    <div className="tech-cards-grid-new">
+                    <div className="tech-cards-grid-responsive">
                       {(category.items || []).map((item, idx) => {
                         const Icon = getIcon(item.icon || '');
                         const isHovered = hoveredCard === idx;
@@ -188,22 +218,22 @@ export default function TechnologiesPage() {
                             <div className="tech-card-icon-wrapper-new">
                               <div className="tech-card-icon-bg-new" />
                               <div className="tech-card-icon-main">
-                                {Icon ? <Icon /> : <span>?</span>}
+                                {item.icon?.startsWith('/') || item.icon?.startsWith('http') ? (
+                                  <img
+                                    src={item.icon.startsWith('http') ? item.icon : (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}${item.icon}` : item.icon)}
+                                    alt={item.name}
+                                    className="w-12 h-12 object-contain filter drop-shadow-lg p-2 bg-white/5 rounded-lg"
+                                  />
+                                ) : (
+                                  Icon ? <Icon /> : <span>?</span>
+                                )}
                               </div>
                             </div>
 
                             {/* Name */}
                             <h4 className="tech-card-name-detailed">{item.name}</h4>
 
-                            {/* Expertise Level */}
-                            <div
-                              className="expertise-level-badge"
-                              style={{
-                                '--expertise-color': expertiseColors[item.expertiseLevel || 'Intermediate']
-                              } as React.CSSProperties}
-                            >
-                              {item.expertiseLevel}
-                            </div>
+
 
                             {/* Use Cases */}
                             {item.useCases && item.useCases.length > 0 && (
@@ -242,8 +272,8 @@ export default function TechnologiesPage() {
               <div className="tech-stat-icon">
                 <FaStar />
               </div>
-              <div className="tech-stat-number-new">{expertCount}</div>
-              <div className="tech-stat-label-new">Advanced Expertise</div>
+              <div className="tech-stat-number-new">100%</div>
+              <div className="tech-stat-label-new">Project Success</div>
             </div>
 
             <div className="tech-stat-card-new">

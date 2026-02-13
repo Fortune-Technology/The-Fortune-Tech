@@ -28,13 +28,12 @@ interface CategoryFormData {
 interface ItemFormData {
     name: string;
     icon: string;
-    expertiseLevel: string;
-    experienceYears: number;
+
     useCases: string;
     featured: boolean;
 }
 
-const expertiseLevels = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+
 
 const initialCategoryFormData: CategoryFormData = {
     name: '',
@@ -47,8 +46,6 @@ const initialCategoryFormData: CategoryFormData = {
 const initialItemFormData: ItemFormData = {
     name: '',
     icon: '',
-    expertiseLevel: 'Intermediate',
-    experienceYears: 1,
     useCases: '',
     featured: false,
 };
@@ -80,7 +77,7 @@ export default function TechnologiesPage() {
     const categories = technologiesResponse?.data || [];
 
     const filteredCategories = categories.filter(cat =>
-        (cat.name || (cat as any).category || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (cat.category || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         cat.items?.some(item => (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
@@ -101,7 +98,7 @@ export default function TechnologiesPage() {
         if (category) {
             setEditingCategoryId(category.id || category._id);
             setCategoryFormData({
-                name: category.name || category.category || '',
+                name: category.category || '',
                 description: category.description || '',
                 icon: category.icon || '',
                 featured: category.featured || false,
@@ -185,8 +182,6 @@ export default function TechnologiesPage() {
             setItemFormData({
                 name: item.name || '',
                 icon: item.icon || '',
-                expertiseLevel: item.expertiseLevel || 'Intermediate',
-                experienceYears: item.experienceYears || 1,
                 useCases: item.useCases?.join(', ') || '',
                 featured: item.featured || false,
             });
@@ -224,8 +219,7 @@ export default function TechnologiesPage() {
 
         const formData = new FormData();
         formData.append('name', itemFormData.name);
-        formData.append('expertiseLevel', itemFormData.expertiseLevel);
-        formData.append('experienceYears', String(itemFormData.experienceYears));
+
 
         // Split useCases into array
         if (itemFormData.useCases) {
@@ -333,8 +327,8 @@ export default function TechnologiesPage() {
                         {/* Category Header */}
                         <div className="category-section-header">
                             <div className="category-section-info">
-                                <h3 className="category-section-title">{category.name || (category as any).category}</h3>
-                                <p className="category-section-description">{category.description || `Modern ${(category.name || (category as any).category || '').toLowerCase()} technologies`}</p>
+                                <h3 className="category-section-title">{category.category}</h3>
+                                <p className="category-section-description">{category.description || `Modern ${(category.category || '').toLowerCase()} technologies`}</p>
                             </div>
                             <div className="category-section-actions">
                                 <button className="btn btn-outline btn-sm" onClick={() => handleOpenItemModal((category as any).id || category._id)}>
@@ -345,7 +339,7 @@ export default function TechnologiesPage() {
                                 </button>
                                 <button
                                     className="icon-btn delete"
-                                    onClick={() => handleDeleteCategory((category as any).id || category._id, category.name || (category as any).category)}
+                                    onClick={() => handleDeleteCategory((category as any).id || category._id, category.category)}
                                     title="Delete Category"
                                     disabled={isDeletingCategory}
                                 >
@@ -373,18 +367,12 @@ export default function TechnologiesPage() {
                                                         }}
                                                     />
                                                 ) : null}
-                                                <span className={`fallback-letter ${item.icon ? 'hidden' : ''}`}>
-                                                    {item.name.charAt(0).toUpperCase()}
-                                                </span>
+
                                             </div>
                                             <div className="tech-item-details">
                                                 <span className="tech-item-name">
                                                     {item.name}
                                                     {item.featured && <FaStar className="featured-star" />}
-                                                </span>
-                                                <span className="tech-item-level">
-                                                    {item.expertiseLevel ? item.expertiseLevel.charAt(0).toUpperCase() + item.expertiseLevel.slice(1) : 'Intermediate'}
-                                                    {item.experienceYears && ` • ${item.experienceYears} yrs`}
                                                 </span>
                                             </div>
                                         </div>
@@ -484,18 +472,7 @@ export default function TechnologiesPage() {
                                     </div>
                                 )}
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Expertise Level</label>
-                                <select name="expertiseLevel" className="form-input" value={itemFormData.expertiseLevel} onChange={handleItemInputChange}>
-                                    {expertiseLevels.map(level => (
-                                        <option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Experience Years</label>
-                                <input type="number" name="experienceYears" className="form-input" min="0" max="50" value={itemFormData.experienceYears} onChange={handleItemInputChange} />
-                            </div>
+
                             <div className="form-group">
                                 <label className="form-label">Use Cases (comma separated)</label>
                                 <input name="useCases" className="form-input" value={itemFormData.useCases} onChange={handleItemInputChange} placeholder="e.g. Web Apps, APIs, Mobile" />

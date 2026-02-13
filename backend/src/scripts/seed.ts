@@ -6,7 +6,7 @@
 import mongoose from 'mongoose';
 import { env } from '../config/env';
 import { User, Service, Portfolio, TechnologyCategory, Testimonial, Career, CMSPage, WebsiteConfig } from '../models';
-import { USER_ROLES, USER_STATUSES, EXPERTISE_LEVELS, CMS_STATUSES, PORTFOLIO_STATUSES, JOB_TYPES } from '../constants';
+import { USER_ROLES, USER_STATUSES, CMS_STATUSES, PORTFOLIO_STATUSES, JOB_TYPES } from '../constants';
 
 const seedData = async (): Promise<void> => {
     try {
@@ -150,29 +150,76 @@ const seedData = async (): Promise<void> => {
         console.log(`  ✅ Created ${portfolios.length} portfolio items`);
 
         // Seed Technologies
-        console.log('🔧 Creating technology categories...');
-        const technologies = await TechnologyCategory.create([
-            {
-                slug: 'frontend',
-                category: 'Frontend',
-                description: 'Modern frontend technologies for building user interfaces',
-                items: [
-                    { name: 'React', icon: 'react', expertiseLevel: EXPERTISE_LEVELS.EXPERT, experienceYears: 5, useCases: ['Web Apps', 'SPAs'], featured: true },
-                    { name: 'Next.js', icon: 'nextjs', expertiseLevel: EXPERTISE_LEVELS.EXPERT, experienceYears: 4, useCases: ['SSR', 'Static Sites'], featured: true },
-                    { name: 'TypeScript', icon: 'typescript', expertiseLevel: EXPERTISE_LEVELS.EXPERT, experienceYears: 4, useCases: ['Type Safety', 'Large Apps'], featured: true },
-                ],
-            },
-            {
-                slug: 'backend',
-                category: 'Backend',
-                description: 'Server-side technologies and databases',
-                items: [
-                    { name: 'Node.js', icon: 'nodejs', expertiseLevel: EXPERTISE_LEVELS.EXPERT, experienceYears: 6, useCases: ['APIs', 'Microservices'], featured: true },
-                    { name: 'Express', icon: 'express', expertiseLevel: EXPERTISE_LEVELS.EXPERT, experienceYears: 6, useCases: ['REST APIs', 'Middleware'], featured: true },
-                    { name: 'MongoDB', icon: 'mongodb', expertiseLevel: EXPERTISE_LEVELS.ADVANCED, experienceYears: 5, useCases: ['NoSQL', 'Flexible Schema'], featured: true },
-                ],
-            },
-        ]);
+        console.log('🔧 Creating technology categories from disk...');
+        const path = (await import('path')).default;
+        const fs = (await import('fs')).default;
+
+        const uploadsDir = path.join(__dirname, '../../public/uploads/technology');
+        const technologies: any[] = [];
+
+        // Map directory names to category names
+        const categoryMap: { [key: string]: string } = {
+            'backend': 'Backend',
+            'frontend': 'Frontend',
+            'database': 'Database',
+            'cloud-devops': 'Cloud & DevOps',
+            'mobileapp': 'Mobile App Development',
+            'cms': 'CMS',
+            'uiux': 'UI/UX Design'
+        };
+
+        // Category descriptions
+        const categoryDescriptions: { [key: string]: string } = {
+            'Backend': 'Server-side technologies and databases',
+            'Frontend': 'Modern frontend technologies for building user interfaces',
+            'Database': 'Data persistence and management solutions',
+            'Cloud & DevOps': 'Cloud infrastructure, deployment, and automation tools',
+            'Mobile App Development': 'Native and cross-platform mobile application development',
+            'CMS': 'Content Management Systems for dynamic content',
+            'UI/UX Design': 'User Interface and User Experience design tools'
+        };
+
+        if (fs.existsSync(uploadsDir)) {
+            const dirs = fs.readdirSync(uploadsDir).filter(file => fs.statSync(path.join(uploadsDir, file)).isDirectory());
+
+            for (const dir of dirs) {
+                const categoryName = categoryMap[dir] || dir.charAt(0).toUpperCase() + dir.slice(1);
+                const categoryPath = path.join(uploadsDir, dir);
+                const files = fs.readdirSync(categoryPath).filter(file => !file.startsWith('.'));
+
+                const items = files.map(file => {
+                    const name = path.parse(file).name
+                        .replace(/-/g, ' ')
+                        .replace(/_/g, ' ')
+                        .replace(/\b\w/g, l => l.toUpperCase()) // Title Case
+                        .replace('js', '.js') // Handle 'nodejs' -> 'Node.js'
+                        .replace('Js', '.js')
+                        .replace('db', 'DB')
+                        .replace('sql', 'SQL');
+
+                    return {
+                        name: name,
+                        icon: `/uploads/technology/${dir}/${file}`,
+                        useCases: [],
+                        featured: false
+                    };
+                });
+
+                if (items.length > 0) {
+                    const techCategory = await TechnologyCategory.create({
+                        slug: dir, // Use directory name as slug
+                        category: categoryName,
+                        description: categoryDescriptions[categoryName] || `Technologies for ${categoryName}`,
+                        items: items
+                    });
+                    technologies.push(techCategory);
+                    console.log(`    Created category: ${categoryName} with ${items.length} items`);
+                }
+            }
+        } else {
+            console.log('⚠️ Technology uploads directory not found:', uploadsDir);
+        }
+
         console.log(`  ✅ Created ${technologies.length} technology categories`);
 
         // Seed Testimonials

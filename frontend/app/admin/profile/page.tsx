@@ -66,7 +66,7 @@ export default function ProfilePage() {
                 firstName: user.firstName || '',
                 lastName: user.lastName || '',
                 email: user.email || '',
-                phone: (user as any).phone || '',
+                phone: (user as any).phone || (user as any).profile?.phone || '',
                 displayName: user.displayName || '',
             });
             if (user.avatar) {
@@ -136,7 +136,8 @@ export default function ProfilePage() {
                 id: user.id,
                 data: {
                     currentPassword: passwordData.currentPassword,
-                    newPassword: passwordData.newPassword
+                    newPassword: passwordData.newPassword,
+                    confirmPassword: passwordData.confirmPassword
                 }
             }).unwrap();
             dispatch(showSuccessNotification('Password changed successfully'));

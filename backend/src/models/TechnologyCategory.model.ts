@@ -6,7 +6,7 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { ITechnologyCategory, ITechnologyItem } from '../interfaces';
 import { generateSlug } from '../utils/helpers';
-import { EXPERTISE_LEVELS } from '../constants';
+
 
 export interface ITechnologyCategoryDocument extends Omit<ITechnologyCategory, 'id'>, Document {
     _id: mongoose.Types.ObjectId;
@@ -23,16 +23,7 @@ const TechnologyItemSchema = new Schema<ITechnologyItem>(
             type: String,
             trim: true,
         },
-        expertiseLevel: {
-            type: String,
-            enum: Object.values(EXPERTISE_LEVELS),
-            default: EXPERTISE_LEVELS.INTERMEDIATE,
-        },
-        experienceYears: {
-            type: Number,
-            min: 0,
-            max: 50,
-        },
+
         useCases: {
             type: [String],
             default: [],

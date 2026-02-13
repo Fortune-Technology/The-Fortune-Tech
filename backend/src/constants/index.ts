@@ -160,15 +160,7 @@ export const PAGINATION = {
     MAX_PAGE_SIZE: 100,
 } as const;
 
-// Technology Expertise Levels
-export const EXPERTISE_LEVELS = {
-    BEGINNER: 'Beginner',
-    INTERMEDIATE: 'Intermediate',
-    ADVANCED: 'Advanced',
-    EXPERT: 'Expert',
-} as const;
 
-export type ExpertiseLevel = typeof EXPERTISE_LEVELS[keyof typeof EXPERTISE_LEVELS];
 
 // CMS Page Statuses
 export const CMS_STATUSES = {

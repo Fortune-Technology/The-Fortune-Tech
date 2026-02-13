@@ -199,8 +199,7 @@ export interface UpdatePortfolioDTO extends Partial<CreatePortfolioDTO> { }
 export interface ITechnologyItem {
     name: string;
     icon?: string;
-    expertiseLevel: ExpertiseLevel;
-    experienceYears?: number;
+
     useCases: string[];
     featured: boolean;
 }
@@ -224,8 +223,7 @@ export interface UpdateTechnologyCategoryDTO extends Partial<CreateTechnologyCat
 export interface CreateTechnologyItemDTO {
     name: string;
     icon?: string;
-    expertiseLevel?: string;
-    experienceYears?: number;
+
     useCases?: string[];
     featured?: boolean;
 }
