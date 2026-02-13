@@ -10,7 +10,7 @@ import { FaCheck, FaStar, FaArrowRight, FaSpinner } from 'react-icons/fa';
 import { useGetServicesQuery } from '../../lib/store/api/servicesApi';
 
 export default function ServicesPage() {
-  const { data: servicesResponse, isLoading, isError } = useGetServicesQuery();
+  const { data: servicesResponse, isLoading, isError } = useGetServicesQuery({ pageSize: 100 });
   const services = servicesResponse?.data || [];
 
 
@@ -104,16 +104,28 @@ export default function ServicesPage() {
                       </div>
                     )}
 
-                    <div className="service-icon-wrapper">
-                      {Icon && <Icon />}
+                    <div className="service-header-row">
+                      <div className="service-icon-wrapper">
+                        {service.icon?.startsWith('/') ? (
+                          <Image
+                            src={getImageUrl(service.icon)}
+                            alt={service.title}
+                            width={48}
+                            height={48}
+                            className="service-icon-img"
+                            style={{ objectFit: 'contain' }}
+                          />
+                        ) : (
+                          Icon && <Icon />
+                        )}
+                      </div>
+                      <h2 className="service-title-lg">{service.title}</h2>
                     </div>
 
                     {/* Tagline */}
                     {service.tagline && (
                       <span className="service-tagline-pill">{service.tagline}</span>
                     )}
-
-                    <h2 className="service-title-lg">{service.title}</h2>
                     <p className="service-description-lg">{service.description}</p>
 
                     <div className="service-details">
@@ -153,9 +165,7 @@ export default function ServicesPage() {
                       <Link href={`/services/${service.slug || service._id}`} className="btn btn-primary">
                         View Full Details <FaArrowRight />
                       </Link>
-                      {service.pricingHint && (
-                        <span className="service-price-tag">{service.pricingHint}</span>
-                      )}
+
                     </div>
                   </div>
                   <div className="service-image-wrapper">

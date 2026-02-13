@@ -27,7 +27,6 @@ export interface Service {
         metaTitle?: string;
         metaDescription?: string;
     };
-    pricingHint?: string;
     featured?: boolean;
     isActive?: boolean;
     order?: number;
@@ -54,6 +53,7 @@ interface ServiceResponse {
 interface QueryParams {
     page?: number;
     limit?: number;
+    pageSize?: number;
     search?: string;
     featured?: boolean;
     isActive?: boolean;

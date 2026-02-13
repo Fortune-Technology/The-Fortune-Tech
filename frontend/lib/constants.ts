@@ -113,9 +113,8 @@ export const IMAGE = {
 // Social Media
 export const SOCIAL_MEDIA = {
     LINKEDIN: 'linkedin',
-    TWITTER: 'twitter',
+    FACEBOOK: 'facebook',
     GITHUB: 'github',
-    DRIBBBLE: 'dribbble',
 } as const;
 
 // HTTP Status Codes

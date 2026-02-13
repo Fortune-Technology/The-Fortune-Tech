@@ -38,12 +38,8 @@ const CompanySettingsSchema = new Schema(
 const SocialSettingsSchema = new Schema(
     {
         linkedin: { type: String, trim: true },
-        twitter: { type: String, trim: true },
-        github: { type: String, trim: true },
-        dribbble: { type: String, trim: true },
         facebook: { type: String, trim: true },
-        instagram: { type: String, trim: true },
-        youtube: { type: String, trim: true },
+        github: { type: String, trim: true },
     },
     { _id: false }
 );

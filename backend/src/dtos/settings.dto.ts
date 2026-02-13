@@ -32,12 +32,8 @@ export const updateSettingsSchema = Joi.object({
     }),
     social: Joi.object({
         linkedin: Joi.string().uri().trim().allow(''),
-        twitter: Joi.string().uri().trim().allow(''),
-        github: Joi.string().uri().trim().allow(''),
-        dribbble: Joi.string().uri().trim().allow(''),
         facebook: Joi.string().uri().trim().allow(''),
-        instagram: Joi.string().uri().trim().allow(''),
-        youtube: Joi.string().uri().trim().allow(''),
+        github: Joi.string().uri().trim().allow(''),
     }),
     seo: Joi.object({
         title: Joi.string().trim().allow(''),

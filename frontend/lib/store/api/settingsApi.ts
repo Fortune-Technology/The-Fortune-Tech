@@ -30,12 +30,8 @@ export interface Settings {
     };
     social?: {
         linkedin?: string;
-        twitter?: string;
-        github?: string;
-        dribbble?: string;
         facebook?: string;
-        instagram?: string;
-        youtube?: string;
+        github?: string;
     };
     seo?: {
         title?: string;

@@ -20,11 +20,8 @@ export interface SiteConfig {
 
 export interface SocialMedia {
     linkedin?: string;
-    twitter?: string;
-    github?: string;
-    dribbble?: string;
     facebook?: string;
-    instagram?: string;
+    github?: string;
 }
 
 export interface NavigationLink {

@@ -39,7 +39,7 @@ export default function AboutPage() {
                                 We specialize in transforming complex business challenges into elegant digital solutions that drive real results.
                             </p>
                             <p style={{ fontSize: '1.0625rem' }}>
-                                Since our inception, we have partnered with startups and Fortune 500 companies alike to deliver
+                                Since our inception, we have partnered with startups and small, medium, and macro-scale enterprises alike to deliver
                                 innovative products that accelerate growth, improve efficiency, and create lasting competitive advantages.
                             </p>
                         </div>
@@ -68,7 +68,7 @@ export default function AboutPage() {
                         <div className="mv-card">
                             <div className="mv-icon"><FaLightbulb /></div>
                             <h3>Our Vision</h3>
-                            <p>To be the global leader in digital transformation, redefining the future of technology consulting with innovation, integrity, and excellence.</p>
+                            <p>To be a prominent tech solutions service provider in the Northeastern United States and the Eastern region of Canada, known for our innovation, integrity, and excellence.</p>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,8 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Team */}
+            {/* Team - Hidden for now */}
+            {/*
             <section className="section bg-alt">
                 <div className="container">
                     <SectionTitle title="Meet Our Team" subtitle="The Experts" />
@@ -117,6 +118,7 @@ export default function AboutPage() {
                     </div>
                 </div>
             </section>
+            */}
         </>
     );
 }

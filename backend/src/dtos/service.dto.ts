@@ -39,7 +39,6 @@ export const createServiceSchema = Joi.object({
     cta: Joi.string().trim().allow(''),
     metaTitle: Joi.string().trim().allow(''),
     metaDescription: Joi.string().trim().allow(''),
-    pricingHint: Joi.string().trim().allow(''),
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0'))
         .default(false),
@@ -66,7 +65,6 @@ export const updateServiceSchema = Joi.object({
     cta: Joi.string().trim().allow(''),
     metaTitle: Joi.string().trim().allow(''),
     metaDescription: Joi.string().trim().allow(''),
-    pricingHint: Joi.string().trim().allow(''),
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0')),
 }).min(1);

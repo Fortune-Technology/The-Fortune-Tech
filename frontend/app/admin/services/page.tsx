@@ -37,7 +37,6 @@ interface ServiceFormData {
         metaTitle: string;
         metaDescription: string;
     };
-    pricingHint: string;
     featured: boolean;
 }
 
@@ -57,7 +56,6 @@ const initialFormData: ServiceFormData = {
     idealFor: '',
     cta: 'Learn More',
     seo: { metaTitle: '', metaDescription: '' },
-    pricingHint: '',
     featured: false,
 };
 
@@ -112,7 +110,6 @@ export default function ServicesPage() {
                     metaTitle: service.seo?.metaTitle || '',
                     metaDescription: service.seo?.metaDescription || '',
                 },
-                pricingHint: service.pricingHint || '',
                 featured: service.featured || false,
             });
         } else {
@@ -184,7 +181,6 @@ export default function ServicesPage() {
             formDataToSend.append('thumbnail', thumbnailFile);
         }
         formDataToSend.append('cta', formData.cta);
-        formDataToSend.append('pricingHint', formData.pricingHint);
         formDataToSend.append('featured', String(formData.featured));
 
         // Arrays
@@ -331,7 +327,7 @@ export default function ServicesPage() {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '0.875rem' }}>{service.pricingHint}</span>
+                                            <span style={{ fontSize: '0.875rem' }}>&mdash;</span>
                                         </div>
                                     </td>
                                     <td>
@@ -397,10 +393,7 @@ export default function ServicesPage() {
                                     <label className="form-label">Overview (Long)</label>
                                     <textarea name="overview" className="form-input" value={formData.overview} onChange={handleInputChange} rows={4} />
                                 </div>
-                                <div className="form-group">
-                                    <label className="form-label">Pricing Hint</label>
-                                    <input name="pricingHint" className="form-input" value={formData.pricingHint} onChange={handleInputChange} placeholder="e.g. Custom Pricing" />
-                                </div>
+
                                 <div className="form-group">
                                     <label className="form-label">CTA Button Text</label>
                                     <input name="cta" className="form-input" value={formData.cta} onChange={handleInputChange} />

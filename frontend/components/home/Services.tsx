@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import SectionTitle from '../ui/SectionTitle';
 import Button from '../ui/Button';
 // import serviceData from '../../data/services.json';
 import { useGetFeaturedServicesQuery, Service } from '../../lib/store/api/servicesApi';
 import { getIcon } from '../../lib/icons';
+import { getImageUrl } from '../../lib/utils';
 import { FaArrowRight, FaCheck, FaSpinner } from 'react-icons/fa';
 
 // Pre-computed displayed services - sorted by featured and limited to 3
@@ -52,7 +54,18 @@ export default function Services() {
 
                                             {/* Icon */}
                                             <div className="service-icon-new">
-                                                {Icon && <Icon />}
+                                                {service.icon?.startsWith('/') ? (
+                                                    <Image
+                                                        src={getImageUrl(service.icon)}
+                                                        alt={service.title}
+                                                        width={64}
+                                                        height={64}
+                                                        className="service-icon-img"
+                                                        style={{ objectFit: 'contain' }}
+                                                    />
+                                                ) : (
+                                                    Icon && <Icon />
+                                                )}
                                             </div>
 
                                             {/* Title & Tagline */}
@@ -86,7 +99,6 @@ export default function Services() {
 
                                             {/* Footer */}
                                             <div className="service-card-footer">
-                                                <span className="service-pricing">{service.pricingHint}</span>
                                                 <span className="service-cta-link">
                                                     {service.cta} <FaArrowRight />
                                                 </span>

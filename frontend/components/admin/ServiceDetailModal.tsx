@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaTag, FaTools, FaCheckCircle, FaListUl, FaLayerGroup, FaGem, FaSearch, FaRocket } from 'react-icons/fa';
+import { FaTimes, FaTag, FaTools, FaCheckCircle, FaListUl, FaLayerGroup, FaSearch, FaRocket } from 'react-icons/fa';
 import { getImageUrl } from '../../lib/utils';
 import { useEffect } from 'react';
 
@@ -85,9 +85,6 @@ export default function ServiceDetailModal({ isOpen, onClose, service }: Service
                                 <div className="modal-title-section">
                                     <h2 className="modal-user-name">{service.title}</h2>
                                     <p className="modal-user-subtitle">{service.tagline}</p>
-                                    <div className="modal-price-tag">
-                                        <FaGem /> {service.pricingHint || 'Custom Pricing'}
-                                    </div>
                                 </div>
                             </div>
 

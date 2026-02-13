@@ -120,9 +120,6 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ slug: 
                                 {Icon && <Icon />}
                             </div>
                             <div className="service-detail-meta">
-                                {service.pricingHint && (
-                                    <span className="service-detail-price">{service.pricingHint}</span>
-                                )}
                                 {service.idealFor && service.idealFor.length > 0 && (
                                     <div className="service-detail-ideal">
                                         <FaUsers className="ideal-icon" />

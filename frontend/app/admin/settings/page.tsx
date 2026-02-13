@@ -35,11 +35,8 @@ export default function SettingsPage() {
                 },
                 social: {
                     facebook: settings.social?.facebook || '',
-                    twitter: settings.social?.twitter || '',
-                    instagram: settings.social?.instagram || '',
                     linkedin: settings.social?.linkedin || '',
                     github: settings.social?.github || '',
-                    youtube: settings.social?.youtube || '',
                 },
                 seo: {
                     title: settings.seo?.title || '',

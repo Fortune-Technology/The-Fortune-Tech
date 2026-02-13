@@ -93,10 +93,7 @@ const ServiceSchema = new Schema<IServiceDocument>(
             type: SEOSchema,
             default: {},
         },
-        pricingHint: {
-            type: String,
-            trim: true,
-        },
+
         featured: {
             type: Boolean,
             default: false,

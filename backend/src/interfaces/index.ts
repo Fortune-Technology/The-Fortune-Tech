@@ -8,7 +8,6 @@ import {
     UserRole,
     UserStatus,
     Permission,
-    ExpertiseLevel,
     CMSStatus,
     PortfolioStatus,
     JobType,
@@ -112,7 +111,6 @@ export interface IService extends Timestamps {
     idealFor: string[];
     cta?: string;
     seo: SEOData;
-    pricingHint?: string;
     featured: boolean;
 }
 
@@ -131,7 +129,6 @@ export interface CreateServiceDTO {
     cta?: string;
     metaTitle?: string;
     metaDescription?: string;
-    pricingHint?: string;
     featured?: boolean;
 }
 
@@ -473,12 +470,8 @@ export interface ICompanySettings {
 
 export interface ISocialSettings {
     linkedin?: string;
-    twitter?: string;
-    github?: string;
-    dribbble?: string;
     facebook?: string;
-    instagram?: string;
-    youtube?: string;
+    github?: string;
 }
 
 export interface ISEOSettings {
