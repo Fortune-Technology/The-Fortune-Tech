@@ -118,6 +118,13 @@ export const PERMISSIONS = {
     DELETE_USERS: 'delete_users',
     MANAGE_ROLES: 'manage_roles',
 
+    // Blog
+    VIEW_BLOGS: 'view_blogs',
+    CREATE_BLOGS: 'create_blogs',
+    EDIT_BLOGS: 'edit_blogs',
+    DELETE_BLOGS: 'delete_blogs',
+    PUBLISH_BLOGS: 'publish_blogs',
+
     // Settings
     VIEW_SETTINGS: 'view_settings',
     EDIT_SETTINGS: 'edit_settings',
@@ -145,6 +152,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
         PERMISSIONS.EDIT_CAREERS,
         PERMISSIONS.VIEW_CMS,
         PERMISSIONS.EDIT_CMS,
+        PERMISSIONS.VIEW_BLOGS,
+        PERMISSIONS.EDIT_BLOGS,
     ],
     [USER_ROLES.CLIENT]: [
         PERMISSIONS.VIEW_DASHBOARD,
@@ -161,6 +170,14 @@ export const PAGINATION = {
 } as const;
 
 
+
+// Blog Statuses
+export const BLOG_STATUSES = {
+    DRAFT: 'draft',
+    PUBLISHED: 'published',
+} as const;
+
+export type BlogStatus = typeof BLOG_STATUSES[keyof typeof BLOG_STATUSES];
 
 // CMS Page Statuses
 export const CMS_STATUSES = {

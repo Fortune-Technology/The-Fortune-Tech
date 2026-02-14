@@ -79,6 +79,8 @@ export const baseApi = createApi({
         'CMS',
         'CMSPages',
         'Settings',
+        'Blog',
+        'Blogs',
     ],
     endpoints: () => ({}),
 });

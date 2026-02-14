@@ -39,7 +39,7 @@
     },
     "social": {
         "linkedin": "https://linkedin.com/company/fortunetech",
-        "facebook": null,
+        "facebook": "https://facebook.com/fortunetech",
         "github": "https://github.com/fortunetech"
     },
     "seo": {
@@ -104,6 +104,11 @@
                 "label": "Careers",
                 "href": "/careers",
                 "icon": null
+            },
+            {
+                "label": "Blog",
+                "href": "/blog",
+                "icon": null
             }
         ],
         "footer": {
@@ -127,6 +132,10 @@
                 {
                     "label": "Careers",
                     "href": "/careers"
+                },
+                {
+                    "label": "Blog",
+                    "href": "/blog"
                 },
                 {
                     "label": "Login",

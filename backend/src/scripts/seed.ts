@@ -5,7 +5,7 @@
 
 import mongoose from 'mongoose';
 import { env } from '../config/env';
-import { User, Service, Portfolio, TechnologyCategory, Testimonial, Career, CMSPage, WebsiteConfig } from '../models';
+import { User, Service, Portfolio, TechnologyCategory, Testimonial, Career, CMSPage, WebsiteConfig, Blog } from '../models';
 import { USER_ROLES, USER_STATUSES, CMS_STATUSES, PORTFOLIO_STATUSES, JOB_TYPES } from '../constants';
 
 const seedData = async (): Promise<void> => {
@@ -25,6 +25,7 @@ const seedData = async (): Promise<void> => {
             Career.deleteMany({}),
             CMSPage.deleteMany({}),
             WebsiteConfig.deleteMany({}),
+            Blog.deleteMany({}),
         ]);
 
         // Seed Admin User
@@ -672,7 +673,7 @@ const seedData = async (): Promise<void> => {
             },
             social: {
                 linkedin: 'https://linkedin.com/company/fortunetech',
-                facebook: '',
+                facebook: 'https://facebook.com/fortunetech',
                 github: 'https://github.com/fortunetech',
             },
             seo: {
@@ -707,6 +708,125 @@ const seedData = async (): Promise<void> => {
             },
         });
         console.log(`  ✅ Created website config`);
+
+        // Seed Blog Posts
+        console.log('📝 Creating blog posts...');
+        const blogPosts = await Blog.create([
+            {
+                title: 'Why Next.js Is the Future of Web Development in 2026',
+                slug: 'why-nextjs-future-web-development-2026',
+                excerpt: 'Discover why Next.js has become the go-to framework for modern web development with its powerful features like App Router, Server Components, and edge-first architecture.',
+                content: `<h2>The Rise of Next.js</h2><p>In the ever-evolving landscape of web development, Next.js has emerged as a dominant framework that bridges the gap between developer experience and end-user performance. Built on top of React, Next.js offers a comprehensive solution for building fast, SEO-friendly, and scalable web applications.</p><h3>Key Features That Set Next.js Apart</h3><p>The App Router introduced in Next.js 13+ revolutionized how developers think about routing and data fetching. With Server Components as the default, applications now ship less JavaScript to the client, resulting in dramatically improved performance.</p><ul><li><strong>Server Components</strong> — Render on the server, reducing client-side bundle size</li><li><strong>Streaming SSR</strong> — Progressive rendering for faster Time to First Byte</li><li><strong>Edge Runtime</strong> — Deploy to the edge for global low-latency responses</li><li><strong>Built-in SEO</strong> — Metadata API makes SEO a first-class citizen</li></ul><h3>Performance Gains</h3><p>Companies that have migrated to Next.js report significant improvements in Core Web Vitals. Our own clients have seen LCP improvements of 40-60% and a measurable boost in search engine rankings after adoption.</p><blockquote>"Next.js allowed us to reduce our time-to-interactive by 50% while simplifying our codebase." — Engineering Lead, Fortune 500 Client</blockquote><h3>When to Choose Next.js</h3><p>Next.js is ideal for content-heavy websites, e-commerce platforms, SaaS dashboards, and any application where SEO and performance are critical. Its flexibility allows you to mix static generation, server-side rendering, and client-side rendering within the same application.</p><p>At The Fortune Tech, we leverage Next.js as our primary frontend framework for most client projects, combining it with our battle-tested Node.js backend to deliver exceptional digital experiences.</p>`,
+                category: 'Technology',
+                tags: ['Next.js', 'React', 'Web Development', 'JavaScript', 'SSR', 'Performance'],
+                metaTitle: 'Why Next.js Is the Future of Web Development in 2026',
+                metaDescription: 'Explore why Next.js dominates modern web development with Server Components, edge runtime, and unmatched performance.',
+                faqSection: [
+                    { question: 'What is Next.js?', answer: 'Next.js is a React framework that provides server-side rendering, static site generation, API routes, and many other features out of the box. It simplifies building production-grade React applications.' },
+                    { question: 'Is Next.js better than plain React?', answer: 'Next.js builds on top of React by adding routing, SSR, SSG, image optimization, and API routes. For production applications that need SEO and performance, Next.js is generally the better choice.' },
+                    { question: 'Can Next.js handle large-scale applications?', answer: 'Absolutely. Companies like Netflix, TikTok, Notion, and Hulu use Next.js in production. Its architecture supports incremental adoption and scales well.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-02-10'),
+                schemaType: 'BlogPosting',
+            },
+            {
+                title: 'The Complete Guide to Building AI-Powered Applications',
+                slug: 'complete-guide-building-ai-powered-applications',
+                excerpt: 'Learn how to integrate AI capabilities into your applications using LLMs, RAG pipelines, and intelligent agents — a practical guide for developers and businesses.',
+                content: `<h2>AI Is No Longer Optional</h2><p>The rapid advancement of Large Language Models (LLMs) like GPT-4, Claude, and open-source alternatives has made AI integration accessible to businesses of all sizes. From chatbots and content generation to predictive analytics and process automation, AI is transforming how we build software.</p><h3>Understanding the AI Stack</h3><p>Building an AI-powered application involves several layers:</p><ol><li><strong>Foundation Models</strong> — Choose between commercial APIs (OpenAI, Anthropic) or self-hosted models (Llama, Mistral)</li><li><strong>Retrieval Augmented Generation (RAG)</strong> — Combine LLMs with your proprietary data for accurate, context-aware responses</li><li><strong>Vector Databases</strong> — Store and query embeddings efficiently using Pinecone, Weaviate, or pgvector</li><li><strong>Orchestration</strong> — Use frameworks like LangChain or LlamaIndex to build complex AI workflows</li><li><strong>Observability</strong> — Monitor token usage, latency, and quality with tools like LangSmith</li></ol><h3>Building a RAG Pipeline</h3><p>RAG is the most practical approach for most business applications. It allows you to ground LLM responses in your own data — documentation, knowledge bases, product catalogs, or internal wikis.</p><p>The process involves: chunking your documents, generating embeddings, storing them in a vector database, and retrieving relevant context at query time to augment the LLM prompt.</p><h3>AI Agents: The Next Frontier</h3><p>AI agents go beyond simple question-answering. They can plan, use tools, browse the web, execute code, and complete multi-step tasks autonomously. This opens up possibilities for automating customer support, data analysis, and complex business workflows.</p><p>At The Fortune Tech, our AI engineering team specializes in building custom AI solutions that integrate seamlessly with your existing systems. We help you move from experimentation to production-ready AI applications.</p>`,
+                category: 'AI',
+                tags: ['AI', 'Machine Learning', 'LLM', 'RAG', 'ChatGPT', 'LangChain', 'Automation'],
+                metaTitle: 'Complete Guide to Building AI-Powered Applications',
+                metaDescription: 'Practical guide to integrating AI into applications using LLMs, RAG pipelines, vector databases, and intelligent agents.',
+                faqSection: [
+                    { question: 'What is RAG in AI?', answer: 'RAG (Retrieval Augmented Generation) is a technique that enhances LLM responses by retrieving relevant context from your own data sources before generating an answer, resulting in more accurate and grounded outputs.' },
+                    { question: 'How much does it cost to build an AI application?', answer: 'Costs vary widely based on complexity. A simple chatbot can be built for a few thousand dollars, while a full-featured AI platform with custom models can range from $20K to $100K+. We offer solutions at every budget level.' },
+                    { question: 'Do I need my own AI model?', answer: 'Most businesses do not need to train their own models. Using commercial APIs (like OpenAI or Anthropic) combined with RAG is usually more cost-effective and produces excellent results.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-02-08'),
+                schemaType: 'BlogPosting',
+            },
+            {
+                title: '10 UI/UX Design Principles Every Developer Should Know',
+                slug: '10-ui-ux-design-principles-developers-should-know',
+                excerpt: 'Great software is not just about code — it is about creating experiences that users love. Master these 10 essential UI/UX principles to build better products.',
+                content: `<h2>Design Meets Engineering</h2><p>As a developer, understanding UI/UX principles is no longer optional. The best products are built by teams where developers and designers share a common language. Here are 10 principles that will elevate your work.</p><h3>1. Consistency Is King</h3><p>Use consistent patterns, colors, spacing, and typography throughout your application. Design systems like Material Design, Ant Design, or your own custom system help enforce consistency at scale.</p><h3>2. The 60-30-10 Color Rule</h3><p>Apply your dominant color to 60% of the interface, secondary color to 30%, and accent color to 10%. This creates visual harmony and guides the user's eye naturally.</p><h3>3. Whitespace Is Not Wasted Space</h3><p>Generous whitespace (or "negative space") improves readability, reduces cognitive load, and makes interfaces feel premium. Don't be afraid of open space.</p><h3>4. Progressive Disclosure</h3><p>Show only what the user needs at each step. Hide complexity behind expandable sections, tooltips, or multi-step flows. This reduces overwhelm and improves task completion rates.</p><h3>5. Feedback and Response</h3><p>Every user action should have a visible response — loading spinners, success messages, hover effects, and error states. Silence creates uncertainty.</p><h3>6. Accessibility First</h3><p>Design for all users. Use proper contrast ratios (WCAG AA minimum), semantic HTML, keyboard navigation, and screen reader support. Accessibility isn't an afterthought — it's a requirement.</p><h3>7. Mobile-First Design</h3><p>Start designing for the smallest screen and progressively enhance. This forces you to prioritize content and functionality, resulting in cleaner designs at all breakpoints.</p><h3>8. Typography Hierarchy</h3><p>Establish a clear hierarchical system with distinct sizes and weights for headings, subheadings, body text, and captions. Good typography makes content scannable.</p><h3>9. Reduce Cognitive Load</h3><p>Group related items, use familiar patterns, limit choices (Hick's Law), and provide sensible defaults. Users should think about their task, not your interface.</p><h3>10. Test with Real Users</h3><p>No amount of theory replaces real user testing. Conduct usability tests early and often. Even 5 users can uncover 80% of usability issues.</p><h3>Conclusion</h3><p>Great design is invisible — users shouldn't have to think about how to use your product. By internalizing these principles, you'll build software that's not only functional but delightful to use.</p>`,
+                category: 'Design',
+                tags: ['UI/UX', 'Design', 'User Experience', 'Frontend', 'Accessibility', 'Web Design'],
+                metaTitle: '10 UI/UX Design Principles Every Developer Should Know',
+                metaDescription: 'Essential UI/UX design principles for developers to build better, more user-friendly products.',
+                faqSection: [
+                    { question: 'What is the difference between UI and UX?', answer: 'UI (User Interface) refers to the visual elements — buttons, layouts, colors, typography. UX (User Experience) is the overall experience a user has, including usability, accessibility, and satisfaction. UI is a subset of UX.' },
+                    { question: 'Do developers need to learn design?', answer: 'Yes, at least the fundamentals. Understanding design principles helps developers make better implementation decisions, communicate effectively with designers, and create polished products even without a dedicated designer.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-02-05'),
+                schemaType: 'BlogPosting',
+            },
+            {
+                title: 'How to Optimize Your Website for Core Web Vitals in 2026',
+                slug: 'optimize-website-core-web-vitals-2026',
+                excerpt: 'Core Web Vitals directly impact your Google search rankings. Learn actionable strategies to improve LCP, INP, and CLS for better SEO and user experience.',
+                content: `<h2>Core Web Vitals Matter More Than Ever</h2><p>Google's page experience signals continue to evolve, and Core Web Vitals remain a critical ranking factor. In 2026, the three metrics you need to optimize are Largest Contentful Paint (LCP), Interaction to Next Paint (INP), and Cumulative Layout Shift (CLS).</p><h3>Largest Contentful Paint (LCP)</h3><p>LCP measures the time it takes for the largest visible content element to render. Target: under 2.5 seconds.</p><p><strong>Optimization strategies:</strong></p><ul><li>Use a CDN for static assets and images</li><li>Implement responsive images with <code>srcset</code> and <code>sizes</code></li><li>Preload critical resources with <code>&lt;link rel="preload"&gt;</code></li><li>Optimize server response time (TTFB under 800ms)</li><li>Use Next.js Image component for automatic optimization</li></ul><h3>Interaction to Next Paint (INP)</h3><p>INP replaced First Input Delay (FID) and measures the responsiveness of all user interactions throughout the page lifecycle. Target: under 200ms.</p><p><strong>Optimization strategies:</strong></p><ul><li>Break up long JavaScript tasks using <code>requestIdleCallback</code> or <code>scheduler.yield()</code></li><li>Defer non-critical JavaScript with <code>async</code> or <code>defer</code></li><li>Use Web Workers for heavy computations</li><li>Minimize main thread work and reduce DOM size</li></ul><h3>Cumulative Layout Shift (CLS)</h3><p>CLS measures visual stability — unexpected layout shifts annoy users. Target: under 0.1.</p><p><strong>Optimization strategies:</strong></p><ul><li>Always set explicit <code>width</code> and <code>height</code> on images and videos</li><li>Avoid dynamically injecting content above existing content</li><li>Use CSS <code>contain</code> property for complex layouts</li><li>Reserve space for ads and embeds</li></ul><h3>Measuring Your Performance</h3><p>Use these tools to audit and monitor:</p><ul><li><strong>Google PageSpeed Insights</strong> — Real-world data from Chrome User Experience Report</li><li><strong>Lighthouse</strong> — Lab-based auditing in Chrome DevTools</li><li><strong>Web Vitals Extension</strong> — Real-time CWV overlay in your browser</li></ul><p>At The Fortune Tech, performance optimization is baked into our development process. We regularly audit all client projects against Core Web Vitals benchmarks and ensure production sites meet or exceed Google's recommended thresholds.</p>`,
+                category: 'SEO',
+                tags: ['SEO', 'Core Web Vitals', 'Performance', 'Google', 'Web Optimization', 'LCP', 'INP'],
+                metaTitle: 'How to Optimize Your Website for Core Web Vitals in 2026',
+                metaDescription: 'Actionable strategies to improve LCP, INP, and CLS scores for better Google rankings and user experience.',
+                faqSection: [
+                    { question: 'What are Core Web Vitals?', answer: 'Core Web Vitals are a set of standardized metrics from Google that measure real-world user experience for loading performance (LCP), interactivity (INP), and visual stability (CLS). They are used as ranking signals in Google Search.' },
+                    { question: 'How do Core Web Vitals affect SEO?', answer: 'Core Web Vitals are a confirmed Google ranking factor. Pages that meet the recommended thresholds have a ranking advantage over pages that do not. They also impact user engagement metrics like bounce rate and session duration.' },
+                    { question: 'What replaced FID?', answer: 'Interaction to Next Paint (INP) replaced First Input Delay (FID) as a Core Web Vital in March 2024. INP measures the responsiveness of all interactions throughout the page lifecycle, not just the first one.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-01-28'),
+                schemaType: 'BlogPosting',
+            },
+            {
+                title: 'Choosing the Right Tech Stack for Your Startup in 2026',
+                slug: 'choosing-right-tech-stack-startup-2026',
+                excerpt: 'Your technology choices can make or break your startup. Here is a comprehensive guide to selecting the right tech stack based on your product, team, and growth stage.',
+                content: `<h2>The Tech Stack Decision</h2><p>For startups, choosing the right tech stack is one of the most consequential decisions you'll make. It affects development speed, hiring, scalability, and long-term maintenance costs. Let's break down the key considerations.</p><h3>Frontend: React vs Vue vs Svelte</h3><p><strong>React</strong> remains the safest choice in 2026. With the massive ecosystem, Next.js integration, and the largest talent pool, React is the pragmatic choice for most startups.</p><p><strong>Vue</strong> offers a gentler learning curve and excellent documentation. It's great for smaller teams priorities developer happiness.</p><p><strong>Svelte/SvelteKit</strong> compiles away the framework at build time, resulting in smaller bundles. Excellent choice for performance-critical applications, though the talent pool is smaller.</p><h3>Backend: Node.js vs Python vs Go</h3><p><strong>Node.js (TypeScript)</strong> — Full-stack JavaScript means shared code between frontend and backend. Express, Fastify, or NestJS are mature choices. Best when your team is JavaScript-first.</p><p><strong>Python</strong> — The go-to for AI/ML-heavy applications. FastAPI and Django offer excellent developer experience. Choose Python if data science or AI is core to your product.</p><p><strong>Go</strong> — When raw performance and concurrency matter most. Excellent for microservices, APIs, and infrastructure tooling. Smaller ecosystem but extremely efficient.</p><h3>Database: SQL vs NoSQL</h3><p><strong>PostgreSQL</strong> — The Swiss Army knife of databases. Supports JSON, full-text search, and scales well. Default choice for most structured data.</p><p><strong>MongoDB</strong> — Flexible schema, fast iteration, great for prototyping. Choose when your data model is evolving rapidly or is inherently document-oriented.</p><h3>Our Recommendation for Most Startups</h3><p>For 80% of startups, we recommend: <strong>Next.js + TypeScript + Node.js/Express + MongoDB/PostgreSQL</strong>. This stack offers the best balance of development speed, hiring availability, and scalability.</p><p>At The Fortune Tech, we help startups make informed technology decisions and build their MVP in record time. Our team has delivered 50+ projects across various tech stacks.</p>`,
+                category: 'Technology',
+                tags: ['Startup', 'Tech Stack', 'React', 'Node.js', 'Python', 'Database', 'Architecture'],
+                metaTitle: 'Choosing the Right Tech Stack for Your Startup in 2026',
+                metaDescription: 'Comprehensive guide to selecting the right tech stack for your startup based on product needs, team skills, and growth plans.',
+                faqSection: [
+                    { question: 'What is the best tech stack for a startup?', answer: 'For most startups, we recommend Next.js + TypeScript for the frontend and Node.js with Express/Fastify for the backend, paired with either MongoDB or PostgreSQL. This provides the best balance of development speed, talent availability, and scalability.' },
+                    { question: 'Should I use a monolith or microservices?', answer: 'Start with a monolith. Microservices add significant operational complexity that most early-stage startups cannot afford. You can always extract services later when you have clear domain boundaries and dedicated DevOps resources.' },
+                    { question: 'How important is TypeScript?', answer: 'Very important. TypeScript catches bugs at compile time, improves IDE support, makes refactoring safer, and serves as living documentation. The initial learning curve pays dividends as your codebase grows.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-01-20'),
+                schemaType: 'BlogPosting',
+            },
+            {
+                title: 'Cloud Cost Optimization: 7 Proven Strategies to Cut Your AWS Bill by 40%',
+                slug: 'cloud-cost-optimization-aws-strategies-2026',
+                excerpt: 'Overspending on cloud infrastructure is a common problem. Learn 7 battle-tested strategies to significantly reduce your AWS, Azure, or GCP costs without sacrificing performance.',
+                content: `<h2>The Cloud Cost Problem</h2><p>Cloud computing offers incredible flexibility with its pay-as-you-go model, but without proper management, costs can spiral quickly. Research shows that the average organization wastes 30-35% of its cloud spend. Here are 7 proven strategies we use to help our clients cut costs.</p><h3>1. Right-Size Your Instances</h3><p>Most workloads run on oversized instances. Use AWS Compute Optimizer or similar tools to analyze actual CPU, memory, and network utilization. Downsizing from a c5.2xlarge to a c5.xlarge can save 50% on that instance — often with no performance impact.</p><h3>2. Use Reserved Instances and Savings Plans</h3><p>If you have predictable workloads, commit to 1-year or 3-year Reserved Instances (RIs) or Savings Plans. You can save 30-60% over on-demand pricing. Start with convertible RIs if you want flexibility.</p><h3>3. Implement Auto-Scaling</h3><p>Don't run peak capacity 24/7. Configure auto-scaling to match demand. For development and staging environments, schedule them to shut down outside business hours — this alone can save 60-70% on non-production costs.</p><h3>4. Optimize Storage</h3><p>Move infrequently accessed data to cheaper storage tiers: S3 Infrequent Access, S3 Glacier, or Glacier Deep Archive. Implement lifecycle policies to automate transitions and clean up unused EBS volumes, snapshots, and AMIs.</p><h3>5. Leverage Spot Instances</h3><p>For fault-tolerant, flexible workloads (batch processing, CI/CD, development), use Spot Instances at 60-90% discount. Combine with on-demand capacity for critical services using mixed instance policies.</p><h3>6. Monitor and Set Budgets</h3><p>Set up AWS Budgets with alerts at 50%, 75%, and 90% thresholds. Use AWS Cost Explorer to identify trends and anomalies. Enable cost allocation tags on all resources to track spending by team, project, or environment.</p><h3>7. Review Architecture</h3><p>Sometimes the biggest savings come from architectural changes: migrating from EC2 to serverless (Lambda), using managed services instead of self-managed ones, or consolidating databases. A quarterly architecture review focused on cost can surface significant savings.</p><h3>The Bottom Line</h3><p>Cloud cost optimization is an ongoing process, not a one-time exercise. At The Fortune Tech, our DevOps team conducts comprehensive cloud audits and helps clients implement these strategies, typically achieving 30-40% cost reduction within the first quarter.</p>`,
+                category: 'Cloud & DevOps',
+                tags: ['Cloud', 'AWS', 'DevOps', 'Cost Optimization', 'Infrastructure', 'Azure', 'GCP'],
+                metaTitle: 'Cloud Cost Optimization: 7 Strategies to Cut AWS Bill by 40%',
+                metaDescription: 'Battle-tested strategies to reduce cloud infrastructure costs by 30-40% on AWS, Azure, or GCP without sacrificing performance.',
+                faqSection: [
+                    { question: 'How much can I save on my cloud bill?', answer: 'Most organizations can reduce their cloud spending by 30-40% through right-sizing, reserved instances, storage optimization, and architectural improvements. Some clients have achieved savings of over 50%.' },
+                    { question: 'Is serverless always cheaper?', answer: 'Not always. Serverless (like AWS Lambda) is cost-effective for sporadic, event-driven workloads. For consistently high-traffic workloads, traditional compute (EC2, ECS) can be more cost-effective. The break-even point depends on your specific usage patterns.' },
+                    { question: 'How often should I review cloud costs?', answer: 'We recommend monthly cost reviews using AWS Cost Explorer or similar tools, with a more thorough quarterly architecture review focused on optimization opportunities.' },
+                ],
+                author: 'The Fortune Tech Team',
+                status: 'published',
+                publishedAt: new Date('2026-01-15'),
+                schemaType: 'BlogPosting',
+            },
+        ]);
+        console.log(`  ✅ Created ${blogPosts.length} blog posts`);
 
         console.log('\n🎉 Database seeding completed successfully!\n');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

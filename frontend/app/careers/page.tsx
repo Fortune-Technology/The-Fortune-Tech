@@ -114,7 +114,7 @@ export default function CareersPage() {
                             </div>
                         ) : (
                             jobs.map((job) => (
-                                <div key={job._id} className="job-card glass-card">
+                                <div key={job.id} className="job-card glass-card">
                                     <div className="job-card-header">
                                         <div className="job-info-main">
                                             <span className="job-dept-tag">{job.department}</span>

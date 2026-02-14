@@ -13,6 +13,7 @@ import careerRoutes from './career.routes';
 import cmsRoutes from './cms.routes';
 import userRoutes from './user.routes';
 import settingsRoutes from './settings.routes';
+import blogRoutes from './blog.routes';
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use('/careers', careerRoutes);
 router.use('/cms', cmsRoutes);
 router.use('/users', userRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/blogs', blogRoutes);
 
 export default router;

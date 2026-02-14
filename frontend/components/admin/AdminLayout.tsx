@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     FaHome, FaUsers, FaCog, FaChartBar, FaBox, FaEnvelope,
     FaBell, FaSignOutAlt, FaTimes, FaBars, FaSearch, FaSun, FaMoon,
-    FaBriefcase, FaIdCard, FaLaptopCode, FaQuoteLeft, FaFileAlt, FaUser
+    FaBriefcase, FaIdCard, FaLaptopCode, FaQuoteLeft, FaFileAlt, FaUser, FaNewspaper
 } from 'react-icons/fa';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
@@ -25,6 +25,7 @@ const navItems = [
     { name: 'Technologies', href: '/admin/technologies', icon: FaLaptopCode },
     { name: 'Testimonials', href: '/admin/testimonials', icon: FaQuoteLeft },
     { name: 'CMS', href: '/admin/cms', icon: FaFileAlt },
+    { name: 'Blog', href: '/admin/blog', icon: FaNewspaper },
     { name: 'Settings', href: '/admin/settings', icon: FaCog },
 ];
 

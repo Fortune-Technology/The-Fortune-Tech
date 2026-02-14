@@ -11,3 +11,4 @@ export * from './cms.dto';
 export * from './user.dto';
 export * from './auth.dto';
 export * from './settings.dto';
+export * from './blog.dto';

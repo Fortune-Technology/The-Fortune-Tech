@@ -11,3 +11,4 @@ export { CMSController } from './cms.controller';
 export { UserController } from './user.controller';
 export { AuthController } from './auth.controller';
 export { SettingsController } from './settings.controller';
+export { BlogController } from './blog.controller';

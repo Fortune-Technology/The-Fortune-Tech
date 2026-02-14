@@ -11,3 +11,4 @@ export { CMSService } from './cms.service';
 export { UserService } from './user.service';
 export { AuthService } from './auth.service';
 export { SettingsService } from './settings.service';
+export { BlogService } from './blog.service';
