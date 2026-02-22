@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { TestimonialService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../utils/response';
-import { getFileUrl } from '../config/multer';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class TestimonialController {
     static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -35,15 +35,22 @@ export class TestimonialController {
         if (req.files && typeof req.files === 'object') {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files.avatar && files.avatar[0]) {
-                avatarUrl = getFileUrl(files.avatar[0].filename, 'avatars');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+                avatarUrl = getFileUrl(files.avatar[0].filename, folder);
             }
             if (files.thumbnail && files.thumbnail[0]) {
-                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, folder);
             }
         } else if (req.file) {
             // Single file upload - use as thumbnail by default
-            thumbnailUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+            thumbnailUrl = getFileUrl(req.file.filename, folder);
         }
+
+        // If only one is provided, set both to the same URL
+        if (thumbnailUrl && !avatarUrl) avatarUrl = thumbnailUrl;
+        if (avatarUrl && !thumbnailUrl) thumbnailUrl = avatarUrl;
 
         const testimonial = await TestimonialService.create(req.body, avatarUrl, thumbnailUrl);
         sendCreated(res, testimonial, 'Testimonial created successfully');
@@ -57,15 +64,22 @@ export class TestimonialController {
         if (req.files && typeof req.files === 'object') {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files.avatar && files.avatar[0]) {
-                avatarUrl = getFileUrl(files.avatar[0].filename, 'avatars');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+                avatarUrl = getFileUrl(files.avatar[0].filename, folder);
             }
             if (files.thumbnail && files.thumbnail[0]) {
-                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+                thumbnailUrl = getFileUrl(files.thumbnail[0].filename, folder);
             }
         } else if (req.file) {
             // Single file upload - use as thumbnail by default
-            thumbnailUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'testimonials';
+            thumbnailUrl = getFileUrl(req.file.filename, folder);
         }
+
+        // If only one is provided, set both to the same URL
+        if (thumbnailUrl && !avatarUrl) avatarUrl = thumbnailUrl;
+        if (avatarUrl && !thumbnailUrl) thumbnailUrl = avatarUrl;
 
         const testimonial = await TestimonialService.update(req.params.id as string, req.body, avatarUrl, thumbnailUrl);
         sendSuccess(res, testimonial, 'Testimonial updated successfully');

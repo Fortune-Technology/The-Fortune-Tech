@@ -16,6 +16,7 @@ import {
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
+import ImageUpload from '../../../components/ui/ImageUpload';
 import TestimonialDetailModal from '../../../components/admin/TestimonialDetailModal';
 
 interface TestimonialFormData {
@@ -55,6 +56,7 @@ export default function TestimonialsPage() {
     const [viewingTestimonialId, setViewingTestimonialId] = useState<string | null>(null);
     const [formData, setFormData] = useState<TestimonialFormData>(initialFormData);
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -90,9 +92,11 @@ export default function TestimonialsPage() {
                 featured: testimonial.featured || false,
                 verified: testimonial.verified !== false,
             });
+            setExistingThumbnailUrl(testimonial.thumbnail || testimonial.avatar || null);
         } else {
             setEditingTestimonialId(null);
             setFormData(initialFormData);
+            setExistingThumbnailUrl(null);
         }
         setThumbnailFile(null);
         setIsModalOpen(true);
@@ -110,6 +114,7 @@ export default function TestimonialsPage() {
         setViewingTestimonialId(null);
         setFormData(initialFormData);
         setThumbnailFile(null);
+        setExistingThumbnailUrl(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -124,11 +129,7 @@ export default function TestimonialsPage() {
         }
     };
 
-    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setThumbnailFile(e.target.files[0]);
-        }
-    };
+    // File handler replaced by ImageUpload component handler directly in JSX
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -145,6 +146,9 @@ export default function TestimonialsPage() {
         formDataToSend.append('website', formData.website);
         formDataToSend.append('featured', String(formData.featured));
         formDataToSend.append('verified', String(formData.verified));
+
+        // Folder path
+        formDataToSend.append('folder', 'testimonials');
 
         if (thumbnailFile) {
             formDataToSend.append('thumbnail', thumbnailFile);
@@ -188,11 +192,11 @@ export default function TestimonialsPage() {
 
     // Get testimonial image
     const getTestimonialImage = (testimonial: { thumbnail?: string; avatar?: string }) => {
-        if (testimonial.thumbnail) {
-            return getImageUrl(testimonial.thumbnail);
-        }
         if (testimonial.avatar) {
             return getImageUrl(testimonial.avatar);
+        }
+        if (testimonial.thumbnail) {
+            return getImageUrl(testimonial.thumbnail);
         }
         return null;
     };
@@ -278,6 +282,13 @@ export default function TestimonialsPage() {
                                                         unoptimized
                                                         sizes="50px"
                                                         style={{ objectFit: 'cover' }}
+                                                        onError={(e) => {
+                                                            const target = e.target as HTMLImageElement;
+                                                            if (!target.src.includes('/images/placeholder-avatar.jpg')) {
+                                                                target.srcset = '';
+                                                                target.src = '/images/placeholder-avatar.jpg';
+                                                            }
+                                                        }}
                                                     />
                                                 ) : (
                                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-start)', fontWeight: 600, fontSize: '1rem' }}>
@@ -385,8 +396,13 @@ export default function TestimonialsPage() {
                                     <input name="website" className="form-input" value={formData.website} onChange={handleInputChange} placeholder="https://..." />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Client Photo</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleThumbnailChange} />
+                                    <ImageUpload
+                                        label="Client Photo"
+                                        value={thumbnailFile || existingThumbnailUrl}
+                                        onChange={(file) => setThumbnailFile(file)}
+                                        folderPath="testimonials"
+                                        height={200}
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>

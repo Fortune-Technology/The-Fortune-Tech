@@ -16,6 +16,7 @@ import {
 } from '../../../lib/store/api/technologiesApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import ImageUpload from '../../../components/ui/ImageUpload';
 
 interface CategoryFormData {
     name: string;
@@ -63,6 +64,8 @@ export default function TechnologiesPage() {
     const [itemFormData, setItemFormData] = useState<ItemFormData>(initialItemFormData);
     const [categoryIconFile, setCategoryIconFile] = useState<File | null>(null);
     const [itemIconFile, setItemIconFile] = useState<File | null>(null);
+    const [existingCategoryIconUrl, setExistingCategoryIconUrl] = useState<string | null>(null);
+    const [existingItemIconUrl, setExistingItemIconUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -104,9 +107,11 @@ export default function TechnologiesPage() {
                 featured: category.featured || false,
                 isActive: category.isActive ?? true,
             });
+            setExistingCategoryIconUrl(category.icon || null);
         } else {
             setEditingCategoryId(null);
             setCategoryFormData(initialCategoryFormData);
+            setExistingCategoryIconUrl(null);
         }
         setCategoryIconFile(null);
         setIsCategoryModalOpen(true);
@@ -117,6 +122,7 @@ export default function TechnologiesPage() {
         setEditingCategoryId(null);
         setCategoryFormData(initialCategoryFormData);
         setCategoryIconFile(null);
+        setExistingCategoryIconUrl(null);
     };
 
     const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -125,11 +131,7 @@ export default function TechnologiesPage() {
         setCategoryFormData(prev => ({ ...prev, [name]: val }));
     };
 
-    const handleCategoryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setCategoryIconFile(e.target.files[0]);
-        }
-    };
+    // Category file handler replaced by ImageUpload component handler directly in JSX
 
     const handleSaveCategory = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -137,12 +139,13 @@ export default function TechnologiesPage() {
         const formData = new FormData();
         formData.append('category', categoryFormData.name);
         formData.append('description', categoryFormData.description);
+        // Folder path
+        formData.append('folder', 'technology');
+
         // formData.append('icon', categoryFormData.icon); // Handled via file
         if (categoryIconFile) {
             formData.append('icon', categoryIconFile);
         }
-        formData.append('featured', String(categoryFormData.featured));
-        formData.append('isActive', String(categoryFormData.isActive));
 
         try {
             if (editingCategoryId) {
@@ -185,9 +188,11 @@ export default function TechnologiesPage() {
                 useCases: item.useCases?.join(', ') || '',
                 featured: item.featured || false,
             });
+            setExistingItemIconUrl(item.icon || null);
         } else {
             setEditingItemId(null);
             setItemFormData(initialItemFormData);
+            setExistingItemIconUrl(null);
         }
         setItemIconFile(null);
         setIsItemModalOpen(true);
@@ -199,6 +204,7 @@ export default function TechnologiesPage() {
         setSelectedCategoryId(null);
         setItemFormData(initialItemFormData);
         setItemIconFile(null);
+        setExistingItemIconUrl(null);
     };
 
     const handleItemInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -207,11 +213,7 @@ export default function TechnologiesPage() {
         setItemFormData(prev => ({ ...prev, [name]: val }));
     };
 
-    const handleItemFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setItemIconFile(e.target.files[0]);
-        }
-    };
+    // Item file handler replaced by ImageUpload component handler directly in JSX
 
     const handleSaveItem = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -230,6 +232,9 @@ export default function TechnologiesPage() {
         }
 
         formData.append('featured', String(itemFormData.featured));
+        // Folder path for tech items
+        formData.append('folder', `technology`);
+
         if (itemIconFile) {
             formData.append('icon', itemIconFile);
         }
@@ -420,13 +425,13 @@ export default function TechnologiesPage() {
                                 <textarea name="description" className="form-input" value={categoryFormData.description} onChange={handleCategoryInputChange} rows={3} />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Icon (Upload File)</label>
-                                <input type="file" accept="image/*" className="form-input" onChange={handleCategoryFileChange} />
-                                {categoryFormData.icon && !categoryIconFile && (
-                                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        Current: {categoryFormData.icon}
-                                    </div>
-                                )}
+                                <ImageUpload
+                                    label="Icon"
+                                    value={categoryIconFile || existingCategoryIconUrl}
+                                    onChange={(file) => setCategoryIconFile(file)}
+                                    folderPath="uploads/technology"
+                                    height={150}
+                                />
                             </div>
                             <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1rem' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -464,13 +469,13 @@ export default function TechnologiesPage() {
                                 <input name="name" className="form-input" value={itemFormData.name} onChange={handleItemInputChange} required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Icon (Upload File)</label>
-                                <input type="file" accept="image/*" className="form-input" onChange={handleItemFileChange} />
-                                {itemFormData.icon && !itemIconFile && (
-                                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        Current: {itemFormData.icon}
-                                    </div>
-                                )}
+                                <ImageUpload
+                                    label="Icon"
+                                    value={itemIconFile || existingItemIconUrl}
+                                    onChange={(file) => setItemIconFile(file)}
+                                    folderPath="uploads/technology"
+                                    height={150}
+                                />
                             </div>
 
                             <div className="form-group">

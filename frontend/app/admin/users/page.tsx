@@ -17,6 +17,7 @@ import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
 import UserDetailsModal from '../../../components/admin/UserDetailsModal';
+import ImageUpload from '../../../components/ui/ImageUpload';
 
 interface UserFormData {
     // ...
@@ -62,6 +63,7 @@ export default function UsersPage() {
     const [viewingUser, setViewingUser] = useState<any>(null);
     const [formData, setFormData] = useState<UserFormData>(initialFormData);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const deleteConfirm = useDeleteConfirm();
 
@@ -105,9 +107,11 @@ export default function UsersPage() {
                 position: user.profile?.position || '',
                 bio: user.profile?.bio || '',
             });
+            setExistingAvatarUrl(user.avatar || null);
         } else {
             setEditingUserId(null);
             setFormData(initialFormData);
+            setExistingAvatarUrl(null);
         }
         setAvatarFile(null);
         setIsModalOpen(true);
@@ -133,11 +137,7 @@ export default function UsersPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setAvatarFile(e.target.files[0]);
-        }
-    };
+    // File handler replaced by ImageUpload component handler directly in JSX
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -155,9 +155,13 @@ export default function UsersPage() {
         formDataToSend.append('position', formData.position);
         formDataToSend.append('bio', formData.bio);
 
+        // Folder path
+        formDataToSend.append('folder', 'users/avatars');
+
         if (avatarFile) {
             formDataToSend.append('avatar', avatarFile);
         }
+
         // For create user, password is required in the main payload
         if (!editingUserId && formData.password) {
             formDataToSend.append('password', formData.password);
@@ -452,36 +456,14 @@ export default function UsersPage() {
                                     </select>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Avatar</label>
-                                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                        {/* Current Avatar */}
-                                        {editingUser && editingUser.avatar && !avatarFile && (
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border-color)', marginBottom: '0.25rem' }}>
-                                                    <img
-                                                        src={getImageUrl(editingUser.avatar)}
-                                                        alt="Current"
-                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                    />
-                                                </div>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Current</span>
-                                            </div>
-                                        )}
-                                        {/* New Avatar Preview */}
-                                        {avatarFile && (
-                                            <div style={{ textAlign: 'center' }}>
-                                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--primary-color)', marginBottom: '0.25rem' }}>
-                                                    <img
-                                                        src={URL.createObjectURL(avatarFile)}
-                                                        alt="New"
-                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                    />
-                                                </div>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--primary-color)' }}>New</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                    <ImageUpload
+                                        label="Avatar"
+                                        value={avatarFile || existingAvatarUrl}
+                                        onChange={(file) => setAvatarFile(file)}
+                                        folderPath="users/avatars"
+                                        height={200}
+                                        accept="image/*"
+                                    />
                                 </div>
                             </div>
 

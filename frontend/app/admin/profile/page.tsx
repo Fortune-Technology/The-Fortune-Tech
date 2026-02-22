@@ -105,6 +105,9 @@ export default function ProfilePage() {
         formData.append('displayName', profileData.displayName);
         formData.append('name', `${profileData.firstName} ${profileData.lastName}`.trim());
 
+        // Folder path for avatar
+        formData.append('folder', 'users/avatars');
+
         if (avatarFile) {
             formData.append('avatar', avatarFile);
         }
@@ -179,7 +182,7 @@ export default function ProfilePage() {
                                     <div className="avatar-preview-wrapper shadow-lg">
                                         {avatarPreview ? (
                                             <Image
-                                                src={avatarFile ? avatarPreview : getImageUrl(avatarPreview)}
+                                                src={avatarFile ? avatarPreview : (avatarPreview?.startsWith('http') || avatarPreview?.startsWith('/uploads/') ? getImageUrl(avatarPreview) : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/uploads/users/avtars/${avatarPreview}`)}
                                                 alt="Avatar"
                                                 width={120}
                                                 height={120}

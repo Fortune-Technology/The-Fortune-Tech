@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { UserService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../utils/response';
-import { getFileUrl } from '../config/multer';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class UserController {
     static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -25,7 +25,8 @@ export class UserController {
         let avatarUrl: string | undefined;
 
         if (req.file) {
-            avatarUrl = getFileUrl(req.file.filename, 'avatars');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'users/avatars';
+            avatarUrl = getFileUrl(req.file.filename, folder);
         }
 
         const user = await UserService.create(req.body, avatarUrl);
@@ -36,7 +37,8 @@ export class UserController {
         let avatarUrl: string | undefined;
 
         if (req.file) {
-            avatarUrl = getFileUrl(req.file.filename, 'avatars');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'users/avatars';
+            avatarUrl = getFileUrl(req.file.filename, folder);
         }
 
         const user = await UserService.update(req.params.id as string, req.body, avatarUrl);

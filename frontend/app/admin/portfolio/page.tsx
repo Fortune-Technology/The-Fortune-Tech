@@ -16,6 +16,7 @@ import {
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
+import ImageUpload from '../../../components/ui/ImageUpload';
 import PortfolioDetailModal from '../../../components/admin/PortfolioDetailModal';
 
 interface PortfolioFormData {
@@ -67,6 +68,7 @@ export default function PortfolioPage() {
     const [viewingProjectId, setViewingProjectId] = useState<string | null>(null);
     const [formData, setFormData] = useState<PortfolioFormData>(initialFormData);
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -109,9 +111,11 @@ export default function PortfolioPage() {
                 githubUrl: project.links?.github || '',
                 featured: project.featured || false,
             });
+            setExistingThumbnailUrl(project.thumbnail || null);
         } else {
             setEditingProjectId(null);
             setFormData(initialFormData);
+            setExistingThumbnailUrl(null);
         }
         setThumbnailFile(null);
         setIsModalOpen(true);
@@ -129,6 +133,7 @@ export default function PortfolioPage() {
         setViewingProjectId(null);
         setFormData(initialFormData);
         setThumbnailFile(null);
+        setExistingThumbnailUrl(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -137,11 +142,7 @@ export default function PortfolioPage() {
         setFormData(prev => ({ ...prev, [name]: val }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setThumbnailFile(e.target.files[0]);
-        }
-    };
+    // File handler replaced by ImageUpload component handler directly in JSX
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -157,8 +158,11 @@ export default function PortfolioPage() {
         formDataToSend.append('status', formData.status);
         formDataToSend.append('liveLink', formData.liveUrl);
         formDataToSend.append('caseStudyLink', formData.caseStudyUrl);
-        formDataToSend.append('githubLink', formData.githubUrl);
+        formDataToSend.append('githubLink', formData.githubUrl ? String(formData.githubUrl) : "");
         formDataToSend.append('featured', String(formData.featured));
+
+        // Folder path for organization
+        formDataToSend.append('folder', `portfolio`);
 
         // Array fields (one per line)
         formData.keyFeatures.split('\n').map((s: string) => s.trim()).filter((s: string) => s).forEach((item: string) =>
@@ -198,7 +202,7 @@ export default function PortfolioPage() {
             }
             handleCloseModals();
         } catch (err: any) {
-            dispatch(showErrorNotification(err?.data?.message || 'Failed to save project'));
+            dispatch(showErrorNotification(err?.data?.error?.message || err?.data?.message || 'Failed to save project'));
         }
     };
 
@@ -212,7 +216,7 @@ export default function PortfolioPage() {
                     await deletePortfolio(id).unwrap();
                     dispatch(showSuccessNotification('Project deleted successfully'));
                 } catch (err: any) {
-                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete project'));
+                    dispatch(showErrorNotification(err?.data?.error?.message || err?.data?.message || 'Failed to delete project'));
                 }
             }
         });
@@ -406,8 +410,13 @@ export default function PortfolioPage() {
                                     <input name="timeline" className="form-input" value={formData.timeline} onChange={handleInputChange} placeholder="e.g. 3 months" />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Thumbnail</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                    <ImageUpload
+                                        label="Project Thumbnail"
+                                        value={thumbnailFile || existingThumbnailUrl}
+                                        onChange={(file) => setThumbnailFile(file)}
+                                        folderPath={`uploads/portfolio`}
+                                        height={250}
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Live URL</label>

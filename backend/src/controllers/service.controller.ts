@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { ServiceService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../utils/response';
-import { getFileUrl } from '../config/multer';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class ServiceController {
     /**
@@ -51,14 +51,17 @@ export class ServiceController {
         if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files['image'] && files['image'][0]) {
-                imageUrl = getFileUrl(files['image'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+                imageUrl = getFileUrl(files['image'][0].filename, folder);
             }
             if (files['thumbnail'] && files['thumbnail'][0]) {
-                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, folder);
             }
         } else if (req.file) {
             // Single file upload (backward compatibility)
-            imageUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+            imageUrl = getFileUrl(req.file.filename, folder);
         }
 
         const service = await ServiceService.create(req.body, imageUrl, thumbnailUrl);
@@ -77,14 +80,17 @@ export class ServiceController {
         if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files['image'] && files['image'][0]) {
-                imageUrl = getFileUrl(files['image'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+                imageUrl = getFileUrl(files['image'][0].filename, folder);
             }
             if (files['thumbnail'] && files['thumbnail'][0]) {
-                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+                thumbnailUrl = getFileUrl(files['thumbnail'][0].filename, folder);
             }
         } else if (req.file) {
             // Single file upload (backward compatibility)
-            imageUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'services';
+            imageUrl = getFileUrl(req.file.filename, folder);
         }
 
         const service = await ServiceService.update(req.params.id as string, req.body, imageUrl, thumbnailUrl);

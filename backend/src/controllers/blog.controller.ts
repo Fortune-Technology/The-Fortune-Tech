@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { BlogService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../utils/response';
-import { getFileUrl } from '../config/multer';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class BlogController {
     /**
@@ -59,10 +59,12 @@ export class BlogController {
         if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files['featuredImage'] && files['featuredImage'][0]) {
-                featuredImageUrl = getFileUrl(files['featuredImage'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'blogs';
+                featuredImageUrl = getFileUrl(files['featuredImage'][0].filename, folder);
             }
         } else if (req.file) {
-            featuredImageUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'blogs';
+            featuredImageUrl = getFileUrl(req.file.filename, folder);
         }
 
         const blog = await BlogService.create(req.body, featuredImageUrl);
@@ -80,10 +82,12 @@ export class BlogController {
         if (req.files && typeof req.files === 'object' && !Array.isArray(req.files)) {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
             if (files['featuredImage'] && files['featuredImage'][0]) {
-                featuredImageUrl = getFileUrl(files['featuredImage'][0].filename, 'images');
+                const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'blogs';
+                featuredImageUrl = getFileUrl(files['featuredImage'][0].filename, folder);
             }
         } else if (req.file) {
-            featuredImageUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'blogs';
+            featuredImageUrl = getFileUrl(req.file.filename, folder);
         }
 
         const blog = await BlogService.update(req.params.id as string, req.body, featuredImageUrl);

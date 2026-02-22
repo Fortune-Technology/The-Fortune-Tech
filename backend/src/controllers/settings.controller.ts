@@ -40,15 +40,17 @@ export class SettingsController {
             const files = req.files as { [key: string]: Express.Multer.File[] };
 
             if (files.logo?.[0]) {
-                if (!updateData.logo) updateData.logo = `/uploads/images/${files.logo[0].filename}`;
+                const folder = req.body.folder || 'images';
+                if (!updateData.logo) updateData.logo = `/uploads/${folder}/${files.logo[0].filename}`;
                 // Also update nested site object if present, for consistency
-                if (updateData.site) updateData.site.logo = `/uploads/images/${files.logo[0].filename}`;
+                if (updateData.site) updateData.site.logo = `/uploads/${folder}/${files.logo[0].filename}`;
             }
 
             if (files.favicon?.[0]) {
-                if (!updateData.favicon) updateData.favicon = `/uploads/images/${files.favicon[0].filename}`;
+                const folder = req.body.folder || 'images';
+                if (!updateData.favicon) updateData.favicon = `/uploads/${folder}/${files.favicon[0].filename}`;
                 // Also update nested site object if present
-                if (updateData.site) updateData.site.favicon = `/uploads/images/${files.favicon[0].filename}`;
+                if (updateData.site) updateData.site.favicon = `/uploads/${folder}/${files.favicon[0].filename}`;
             }
         }
 

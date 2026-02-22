@@ -6,6 +6,7 @@ import { FaSave, FaGlobe, FaBuilding, FaShareAlt, FaSearch, FaCogs, FaSpinner } 
 import { useGetSettingsQuery, useUpdateSettingsMutation, Settings } from '../../../lib/store/api/settingsApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import ImageUpload from '../../../components/ui/ImageUpload';
 
 export default function SettingsPage() {
     const dispatch = useAppDispatch();
@@ -90,6 +91,9 @@ export default function SettingsPage() {
             const submitData = new FormData();
             submitData.append('data', JSON.stringify(dataToSend));
 
+            // Folder path
+            submitData.append('folder', 'settings');
+
             if (logoFile) {
                 submitData.append('logo', logoFile);
             }
@@ -120,13 +124,6 @@ export default function SettingsPage() {
         }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
-        if (e.target.files && e.target.files[0]) {
-            if (type === 'logo') setLogoFile(e.target.files[0]);
-            else setFaviconFile(e.target.files[0]);
-        }
-    };
-
     const tabs = [
         { id: 'site', label: 'General', icon: FaGlobe },
         { id: 'company', label: 'Company', icon: FaBuilding },
@@ -140,27 +137,19 @@ export default function SettingsPage() {
 
         // Custom render for logo and favicon
         if (section === 'site' && (key === 'logo' || key === 'favicon')) {
+            const isLogo = key === 'logo';
+            const file = isLogo ? logoFile : faviconFile;
+
             return (
                 <div key={key} className="form-group">
-                    <label className="form-label">{label}</label>
-                    <div className="file-input-wrapper">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="form-input"
-                            onChange={(e) => handleFileChange(e, key as 'logo' | 'favicon')}
-                        />
-                        {value && (
-                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                Current: <a href={value.startsWith('http') || value.startsWith('/') ? `${value.startsWith('http') ? '' : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000')}${value.startsWith('/') ? '' : '/'}${value}` : value} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>View Current Image</a>
-                            </div>
-                        )}
-                        {(key === 'logo' ? logoFile : faviconFile) && (
-                            <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--success)' }}>
-                                Selected: {(key === 'logo' ? logoFile : faviconFile)?.name}
-                            </div>
-                        )}
-                    </div>
+                    <ImageUpload
+                        label={label}
+                        value={file || value}
+                        onChange={(f) => isLogo ? setLogoFile(f) : setFaviconFile(f)}
+                        folderPath="uploads/settings"
+                        height={150}
+                        accept={isLogo ? "image/*" : "image/x-icon,image/png,image/svg+xml"}
+                    />
                 </div>
             );
         }

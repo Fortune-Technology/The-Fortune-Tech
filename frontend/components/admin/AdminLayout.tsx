@@ -153,7 +153,7 @@ export default function AdminLayout({ children, pageTitle }: AdminLayoutProps) {
                                 <div className="header-profile-avatar">
                                     {isMounted && user?.avatar ? (
                                         <Image
-                                            src={getImageUrl(user.avatar)}
+                                            src={user.avatar?.startsWith('http') || user.avatar?.startsWith('/uploads/') ? getImageUrl(user.avatar) : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/uploads/users/avtars/${user.avatar}`}
                                             alt={user.displayName || 'User'}
                                             width={32}
                                             height={32}

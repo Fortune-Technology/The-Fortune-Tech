@@ -8,6 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { TechnologyService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendNoContent } from '../utils/response';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class TechnologyController {
     static getAll = asyncHandler(async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -27,7 +28,8 @@ export class TechnologyController {
 
     static createCategory = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         if (req.file) {
-            req.body.icon = `/uploads/images/${req.file.filename}`;
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'technology';
+            req.body.icon = getFileUrl(req.file.filename, folder);
         }
         const category = await TechnologyService.createCategory(req.body);
         sendCreated(res, category, 'Technology category created successfully');
@@ -35,7 +37,8 @@ export class TechnologyController {
 
     static updateCategory = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         if (req.file) {
-            req.body.icon = `/uploads/images/${req.file.filename}`;
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'technology';
+            req.body.icon = getFileUrl(req.file.filename, folder);
         }
         const category = await TechnologyService.updateCategory(req.params.id as string, req.body);
         sendSuccess(res, category, 'Technology category updated successfully');
@@ -48,7 +51,8 @@ export class TechnologyController {
 
     static addItem = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         if (req.file) {
-            req.body.icon = `/uploads/images/${req.file.filename}`;
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'technology';
+            req.body.icon = getFileUrl(req.file.filename, folder);
         }
         const category = await TechnologyService.addItem(req.params.categoryId as string, req.body);
         sendCreated(res, category, 'Technology item added successfully');
@@ -56,7 +60,8 @@ export class TechnologyController {
 
     static updateItem = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
         if (req.file) {
-            req.body.icon = `/uploads/images/${req.file.filename}`;
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'technology';
+            req.body.icon = getFileUrl(req.file.filename, folder);
         }
         const category = await TechnologyService.updateItem(
             req.params.categoryId as string,

@@ -16,6 +16,7 @@ import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
 import Image from 'next/image';
+import ImageUpload from '../../../components/ui/ImageUpload';
 import ServiceDetailModal from '../../../components/admin/ServiceDetailModal';
 
 interface ServiceFormData {
@@ -70,6 +71,8 @@ export default function ServicesPage() {
     const [formData, setFormData] = useState<ServiceFormData>(initialFormData);
     const [iconFile, setIconFile] = useState<File | null>(null);
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [existingIconUrl, setExistingIconUrl] = useState<string | null>(null);
+    const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // RTK Query hooks
@@ -112,9 +115,13 @@ export default function ServicesPage() {
                 },
                 featured: service.featured || false,
             });
+            setExistingIconUrl(service.image || service.icon || null);
+            setExistingThumbnailUrl(service.thumbnail || null);
         } else {
             setEditingServiceId(null);
             setFormData(initialFormData);
+            setExistingIconUrl(null);
+            setExistingThumbnailUrl(null);
         }
         setIconFile(null);
         setThumbnailFile(null);
@@ -133,8 +140,11 @@ export default function ServicesPage() {
         setViewingServiceId(null);
         setViewingService(null);
         setFormData(initialFormData);
+        setFormData(initialFormData);
         setIconFile(null);
         setThumbnailFile(null);
+        setExistingIconUrl(null);
+        setExistingThumbnailUrl(null);
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -152,17 +162,7 @@ export default function ServicesPage() {
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setIconFile(e.target.files[0]);
-        }
-    };
-
-    const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setThumbnailFile(e.target.files[0]);
-        }
-    };
+    // File handlers replaced by ImageUpload component handlers directly in JSX
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -172,8 +172,11 @@ export default function ServicesPage() {
         formDataToSend.append('title', formData.title);
         formDataToSend.append('tagline', formData.tagline);
         formDataToSend.append('description', formData.description);
-        formDataToSend.append('overview', formData.overview);
-        // formDataToSend.append('icon', formData.icon); // Icon is now handled via file upload
+        formDataToSend.append('overview', String(formData.overview));
+
+        // Folder path for organization
+        formDataToSend.append('folder', `serviceicon`);
+
         if (iconFile) {
             formDataToSend.append('image', iconFile);
         }
@@ -212,7 +215,7 @@ export default function ServicesPage() {
             }
             handleCloseModals();
         } catch (err: any) {
-            dispatch(showErrorNotification(err?.data?.message || 'Failed to save service'));
+            dispatch(showErrorNotification(err?.data?.error?.message || err?.data?.message || 'Failed to save service'));
         }
     };
 
@@ -226,7 +229,7 @@ export default function ServicesPage() {
                     await deleteService(id).unwrap();
                     dispatch(showSuccessNotification('Service deleted successfully'));
                 } catch (err: any) {
-                    dispatch(showErrorNotification(err?.data?.message || 'Failed to delete service'));
+                    dispatch(showErrorNotification(err?.data?.error?.message || err?.data?.message || 'Failed to delete service'));
                 }
             }
         });
@@ -399,31 +402,22 @@ export default function ServicesPage() {
                                     <input name="cta" className="form-input" value={formData.cta} onChange={handleInputChange} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Service Image</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
-                                    {formData.image && !iconFile && (
-                                        <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            Current: {formData.image.split('/').pop()}
-                                        </div>
-                                    )}
+                                    <ImageUpload
+                                        label="Service Image/Icon"
+                                        value={iconFile || existingIconUrl}
+                                        onChange={(file) => setIconFile(file)}
+                                        folderPath={`uploads/serviceicon`}
+                                        height={200}
+                                    />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Thumbnail</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleThumbnailChange} />
-                                    {formData.thumbnail && !thumbnailFile && (
-                                        <div style={{ marginTop: '0.5rem' }}>
-                                            <div style={{ width: '80px', height: '60px', borderRadius: '6px', overflow: 'hidden', position: 'relative', backgroundColor: 'var(--glass-bg)' }}>
-                                                <Image
-                                                    src={getImageUrl(formData.thumbnail)}
-                                                    alt="Current thumbnail"
-                                                    fill
-                                                    unoptimized
-                                                    sizes="80px"
-                                                    style={{ objectFit: 'cover' }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+                                    <ImageUpload
+                                        label="Thumbnail"
+                                        value={thumbnailFile || existingThumbnailUrl}
+                                        onChange={(file) => setThumbnailFile(file)}
+                                        folderPath={`uploads/serviceicon`}
+                                        height={200}
+                                    />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Featured</label>

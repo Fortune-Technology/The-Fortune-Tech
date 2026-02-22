@@ -70,11 +70,17 @@ export default function TestimonialDetailModal({ isOpen, onClose, testimonial }:
                                 <div className="modal-cover-bg testimonial-cover"></div>
                                 <div className="modal-avatar-wrapper">
                                     <div className="modal-avatar-ring">
-                                        {(testimonial.thumbnail || testimonial.avatar) ? (
+                                        {(testimonial.avatar || testimonial.thumbnail) ? (
                                             <img
-                                                src={getImageUrl(testimonial.thumbnail || testimonial.avatar)}
+                                                src={getImageUrl(testimonial.avatar || testimonial.thumbnail)}
                                                 alt={testimonial.name}
                                                 className="modal-avatar-img"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    if (!target.src.includes('/images/placeholder-avatar.jpg')) {
+                                                        target.src = '/images/placeholder-avatar.jpg';
+                                                    }
+                                                }}
                                             />
                                         ) : (
                                             <div className="modal-avatar-placeholder">

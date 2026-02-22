@@ -21,11 +21,11 @@ export default function Testimonials() {
 
   // Get image URL - prioritize thumbnail, then avatar, then fallback
   const getTestimonialImage = (testimonial: { thumbnail?: string; avatar?: string; name: string }) => {
-    if (testimonial.thumbnail) {
-      return getImageUrl(testimonial.thumbnail, '/images/placeholder-avatar.jpg');
-    }
     if (testimonial.avatar) {
       return getImageUrl(testimonial.avatar, '/images/placeholder-avatar.jpg');
+    }
+    if (testimonial.thumbnail) {
+      return getImageUrl(testimonial.thumbnail, '/images/placeholder-avatar.jpg');
     }
     return '/images/placeholder-avatar.jpg';
   };
@@ -134,6 +134,13 @@ export default function Testimonials() {
                     height={56}
                     unoptimized
                     style={{ objectFit: 'cover' }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('/images/placeholder-avatar.jpg')) {
+                        target.srcset = '';
+                        target.src = '/images/placeholder-avatar.jpg';
+                      }
+                    }}
                   />
                 </div>
                 <div className="author-details">

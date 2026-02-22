@@ -8,7 +8,7 @@ import { AuthenticatedRequest } from '../interfaces';
 import { PortfolioService } from '../services';
 import { asyncHandler } from '../utils/async-handler';
 import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../utils/response';
-import { getFileUrl } from '../config/multer';
+import { getFileUrl, sanitizeFolder } from '../config/multer';
 
 export class PortfolioController {
     static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -31,7 +31,8 @@ export class PortfolioController {
         let thumbnailUrl: string | undefined;
 
         if (req.file) {
-            thumbnailUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'portfolio';
+            thumbnailUrl = getFileUrl(req.file.filename, folder);
         }
 
         const portfolio = await PortfolioService.create(req.body, thumbnailUrl);
@@ -42,7 +43,8 @@ export class PortfolioController {
         let thumbnailUrl: string | undefined;
 
         if (req.file) {
-            thumbnailUrl = getFileUrl(req.file.filename, 'images');
+            const folder = req.body.folder ? sanitizeFolder(req.body.folder as string) : 'portfolio';
+            thumbnailUrl = getFileUrl(req.file.filename, folder);
         }
 
         const portfolio = await PortfolioService.update(req.params.id as string, req.body, thumbnailUrl);

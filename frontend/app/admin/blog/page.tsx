@@ -21,6 +21,9 @@ import { getImageUrl } from '../../../lib/utils';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
+
+import ImageUpload from '../../../components/ui/ImageUpload';
+
 const RichTextEditor = dynamic(() => import('../../../components/ui/RichTextEditor'), { ssr: false });
 
 // Predefined blog categories
@@ -74,7 +77,9 @@ export default function BlogPage() {
     const [editingBlogId, setEditingBlogId] = useState<string | null>(null);
     const [viewingBlog, setViewingBlog] = useState<Blog | null>(null);
     const [formData, setFormData] = useState<BlogFormData>(initialFormData);
+
     const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
+    const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
 
     // Dynamic category management
@@ -116,9 +121,11 @@ export default function BlogPage() {
             if (blog.category && !allCategories.includes(blog.category)) {
                 setCustomCategories(prev => [...prev, blog.category]);
             }
+            setExistingImageUrl(blog.featuredImage || null);
         } else {
             setEditingBlogId(null);
             setFormData(initialFormData);
+            setExistingImageUrl(null);
         }
         setFeaturedImageFile(null);
         setIsModalOpen(true);
@@ -135,7 +142,9 @@ export default function BlogPage() {
         setEditingBlogId(null);
         setViewingBlog(null);
         setFormData(initialFormData);
+        setFormData(initialFormData);
         setFeaturedImageFile(null);
+        setExistingImageUrl(null);
         setShowAddCategory(false);
         setNewCategoryName('');
     };
@@ -207,6 +216,10 @@ export default function BlogPage() {
         if (formData.faqSection.length > 0) {
             fd.append('faqSection', JSON.stringify(formData.faqSection.filter(f => f.question && f.answer)));
         }
+
+        // Format: blogs
+        const folderPath = `blogs`;
+        fd.append('folder', folderPath);
 
         if (featuredImageFile) {
             fd.append('featuredImage', featuredImageFile);
@@ -539,8 +552,13 @@ export default function BlogPage() {
 
                                 {/* Featured Image */}
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Featured Image</label>
-                                    <input type="file" accept="image/*" className="form-input" onChange={handleFileChange} />
+                                    <ImageUpload
+                                        label="Featured Image"
+                                        value={featuredImageFile || existingImageUrl}
+                                        onChange={(file) => setFeaturedImageFile(file)}
+                                        folderPath={`uploads/blogs`}
+                                        height={300}
+                                    />
                                 </div>
 
                                 {/* FAQ Section */}

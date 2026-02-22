@@ -9,6 +9,11 @@ import fs from 'fs';
 import { env } from './env';
 import { Request } from 'express';
 
+// Helper to sanitize folder path
+export const sanitizeFolder = (folder: string): string => {
+    return folder.replace(/(\.\.(\/|\\|$))+/g, '').replace(/^\/+/, '');
+};
+
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../../', env.UPLOAD_DIR);
 if (!fs.existsSync(uploadDir)) {
@@ -26,15 +31,30 @@ subdirs.forEach((dir) => {
 
 // Storage configuration
 const storage = multer.diskStorage({
-    destination: (_req: Request, file: Express.Multer.File, cb) => {
+    destination: (req: Request, file: Express.Multer.File, cb) => {
         let subFolder = 'documents';
 
-        if (file.mimetype.startsWith('image/')) {
+        const baseUrlParts = req.baseUrl ? req.baseUrl.split('/').filter(Boolean) : [];
+        const moduleName = baseUrlParts.length > 0 ? baseUrlParts[baseUrlParts.length - 1] : '';
+
+        // Check if a specific folder is requested in body or query
+        if (req.body?.folder || req.query?.folder) {
+            const requestedFolder = (req.body.folder || req.query.folder) as string;
+            subFolder = sanitizeFolder(requestedFolder);
+        } else if (moduleName && moduleName !== 'api' && moduleName !== 'v1') {
+            subFolder = moduleName;
+        } else if (file.mimetype.startsWith('image/')) {
             // Check if it's for avatar based on field name
             subFolder = file.fieldname === 'avatar' ? 'avatars' : 'images';
         }
 
         const dest = path.join(uploadDir, subFolder);
+
+        // Ensure directory exists
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+        }
+
         cb(null, dest);
     },
     filename: (_req: Request, file: Express.Multer.File, cb) => {
