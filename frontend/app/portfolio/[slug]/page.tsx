@@ -8,7 +8,9 @@ import PageHeader from '../../../components/ui/PageHeader';
 import Button from '../../../components/ui/Button';
 import { getImageUrl } from '../../../lib/utils';
 import { useGetPortfolioByIdQuery, useGetPortfoliosQuery } from '../../../lib/store/api/portfolioApi';
-import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine, FaSpinner, FaFileAlt } from 'react-icons/fa';
+import { useGetTestimonialsQuery } from '../../../lib/store/api/testimonialsApi';
+import { useGetTechnologiesQuery } from '../../../lib/store/api/technologiesApi';
+import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine, FaSpinner, FaFileAlt, FaStar, FaQuoteLeft } from 'react-icons/fa';
 import { SiNextdotjs, SiTypescript, SiPython, SiPostgresql, SiRedis, SiDocker, SiFirebase, SiStripe, SiMongodb, SiFigma } from 'react-icons/si';
 import { FaReact, FaNodeJs, FaAws } from 'react-icons/fa';
 
@@ -68,6 +70,12 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
     // Fetch all portfolios for related projects
     const { data: portfoliosResponse } = useGetPortfoliosQuery();
     const allProjects = portfoliosResponse?.data || [];
+
+    // Fetch testimonials (must be before any early returns to preserve hooks order)
+    const { data: testimonialsResponse } = useGetTestimonialsQuery();
+
+    // Fetch technologies to resolve exact item names and icons
+    const { data: technologiesResponse } = useGetTechnologiesQuery();
 
     if (isLoading) {
         return (
@@ -131,14 +139,36 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
         .filter((p) => p.id !== project.id && p.category === project.category)
         .slice(0, 2);
 
-    // Check if techStack has data - it can be an object or array
-    const hasTechStack = project.techStack && (
-        (Array.isArray(project.techStack) && project.techStack.length > 0) ||
-        (typeof project.techStack === 'object' && hasObjectData(project.techStack))
-    );
+    // Compute displayed technologies grouped by category from project.technologyStack items
+    const displayTechStack = (() => {
+        if (!project.technologyStack || project.technologyStack.length === 0) return [];
+        const techIds = project.technologyStack.map((t: any) => typeof t === 'object' ? t.id || t._id : t);
+        const cats = technologiesResponse?.data || [];
+        const grouped: any[] = [];
+
+        cats.forEach((cat: any) => {
+            const matchedItems = (cat.items || []).filter((item: any) => techIds.includes(item._id));
+            if (matchedItems.length > 0) {
+                grouped.push({
+                    category: cat.category,
+                    items: matchedItems.map((item: any) => ({ name: item.name, icon: item.icon }))
+                });
+            }
+        });
+
+        return grouped;
+    })();
 
     // Check if metrics has data
     const hasMetrics = project.metrics && hasObjectData(project.metrics);
+
+    // Get testimonials linked to this portfolio
+    const linkedTestimonials = (testimonialsResponse?.data || []).filter((t: any) =>
+        t.portfolios?.some((p: any) => {
+            const pId = typeof p === 'object' ? (p._id || p.id) : p;
+            return pId === project._id || pId === project.id;
+        })
+    );
 
     return (
         <>
@@ -195,46 +225,43 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                 </div>
                             )}
 
-                            {/* Tech Stack */}
-                            {hasTechStack && (
+                            {/* Long Description */}
+                            {project.longDescription && (
                                 <div className="detail-section">
-                                    <h2 className="detail-section-title">Technology Stack</h2>
+                                    <h2 className="detail-section-title">Project Overview</h2>
+                                    <div
+                                        className="long-description-content"
+                                        style={{ lineHeight: 1.8, color: 'var(--text-secondary)', fontSize: '1rem' }}
+                                        dangerouslySetInnerHTML={{ __html: project.longDescription }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Technology Stack from populated technologyStack */}
+                            {displayTechStack.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Technologies Used</h2>
                                     <div className="tech-stack-grid">
-                                        {/* Handle both object format and array format */}
-                                        {typeof project.techStack === 'object' && !Array.isArray(project.techStack) ? (
-                                            // Object format: { frontend: [...], backend: [...] }
-                                            Object.entries(project.techStack as Record<string, string[]>).map(([category, techs]) => (
-                                                Array.isArray(techs) && techs.length > 0 && (
-                                                    <div key={category} className="tech-stack-category">
-                                                        <h4 className="tech-category-label">{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
-                                                        <div className="tech-pills">
-                                                            {techs.map((tech: string, idx: number) => {
-                                                                const Icon = getTechIcon(tech);
-                                                                return (
-                                                                    <span key={`${category}-${idx}`} className="tech-pill">
-                                                                        {Icon && <Icon className="tech-pill-icon" />}
-                                                                        {tech}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            ))
-                                        ) : Array.isArray(project.techStack) ? (
-                                            // Array format: ["React", "Node.js", ...]
-                                            <div className="tech-pills">
-                                                {project.techStack.map((tech: string, idx: number) => {
-                                                    const Icon = getTechIcon(tech);
-                                                    return (
-                                                        <span key={`tech-${idx}`} className="tech-pill">
-                                                            {Icon && <Icon className="tech-pill-icon" />}
-                                                            {tech}
-                                                        </span>
-                                                    );
-                                                })}
+                                        {displayTechStack.map((cat: any) => (
+                                            <div key={cat.category} className="tech-stack-category">
+                                                <h4 className="tech-category-label">{cat.category}</h4>
+                                                <div className="tech-pills">
+                                                    {cat.items?.map((item: any, idx: number) => {
+                                                        const HardcodedIcon = getTechIcon(item.name);
+                                                        return (
+                                                            <span key={`ts-${idx}`} className="tech-pill">
+                                                                {item.icon ? (
+                                                                    <img src={getImageUrl(item.icon)} alt={item.name} style={{ width: '16px', height: '16px', objectFit: 'contain', marginRight: '0.25rem' }} />
+                                                                ) : HardcodedIcon && (
+                                                                    <HardcodedIcon className="tech-pill-icon" />
+                                                                )}
+                                                                {item.name}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        ) : null}
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -350,6 +377,49 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                             )}
                         </div>
                     </div>
+
+                    {/* Linked Testimonials */}
+                    {linkedTestimonials.length > 0 && (
+                        <div className="detail-section" style={{ marginTop: '3rem' }}>
+                            <h2 className="section-title">What Our Clients Say</h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+                                {linkedTestimonials.map((t: any) => (
+                                    <div key={t._id || t.id} style={{
+                                        background: 'var(--glass-bg)', border: '1px solid var(--border-primary)',
+                                        borderRadius: '16px', padding: '2rem', position: 'relative'
+                                    }}>
+                                        <FaQuoteLeft style={{ fontSize: '1.5rem', color: 'var(--accent-start)', opacity: 0.3, position: 'absolute', top: '1rem', right: '1.5rem' }} />
+                                        <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem' }}>
+                                            {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                                                <FaStar key={i} style={{ color: '#f59e0b', fontSize: '0.875rem' }} />
+                                            ))}
+                                        </div>
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                                            &ldquo;{t.content}&rdquo;
+                                        </p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            {(t.avatar || t.thumbnail) && (
+                                                <Image
+                                                    src={getImageUrl(t.avatar || t.thumbnail, '/images/placeholder-avatar.jpg')}
+                                                    alt={t.name}
+                                                    width={44}
+                                                    height={44}
+                                                    unoptimized
+                                                    style={{ borderRadius: '50%', objectFit: 'cover' }}
+                                                />
+                                            )}
+                                            <div>
+                                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{t.name}</div>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                                    {[t.role, t.company].filter(Boolean).join(' at ')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Related Projects */}
                     {relatedProjects.length > 0 && (

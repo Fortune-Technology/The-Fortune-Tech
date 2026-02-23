@@ -13,6 +13,21 @@ interface TestimonialQuery {
     verified?: boolean | string;
     search?: string;
 }
+// Helper to parse portfolios from various formats
+const parsePortfolios = (value: unknown): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (typeof value === 'string') {
+        if (!value.trim()) return [];
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        } catch {
+            return value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
+    return [];
+};
 
 export class TestimonialService {
     static async getAll(query: TestimonialQuery): Promise<PaginatedResult<ITestimonialDocument>> {
@@ -43,7 +58,8 @@ export class TestimonialService {
             query.$or.push({ _id: idOrSlug });
         }
 
-        const testimonial = await Testimonial.findOne(query);
+        const testimonial = await Testimonial.findOne(query)
+            .populate('portfolios', 'title slug thumbnail');
 
         if (!testimonial) throw new NotFoundError('Testimonial');
         return testimonial;
@@ -75,6 +91,7 @@ export class TestimonialService {
             website: data.website,
             verified: parseBoolean(data.verified as unknown as string),
             featured: parseBoolean(data.featured as unknown as string),
+            portfolios: parsePortfolios(data.portfolios),
         });
 
         await testimonial.save();
@@ -92,6 +109,7 @@ export class TestimonialService {
         if (data.metrics !== undefined) updateData.metrics = parseJSON(data.metrics as unknown as string, testimonial.metrics);
         if (data.verified !== undefined) updateData.verified = parseBoolean(data.verified as unknown as string);
         if (data.featured !== undefined) updateData.featured = parseBoolean(data.featured as unknown as string);
+        if (data.portfolios !== undefined) updateData.portfolios = parsePortfolios(data.portfolios);
 
         Object.assign(testimonial, updateData);
         await testimonial.save();

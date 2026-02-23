@@ -157,8 +157,10 @@ export interface IPortfolio extends Timestamps {
     industry?: string;
     client: IPortfolioClient;
     description: string;
+    longDescription?: string;
     keyFeatures: string[];
     techStack: Record<string, string[]>;
+    technologyStack?: string[];
     metrics: Record<string, string>;
     timeline?: string;
     status: PortfolioStatus;
@@ -175,8 +177,10 @@ export interface CreatePortfolioDTO {
     clientName?: string;
     clientLocation?: string;
     description: string;
+    longDescription?: string;
     keyFeatures?: string[];
     techStack?: Record<string, string[]>;
+    technologyStack?: string[];
     metrics?: Record<string, string>;
     timeline?: string;
     status?: string;
@@ -253,6 +257,7 @@ export interface ITestimonial extends Timestamps {
     website?: string;
     verified: boolean;
     featured: boolean;
+    portfolios?: string[];
 }
 
 export interface CreateTestimonialDTO {
@@ -269,6 +274,7 @@ export interface CreateTestimonialDTO {
     website?: string;
     verified?: boolean;
     featured?: boolean;
+    portfolios?: string[];
 }
 
 export interface UpdateTestimonialDTO extends Partial<CreateTestimonialDTO> { }

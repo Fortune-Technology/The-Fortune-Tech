@@ -16,6 +16,8 @@ export interface Portfolio {
     images?: string[];
     technologies?: string[];
     techStack?: Record<string, string[]> | string[];
+    technologyStack?: any[];
+    longDescription?: string;
     client?: string | { name?: string; location?: string };
     projectUrl?: string;
     githubUrl?: string;

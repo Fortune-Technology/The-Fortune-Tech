@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaStar, FaQuoteLeft, FaSpinner } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaStar, FaQuoteLeft, FaSpinner, FaChevronDown } from 'react-icons/fa';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
 import {
@@ -13,6 +13,7 @@ import {
     useUpdateTestimonialMutation,
     useDeleteTestimonialMutation,
 } from '../../../lib/store/api/testimonialsApi';
+import { useGetPortfoliosQuery } from '../../../lib/store/api/portfolioApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
@@ -25,12 +26,14 @@ interface TestimonialFormData {
     company: string;
     industry: string;
     serviceProvided: string;
+    projectType: string;
     content: string;
     rating: number;
     linkedin: string;
     website: string;
-    featured: boolean;
     verified: boolean;
+    featured: boolean;
+    portfolios: string[];
 }
 
 const initialFormData: TestimonialFormData = {
@@ -39,12 +42,14 @@ const initialFormData: TestimonialFormData = {
     company: '',
     industry: '',
     serviceProvided: '',
+    projectType: '',
     content: '',
     rating: 5,
     linkedin: '',
     website: '',
+    verified: false,
     featured: false,
-    verified: true,
+    portfolios: [],
 };
 
 export default function TestimonialsPage() {
@@ -58,9 +63,11 @@ export default function TestimonialsPage() {
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
+    const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
 
     // RTK Query hooks
-    const { data: testimonialsResponse, isLoading, isError } = useGetTestimonialsQuery();
+    const { data: testimonialResponse, isLoading, isError } = useGetTestimonialsQuery();
+    const { data: portfolioResponse } = useGetPortfoliosQuery();
     const { data: testimonialDetailResponse } = useGetTestimonialByIdQuery(viewingTestimonialId!, {
         skip: !viewingTestimonialId
     });
@@ -68,7 +75,14 @@ export default function TestimonialsPage() {
     const [updateTestimonial, { isLoading: isUpdating }] = useUpdateTestimonialMutation();
     const [deleteTestimonial, { isLoading: isDeleting }] = useDeleteTestimonialMutation();
 
-    const testimonials = testimonialsResponse?.data || [];
+    const testimonials = testimonialResponse?.data || [];
+    const portfolios = portfolioResponse?.data || [];
+
+    // Build portfolio options for multi-select
+    const portfolioOptions = useMemo(() =>
+        portfolios.map(p => ({ id: p._id || p.id || '', label: p.title || p.slug || '' })).filter(p => p.id),
+        [portfolios]
+    );
 
     const filteredTestimonials = testimonials.filter(t =>
         (t.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,12 +99,14 @@ export default function TestimonialsPage() {
                 company: testimonial.company || '',
                 industry: testimonial.industry || '',
                 serviceProvided: testimonial.serviceProvided || '',
+                projectType: testimonial.projectType || '',
                 content: testimonial.content || '',
                 rating: testimonial.rating || 5,
                 linkedin: testimonial.linkedin || '',
                 website: testimonial.website || '',
+                verified: testimonial.verified || false,
                 featured: testimonial.featured || false,
-                verified: testimonial.verified !== false,
+                portfolios: testimonial.portfolios?.map((p: any) => typeof p === 'object' ? p._id || p.id : p) || [],
             });
             setExistingThumbnailUrl(testimonial.thumbnail || testimonial.avatar || null);
         } else {
@@ -140,6 +156,7 @@ export default function TestimonialsPage() {
         formDataToSend.append('company', formData.company);
         formDataToSend.append('industry', formData.industry);
         formDataToSend.append('serviceProvided', formData.serviceProvided);
+        formDataToSend.append('projectType', formData.projectType);
         formDataToSend.append('content', formData.content);
         formDataToSend.append('rating', formData.rating.toString());
         formDataToSend.append('linkedin', formData.linkedin);
@@ -152,6 +169,11 @@ export default function TestimonialsPage() {
 
         if (thumbnailFile) {
             formDataToSend.append('thumbnail', thumbnailFile);
+        }
+
+        // Portfolio IDs as JSON array
+        if (formData.portfolios.length > 0) {
+            formDataToSend.append('portfolios', JSON.stringify(formData.portfolios));
         }
 
         try {
@@ -415,6 +437,22 @@ export default function TestimonialsPage() {
                                             <span>Verified</span>
                                         </label>
                                     </div>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Linked Portfolio Project</label>
+                                    <select
+                                        className="form-input"
+                                        value={formData.portfolios[0] || ''}
+                                        onChange={(e) => setFormData(prev => ({
+                                            ...prev,
+                                            portfolios: e.target.value ? [e.target.value] : []
+                                        }))}
+                                    >
+                                        <option value="">— None —</option>
+                                        {portfolioOptions.map(item => (
+                                            <option key={item.id} value={item.id}>{item.label}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
 

@@ -1532,6 +1532,21 @@
   border-bottom: 1px solid var(--glass-border);
 }
 
+.long-description-content {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.long-description-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  margin: 1rem 0;
+}
+
 .feature-list {
   display: flex;
   flex-direction: column;

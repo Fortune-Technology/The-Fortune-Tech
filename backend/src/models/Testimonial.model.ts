@@ -87,6 +87,10 @@ const TestimonialSchema = new Schema<ITestimonialDocument>(
             default: false,
             index: true,
         },
+        portfolios: [{
+            type: Schema.Types.ObjectId,
+            ref: 'Portfolio',
+        }],
     },
     {
         timestamps: true,

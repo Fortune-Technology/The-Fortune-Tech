@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
 import Image from 'next/image';
-import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaExternalLinkAlt, FaGithub, FaSpinner, FaProjectDiagram } from 'react-icons/fa';
+import dynamic from 'next/dynamic';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaSave, FaTimes, FaEye, FaExternalLinkAlt, FaGithub, FaSpinner, FaProjectDiagram, FaChevronDown } from 'react-icons/fa';
+import 'react-quill-new/dist/quill.snow.css';
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal';
 import { useDeleteConfirm } from '../../../lib/hooks/useDeleteConfirm';
 import {
@@ -13,21 +15,25 @@ import {
     useUpdatePortfolioMutation,
     useDeletePortfolioMutation,
 } from '../../../lib/store/api/portfolioApi';
+import { useGetTechnologiesQuery } from '../../../lib/store/api/technologiesApi';
 import { useAppDispatch } from '../../../lib/store/hooks';
 import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
 import { getImageUrl } from '../../../lib/utils';
 import ImageUpload from '../../../components/ui/ImageUpload';
 import PortfolioDetailModal from '../../../components/admin/PortfolioDetailModal';
 
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false, loading: () => <div style={{ height: 200, background: 'var(--glass-bg)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Loading editor...</div> });
+
 interface PortfolioFormData {
     title: string;
     description: string;
+    longDescription: string;
     category: string;
     industry: string;
     clientName: string;
     clientLocation: string;
     keyFeatures: string;
-    techStack: string;
+    technologyStack: string[];
     timeline: string;
     status: string;
     servicesProvided: string;
@@ -40,12 +46,13 @@ interface PortfolioFormData {
 const initialFormData: PortfolioFormData = {
     title: '',
     description: '',
+    longDescription: '',
     category: 'web-app',
     industry: '',
     clientName: '',
     clientLocation: '',
     keyFeatures: '',
-    techStack: '',
+    technologyStack: [],
     timeline: '',
     status: 'Completed',
     servicesProvided: '',
@@ -70,9 +77,11 @@ export default function PortfolioPage() {
     const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
     const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
     const deleteConfirm = useDeleteConfirm();
+    const [techDropdownOpen, setTechDropdownOpen] = useState(false);
 
     // RTK Query hooks
     const { data: portfolioResponse, isLoading, isError } = useGetPortfoliosQuery();
+    const { data: technologiesResponse } = useGetTechnologiesQuery();
     const { data: portfolioDetailResponse } = useGetPortfolioByIdQuery(viewingProjectId!, {
         skip: !viewingProjectId
     });
@@ -82,6 +91,23 @@ export default function PortfolioPage() {
 
     const projects = portfolioResponse?.data || [];
 
+    // Extract individual technology items grouped by category
+    const groupedTechnologies = useMemo(() => {
+        const cats = technologiesResponse?.data || [];
+        return cats.map((cat: any) => ({
+            categoryName: cat.category,
+            items: (cat.items || []).map((item: any) => ({
+                id: item._id,
+                label: item.name,
+                icon: item.icon
+            }))
+        })).filter((cat: any) => cat.items.length > 0);
+    }, [technologiesResponse]);
+
+    // Flat list of all items for lookups
+    const allTechnologyItems = useMemo(() => {
+        return groupedTechnologies.flatMap((cat: any) => cat.items);
+    }, [groupedTechnologies]);
     const filteredProjects = projects.filter(project => {
         const matchesSearch = (project.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (project.description || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -95,14 +121,13 @@ export default function PortfolioPage() {
             setFormData({
                 title: project.title || '',
                 description: project.description || '',
+                longDescription: project.longDescription || '',
                 category: project.category || 'web-app',
                 industry: project.industry || '',
                 clientName: (typeof project.client === 'object' ? project.client?.name : project.client) || '',
                 clientLocation: (typeof project.client === 'object' ? project.client?.location : '') || '',
                 keyFeatures: project.keyFeatures?.join('\n') || '',
-                techStack: typeof project.techStack === 'object'
-                    ? Object.entries(project.techStack).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n')
-                    : '',
+                technologyStack: project.technologyStack?.map((t: any) => typeof t === 'object' ? t._id || t.id : t) || [],
                 timeline: project.timeline || '',
                 status: project.status || 'Completed',
                 servicesProvided: project.servicesProvided?.join('\n') || '',
@@ -150,6 +175,7 @@ export default function PortfolioPage() {
         const formDataToSend = new FormData();
         formDataToSend.append('title', formData.title);
         formDataToSend.append('description', formData.description);
+        formDataToSend.append('longDescription', formData.longDescription);
         formDataToSend.append('category', formData.category);
         formDataToSend.append('industry', formData.industry);
         formDataToSend.append('clientName', formData.clientName);
@@ -172,24 +198,14 @@ export default function PortfolioPage() {
             formDataToSend.append('servicesProvided[]', item)
         );
 
-        // TechStack as JSON object
-        if (formData.techStack.trim()) {
-            const techStackObj: Record<string, string[]> = {};
-            formData.techStack.split('\n').forEach(line => {
-                const parts = line.split(':');
-                if (parts.length >= 2) {
-                    const category = parts[0].trim();
-                    const techs = parts.slice(1).join(':').split(',').map(t => t.trim()).filter(Boolean);
-                    if (category && techs.length > 0) {
-                        techStackObj[category] = techs;
-                    }
-                }
-            });
-            formDataToSend.append('techStack', JSON.stringify(techStackObj));
-        }
-
+        // TechStack handling removed in favor of technologyStack
         if (thumbnailFile) {
             formDataToSend.append('thumbnail', thumbnailFile);
+        }
+
+        // Technology Stack IDs as JSON array
+        if (formData.technologyStack.length > 0) {
+            formDataToSend.append('technologyStack', JSON.stringify(formData.technologyStack));
         }
 
         try {
@@ -397,6 +413,31 @@ export default function PortfolioPage() {
                                     <label className="form-label">Description</label>
                                     <textarea name="description" className="form-input" value={formData.description} onChange={handleInputChange} required rows={3} />
                                 </div>
+                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                    <label className="form-label">Long Description (Rich Text)</label>
+                                    <div style={{ background: 'var(--glass-bg)', borderRadius: '8px', border: '1px solid var(--border-primary)' }}>
+                                        <ReactQuill
+                                            theme="snow"
+                                            value={formData.longDescription}
+                                            onChange={(value: string) => setFormData(prev => ({ ...prev, longDescription: value }))}
+                                            style={{ minHeight: '200px' }}
+                                            modules={{
+                                                toolbar: [
+                                                    [{ 'font': [] }, { 'size': [] }],
+                                                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                                    ['bold', 'italic', 'underline', 'strike'],
+                                                    [{ 'color': [] }, { 'background': [] }],
+                                                    [{ 'script': 'sub' }, { 'script': 'super' }],
+                                                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+                                                    [{ 'direction': 'rtl' }, { 'align': [] }],
+                                                    ['blockquote', 'code-block'],
+                                                    ['link', 'image', 'video', 'formula'],
+                                                    ['clean']
+                                                ]
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                                 <div className="form-group">
                                     <label className="form-label">Client Name</label>
                                     <input name="clientName" className="form-input" value={formData.clientName} onChange={handleInputChange} />
@@ -438,12 +479,96 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Key Features (one per line)</label>
-                                    <textarea name="keyFeatures" className="form-input" value={formData.keyFeatures} onChange={handleInputChange} rows={3} placeholder="AI-powered recommendations&#10;Real-time inventory&#10;Multi-currency support" />
+                                    <label className="form-label">Technologies Used</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <button
+                                            type="button"
+                                            className="form-input"
+                                            onClick={() => setTechDropdownOpen(!techDropdownOpen)}
+                                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left', width: '100%', minHeight: '42px' }}
+                                        >
+                                            <span style={{ color: formData.technologyStack.length > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+                                                {formData.technologyStack.length > 0
+                                                    ? `${formData.technologyStack.length} technolog${formData.technologyStack.length === 1 ? 'y' : 'ies'} selected`
+                                                    : 'Select technologies...'}
+                                            </span>
+                                            <FaChevronDown style={{ fontSize: '0.75rem', transition: 'transform 0.2s', transform: techDropdownOpen ? 'rotate(180deg)' : 'none' }} />
+                                        </button>
+                                        {techDropdownOpen && (
+                                            <div style={{
+                                                position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                                                background: '#ffffff', color: '#1a1a1a', border: '1px solid var(--border-primary)',
+                                                borderRadius: '8px', marginTop: '4px', maxHeight: '300px', overflowY: 'auto',
+                                                boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                                            }}>
+                                                {groupedTechnologies.map((group: any) => (
+                                                    <div key={group.categoryName}>
+                                                        <div style={{ padding: '0.5rem 1rem', background: '#f8f9fa', fontSize: '0.75rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                            {group.categoryName}
+                                                        </div>
+                                                        {group.items.map((item: any) => (
+                                                            <label key={item.id} style={{
+                                                                display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 1rem', paddingLeft: '1.5rem',
+                                                                cursor: 'pointer', borderBottom: '1px solid var(--border-primary)',
+                                                                transition: 'background 0.15s'
+                                                            }}
+                                                                onMouseEnter={e => (e.currentTarget.style.background = '#f0f0f0')}
+                                                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={formData.technologyStack.includes(item.id)}
+                                                                    onChange={() => {
+                                                                        setFormData(prev => ({
+                                                                            ...prev,
+                                                                            technologyStack: prev.technologyStack.includes(item.id)
+                                                                                ? prev.technologyStack.filter(id => id !== item.id)
+                                                                                : [...prev.technologyStack, item.id]
+                                                                        }));
+                                                                    }}
+                                                                />
+                                                                {item.icon && <img src={getImageUrl(item.icon)} alt={item.label} style={{ width: '16px', height: '16px', objectFit: 'contain' }} />}
+                                                                <span style={{ fontSize: '0.875rem' }}>{item.label}</span>
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                ))}
+                                                {groupedTechnologies.length === 0 && (
+                                                    <div style={{ padding: '1rem', textAlign: 'center', color: '#666', fontSize: '0.875rem' }}>
+                                                        No technologies available
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {formData.technologyStack.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                            {formData.technologyStack.map(id => {
+                                                const tech = allTechnologyItems.find((t: any) => t.id === id);
+                                                return tech ? (
+                                                    <span key={id} style={{
+                                                        display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                                                        padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem',
+                                                        background: 'var(--accent-start)', color: 'white'
+                                                    }}>
+                                                        {tech.icon && <img src={getImageUrl(tech.icon)} alt="" style={{ width: '12px', height: '12px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
+                                                        {tech.label}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({ ...prev, technologyStack: prev.technologyStack.filter(tId => tId !== id) }))}
+                                                            style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '0.75rem', padding: '0 2px' }}
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                    <label className="form-label">Tech Stack (format: category: tech1, tech2)</label>
-                                    <textarea name="techStack" className="form-input" value={formData.techStack} onChange={handleInputChange} rows={3} placeholder="frontend: React, Next.js&#10;backend: Node.js, MongoDB&#10;devops: Docker, AWS" />
+                                    <label className="form-label">Key Features (one per line)</label>
+                                    <textarea name="keyFeatures" className="form-input" value={formData.keyFeatures} onChange={handleInputChange} rows={3} placeholder="AI-powered recommendations&#10;Real-time inventory&#10;Multi-currency support" />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label className="form-label">Services Provided (one per line)</label>

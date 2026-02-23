@@ -64,14 +64,17 @@ const PortfolioSchema = new Schema<IPortfolioDocument>(
             required: [true, 'Description is required'],
             trim: true,
         },
+        longDescription: {
+            type: String,
+            trim: true,
+        },
         keyFeatures: {
             type: [String],
             default: [],
         },
-        techStack: {
-            type: Schema.Types.Mixed,
-            default: {},
-        },
+        technologyStack: [{
+            type: String,
+        }],
         metrics: {
             type: Schema.Types.Mixed,
             default: {},

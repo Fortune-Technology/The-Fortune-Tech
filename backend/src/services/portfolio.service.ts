@@ -10,6 +10,23 @@ import {
     calculatePagination,
 } from '../utils/helpers';
 
+// Helper to parse technologyStack from various formats
+const parseTechnologyStack = (value: unknown): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (typeof value === 'string') {
+        if (!value.trim()) return [];
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        } catch {
+            // Comma-separated string
+            return value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
+    return [];
+};
+
 interface PortfolioQuery {
     page?: number;
     pageSize?: number;
@@ -107,8 +124,9 @@ export class PortfolioService {
                 location: data.clientLocation,
             },
             description: data.description,
+            longDescription: data.longDescription,
             keyFeatures: parseArrayFromString(data.keyFeatures as unknown as string),
-            techStack: parseJSON(data.techStack as unknown as string, {}),
+            technologyStack: parseTechnologyStack(data.technologyStack),
             metrics: parseJSON(data.metrics as unknown as string, {}),
             timeline: data.timeline,
             status: data.status,
@@ -142,6 +160,7 @@ export class PortfolioService {
         if (data.category !== undefined) updateData.category = data.category;
         if (data.industry !== undefined) updateData.industry = data.industry;
         if (data.description !== undefined) updateData.description = data.description;
+        if (data.longDescription !== undefined) updateData.longDescription = data.longDescription;
         if (data.timeline !== undefined) updateData.timeline = data.timeline;
         if (data.status !== undefined) updateData.status = data.status;
         if (thumbnailUrl) updateData.thumbnail = thumbnailUrl;
@@ -156,9 +175,6 @@ export class PortfolioService {
         if (data.keyFeatures !== undefined) {
             updateData.keyFeatures = parseArrayFromString(data.keyFeatures as unknown as string);
         }
-        if (data.techStack !== undefined) {
-            updateData.techStack = parseJSON(data.techStack as unknown as string, portfolio.techStack);
-        }
         if (data.metrics !== undefined) {
             updateData.metrics = parseJSON(data.metrics as unknown as string, portfolio.metrics);
         }
@@ -167,6 +183,9 @@ export class PortfolioService {
         }
         if (data.featured !== undefined) {
             updateData.featured = parseBoolean(data.featured as unknown as string);
+        }
+        if (data.technologyStack !== undefined) {
+            updateData.technologyStack = parseTechnologyStack(data.technologyStack);
         }
 
         if (data.liveLink !== undefined || data.caseStudyLink !== undefined || data.githubLink !== undefined) {

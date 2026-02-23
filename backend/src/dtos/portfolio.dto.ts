@@ -23,6 +23,7 @@ export const createPortfolioSchema = Joi.object({
         'string.empty': 'Description is required',
         'any.required': 'Description is required',
     }),
+    longDescription: Joi.string().trim().allow(''),
     keyFeatures: Joi.alternatives()
         .try(Joi.array().items(Joi.string().trim()), Joi.string().allow(''))
         .default([]),
@@ -45,6 +46,9 @@ export const createPortfolioSchema = Joi.object({
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0'))
         .default(false),
+    technologyStack: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().trim()), Joi.string().allow(''))
+        .default([]),
 });
 
 export const updatePortfolioSchema = Joi.object({
@@ -54,6 +58,7 @@ export const updatePortfolioSchema = Joi.object({
     clientName: Joi.string().trim().allow(''),
     clientLocation: Joi.string().trim().allow(''),
     description: Joi.string().trim(),
+    longDescription: Joi.string().trim().allow(''),
     keyFeatures: Joi.alternatives()
         .try(Joi.array().items(Joi.string().trim()), Joi.string().allow('')),
     techStack: Joi.alternatives()
@@ -69,6 +74,8 @@ export const updatePortfolioSchema = Joi.object({
     githubLink: Joi.string().uri().trim().allow(''),
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0')),
+    technologyStack: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().trim()), Joi.string().allow('')),
 }).min(1);
 
 export const portfolioIdSchema = Joi.object({

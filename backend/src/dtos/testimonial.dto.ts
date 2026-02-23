@@ -36,6 +36,9 @@ export const createTestimonialSchema = Joi.object({
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0'))
         .default(false),
+    portfolios: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().trim()), Joi.string().allow(''))
+        .default([]),
 });
 
 export const updateTestimonialSchema = Joi.object({
@@ -55,6 +58,8 @@ export const updateTestimonialSchema = Joi.object({
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0')),
     featured: Joi.alternatives()
         .try(Joi.boolean(), Joi.string().valid('true', 'false', '1', '0')),
+    portfolios: Joi.alternatives()
+        .try(Joi.array().items(Joi.string().trim()), Joi.string().allow('')),
 }).min(1);
 
 export const testimonialIdSchema = Joi.object({

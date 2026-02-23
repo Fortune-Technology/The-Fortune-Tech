@@ -335,8 +335,8 @@ const seedData = async (): Promise<void> => {
                 industry: 'Retail',
                 client: { name: 'Fashion Store', location: 'New York, USA' },
                 description: 'A full-featured e-commerce platform with real-time inventory management, multi-vendor support, and AI-powered product recommendations.',
+                longDescription: '<h2 style="color: var(--accent-start);">Project Background</h2><p>Fashion Store needed a modern, scalable e-commerce platform to replace their legacy system. The old platform struggled with peak traffic during sales events and lacked real-time inventory management capabilities.</p><h3>Our Approach</h3><p>We designed and built a <strong>fully custom e-commerce solution</strong> using <span style="color: #61dafb;">React</span> and <span style="color: #68a063;">Node.js</span>, with a focus on <u>performance</u>, <u>scalability</u>, and user experience. Key decisions included:</p><ul style="padding-left: 20px;"><li>Microservices architecture for independent scaling</li><li>Redis-based caching for blazing-fast page loads</li><li>Real-time inventory sync across multiple warehouses</li><li>AI-powered recommendation engine using collaborative filtering</li></ul><blockquote style="border-left: 4px solid var(--accent-start); padding-left: 1rem; color: #888;">"The team delivered beyond expectations. The system has 0 downtime even during our flash sale events."<br>- John Doe, CTO</blockquote><h3>Results</h3><p>The platform launched on schedule and delivered <strong>35% higher conversion rates</strong> compared to the previous solution, with sub-2-second page load times even during peak traffic of 120K+ monthly users.</p>',
                 keyFeatures: ['Real-time Inventory', 'Payment Integration', 'Order Management', 'AI Recommendations', 'Multi-vendor Support'],
-                techStack: { Frontend: ['React', 'Redux', 'Tailwind CSS'], Backend: ['Node.js', 'Express', 'MongoDB'], DevOps: ['AWS', 'Docker'] },
                 metrics: { 'Page Load': '< 2s', 'Uptime': '99.9%', 'Conversion Rate': '+35%', 'Monthly Users': '120K+' },
                 timeline: '4 months',
                 status: PORTFOLIO_STATUSES.LIVE,
@@ -352,8 +352,8 @@ const seedData = async (): Promise<void> => {
                 industry: 'Healthcare',
                 client: { name: 'FitLife Inc.', location: 'San Francisco, USA' },
                 description: 'A comprehensive health tracking mobile application with wearable device integration, personalized workout plans, and nutrition logging.',
+                longDescription: '<h2 style="color: var(--accent-start);">The Challenge</h2><p>FitLife Inc. wanted to create a <strong>comprehensive health and fitness app</strong> that goes beyond simple step counting. They needed wearable integration, personalized workout plans, nutrition tracking, and social features — all with a beautiful, intuitive interface.</p><h3>Solution Architecture</h3><p>We built a cross-platform mobile app using <strong>React Native</strong> with Expo, backed by Firebase for real-time data sync, authentication, and cloud functions. Below is an example of the query structure for the tracking module:</p><pre class="ql-syntax" spellcheck="false" style="background-color: #f4f4f4; padding: 10px; border-radius: 5px;">const fetchUserStats = async (userId) => {\n  const metrics = await db.collection("stats").doc(userId).get();\n  return metrics.data();\n};</pre><p>The app features:</p><ol style="padding-left: 20px;"><li>Seamless integration with Apple Health, Google Fit, and Fitbit APIs</li><li>AI-powered workout plan generator based on user goals and fitness level</li><li>Barcode-scanning nutrition logger with a database of 500K+ foods</li><li>Social challenges and leaderboards for community engagement</li></ol><h3>Impact</h3><p>Within <span style="background-color: #ffeb3b; color: #000;">6 months of launch</span>, the app reached <strong>50K+ downloads</strong> with a 4.8-star App Store rating and 68% 30-day retention rate.</p>',
                 keyFeatures: ['Activity Tracking', 'Nutrition Log', 'Health Insights', 'Wearable Integration', 'Social Challenges'],
-                techStack: { Mobile: ['React Native', 'Expo'], Backend: ['Firebase', 'Cloud Functions'], Analytics: ['Google Analytics', 'Mixpanel'] },
                 metrics: { 'Downloads': '50K+', 'Rating': '4.8', 'Daily Active Users': '12K', 'Retention Rate': '68%' },
                 timeline: '6 months',
                 status: PORTFOLIO_STATUSES.LIVE,
@@ -369,8 +369,8 @@ const seedData = async (): Promise<void> => {
                 industry: 'Finance',
                 client: { name: 'FinEdge Solutions', location: 'London, UK' },
                 description: 'An intelligent CRM platform with AI-driven lead scoring, automated follow-ups, predictive analytics, and a real-time collaboration dashboard for sales teams.',
+                longDescription: '<h2 style="color: var(--accent-start);">Why This Project?</h2><p>FinEdge Solutions\' sales team was spending <strong style="color: #e53e3e;">60% of their time</strong> on manual lead qualification and follow-ups, leaving little time for actual selling. They needed an intelligent CRM that could automate these tasks and provide actionable insights.</p><h3>What We Built</h3><p>We developed a custom AI-powered CRM dashboard using Next.js, TypeScript, and Python (FastAPI) with integrated machine learning models for:</p><ul style="padding-left: 20px;"><li><strong>Lead Scoring</strong> — ML model trained on historical conversion data to predict lead quality</li><li><strong>Automated Follow-ups</strong> — Smart email sequences triggered by lead behavior patterns</li><li><strong>Predictive Analytics</strong> — Revenue forecasting and pipeline health dashboards</li><li><strong>Real-time Collaboration</strong> — Live activity feed and team performance insights</li></ul><p style="text-align: center;"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="Dashboard Chart" width="500"></p><h3 style="text-align: right;">Business Impact</h3><p style="text-align: right;">Lead conversion rates jumped <strong>45%</strong>, sales team efficiency improved by <strong>30%</strong>, and the platform delivered a <strong>300% ROI</strong> within the first year of deployment.</p>',
                 keyFeatures: ['AI Lead Scoring', 'Predictive Analytics', 'Automated Follow-ups', 'Real-time Dashboard', 'Email Integration', 'Role-based Access'],
-                techStack: { Frontend: ['Next.js', 'TypeScript', 'Chart.js'], Backend: ['Python', 'FastAPI', 'PostgreSQL'], AI: ['TensorFlow', 'OpenAI API', 'LangChain'] },
                 metrics: { 'Lead Conversion': '+45%', 'Response Time': '-60%', 'Sales Efficiency': '+30%', 'Monthly Active Users': '5K+' },
                 timeline: '5 months',
                 status: PORTFOLIO_STATUSES.COMPLETED,
@@ -455,6 +455,27 @@ const seedData = async (): Promise<void> => {
 
         console.log(`  ✅ Created ${technologies.length} technology categories`);
 
+        // Assign technologyStack references to portfolios (now that technologies are seeded)
+        if (technologies.length > 0) {
+            console.log('🔗 Linking technology items to portfolios...');
+            const allItems = technologies.flatMap((t: any) => t.items);
+            const itemIds = allItems.map((i: any) => i._id.toString());
+
+            // E-Commerce: assign first 5 tech items
+            if (portfolios[0] && itemIds.length >= 5) {
+                await Portfolio.findByIdAndUpdate(portfolios[0]._id, { technologyStack: itemIds.slice(0, 5) });
+            }
+            // Health App: assign next 5 tech items
+            if (portfolios[1] && itemIds.length >= 10) {
+                await Portfolio.findByIdAndUpdate(portfolios[1]._id, { technologyStack: itemIds.slice(5, 10) });
+            }
+            // AI CRM: assign next 5 tech items
+            if (portfolios[2] && itemIds.length >= 15) {
+                await Portfolio.findByIdAndUpdate(portfolios[2]._id, { technologyStack: itemIds.slice(10, 15) });
+            }
+            console.log('  ✅ Linked technology items to portfolios');
+        }
+
         // Seed Testimonials
         console.log('💬 Creating testimonials...');
         const testimonials = await Testimonial.create([
@@ -475,6 +496,7 @@ const seedData = async (): Promise<void> => {
                 website: 'https://techcorpsolutions.com',
                 verified: true,
                 featured: true,
+                portfolios: portfolios[0] ? [portfolios[0]._id] : [],
             },
             {
                 slug: 'sarah-johnson-retailco',
@@ -493,6 +515,7 @@ const seedData = async (): Promise<void> => {
                 website: 'https://retailco.com',
                 verified: true,
                 featured: true,
+                portfolios: portfolios[1] ? [portfolios[1]._id] : [],
             },
             {
                 slug: 'michael-chen-finedge',
@@ -511,6 +534,7 @@ const seedData = async (): Promise<void> => {
                 website: 'https://finedgesolutions.com',
                 verified: true,
                 featured: true,
+                portfolios: portfolios[2] ? [portfolios[2]._id] : [],
             },
         ]);
         console.log(`  ✅ Created ${testimonials.length} testimonials`);

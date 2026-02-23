@@ -24,6 +24,7 @@ export interface Testimonial {
     website?: string;
     verified?: boolean;
     featured?: boolean;
+    portfolios?: any[];
     isActive?: boolean;
     order?: number;
     createdAt?: string;
