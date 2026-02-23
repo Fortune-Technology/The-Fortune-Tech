@@ -60,7 +60,7 @@
 /* Logo image styling */
 .nav-logo-img {
     border-radius: var(--radius-sm);
-    max-height: 48px;
+    max-height: 60px;
     width: auto;
     object-fit: contain;
 }

@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import PageHeader from '../../components/ui/PageHeader';
 import { getIcon } from '../../lib/icons';
-import { FaCode, FaServer, FaDatabase, FaCloud, FaStar, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { FaCode, FaServer, FaDatabase, FaCloud, FaStar, FaCheckCircle, FaSpinner, FaBookOpen } from 'react-icons/fa';
 import { useGetTechnologiesQuery } from '../../lib/store/api/technologiesApi';
+import Stats from '../../components/home/Stats';
 
 // Category icons mapping
 const categoryIcons: { [key: string]: React.ComponentType } = {
@@ -283,9 +284,20 @@ export default function TechnologiesPage() {
               <div className="tech-stat-number-new">100%</div>
               <div className="tech-stat-label-new">Modern Stack</div>
             </div>
+
+            <div className="tech-stat-card-new">
+              <div className="tech-stat-icon">
+                <FaBookOpen />
+              </div>
+              <div className="tech-stat-number-new">50+</div>
+              <div className="tech-stat-label-new">Recent Case Studies or Blogs</div>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Reusing Home Stats Section */}
+      <Stats />
     </>
   );
 }
