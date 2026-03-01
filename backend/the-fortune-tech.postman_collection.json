@@ -1,0 +1,2429 @@
+{
+    "info": {
+        "_postman_id": "7a3b4c12-9d8e-4f5a-b6c7-d8e9f0a1b2c3",
+        "name": "The Fortune Tech API",
+        "description": "API collection for The Fortune Tech backend services. This collection includes all public and protected endpoints for managing services, portfolio, technologies, testimonials, careers, CMS, and user management. Verified for compliance with Engineering Principles.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "General",
+            "item": [
+                {
+                    "name": "Root Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"Password123!\",\n    \"confirmPassword\": \"Password123!\",\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const response = pm.response.json();",
+                                    "if (response.success && response.data && response.data.accessToken) {",
+                                    "    pm.collectionVariables.set(\"accessToken\", response.data.accessToken);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@thefortunetech.com\",\n    \"password\": \"Admin@123\",\n    \"rememberMe\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/refresh",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "refresh"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"user@example.com\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/forgot-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "forgot-password"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"token\": \"your-reset-token\",\n    \"password\": \"NewPassword123!\",\n    \"confirmPassword\": \"NewPassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/reset-password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "reset-password"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Email",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify-email/your-token",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-email",
+                                "your-token"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Current User (Me)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Services",
+            "item": [
+                {
+                    "name": "Get All Services",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/services?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Featured Services",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/services/featured",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services",
+                                "featured"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Service By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/services/service-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services",
+                                "service-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Service",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Web Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tagline",
+                                    "value": "Building high-performance web applications",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Complete web development from idea to launch.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "overview",
+                                    "value": "We specialize in building modern, scalable, and secure web applications.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "value": "code",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "features[0]",
+                                    "value": "Custom Web Applications",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "features[1]",
+                                    "value": "API Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "deliverables[0]",
+                                    "value": "Source Code",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "deliverables[1]",
+                                    "value": "Documentation",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "process[0]",
+                                    "value": "Discovery & Planning",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "process[1]",
+                                    "value": "Development & Testing",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "process[2]",
+                                    "value": "Deployment & Support",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[0]",
+                                    "value": "React",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[1]",
+                                    "value": "Node.js",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "benefits[0]",
+                                    "value": "Scalable architecture",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "benefits[1]",
+                                    "value": "Modern technology stack",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "idealFor[0]",
+                                    "value": "Startups",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "idealFor[1]",
+                                    "value": "Enterprises",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "cta",
+                                    "value": "Get Started",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "seo[metaTitle]",
+                                    "value": "Web Development Services",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "seo[metaDescription]",
+                                    "value": "Professional web development services",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "seo[keywords][0]",
+                                    "value": "web development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "seo[keywords][1]",
+                                    "value": "react",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "pricingHint",
+                                    "value": "Starting from $5000",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "thumbnail",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/services",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Service",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Web Development Pro",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tagline",
+                                    "value": "Building high-performance web applications",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Professional website development services with AI",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "overview",
+                                    "value": "Updated overview text",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "icon",
+                                    "value": "code",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "features[0]",
+                                    "value": "Custom Web Applications",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "deliverables[0]",
+                                    "value": "Source Code",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "techStack[0]",
+                                    "value": "React",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "benefits[0]",
+                                    "value": "Scalable architecture",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "pricingHint",
+                                    "value": "Starting from $7500",
+                                    "type": "text",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/services/service-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services",
+                                "service-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Service",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/services/service-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "services",
+                                "service-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Portfolio",
+            "item": [
+                {
+                    "name": "Get All Portfolio",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "",
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Featured Portfolio",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio/featured",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio",
+                                "featured"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Portfolio By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio/portfolio-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio",
+                                "portfolio-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Portfolio",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "E-commerce Platform",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Large scale e-commerce solution with AI-driven recommendations.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client[name]",
+                                    "value": "Global Retail Corp",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "client[location]",
+                                    "value": "New York, USA",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "Web Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "industry",
+                                    "value": "Retail",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[frontend][0]",
+                                    "value": "Next.js",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[frontend][1]",
+                                    "value": "Redux",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[backend][0]",
+                                    "value": "Node.js",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "techStack[backend][1]",
+                                    "value": "MongoDB",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "keyFeatures[0]",
+                                    "value": "AI-powered recommendations",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "keyFeatures[1]",
+                                    "value": "Real-time inventory",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metrics[performance]",
+                                    "value": "50% faster load time",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metrics[scale]",
+                                    "value": "10,000+ daily users",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "links[live]",
+                                    "value": "https://example.com/project",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "links[caseStudy]",
+                                    "value": "https://example.com/case-study",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "links[github]",
+                                    "value": "https://github.com/example/project",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "timeline",
+                                    "value": "4 Months",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "Completed",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "servicesProvided[0]",
+                                    "value": "Web Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "servicesProvided[1]",
+                                    "value": "UI/UX Design",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "thumbnail",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Portfolio",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Updated E-commerce Platform",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "thumbnail",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio/portfolio-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio",
+                                "portfolio-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Portfolio",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/portfolio/portfolio-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "portfolio",
+                                "portfolio-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Technologies",
+            "item": [
+                {
+                    "name": "Get All Technologies",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Featured Technologies",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/featured",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "featured"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Tech Category By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Tech Category",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "category",
+                                    "value": "Frontend Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Technologies we use for web UI",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Tech Category",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "category",
+                                    "value": "Updated Frontend Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Tech Category",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Add Tech Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "React",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "expertiseLevel",
+                                    "value": "Advanced",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "experienceYears",
+                                    "value": "5",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "useCases[0]",
+                                    "value": "Web Apps",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "useCases[1]",
+                                    "value": "SPAs",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "useCases[2]",
+                                    "value": "Mobile Apps",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id/items",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id",
+                                "items"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Tech Item",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "React.js",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "icon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id/items/item-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id",
+                                "items",
+                                "item-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Tech Item",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/technologies/category-id/items/item-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "technologies",
+                                "category-id",
+                                "items",
+                                "item-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Testimonials",
+            "item": [
+                {
+                    "name": "Get All Testimonials",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Featured Testimonials",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials/featured",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials",
+                                "featured"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Testimonial By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials/testimonial-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials",
+                                "testimonial-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Testimonial",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "name",
+                                    "value": "Jane Smith",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "role",
+                                    "value": "CEO",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "company",
+                                    "value": "TechCorp",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "industry",
+                                    "value": "Technology",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "serviceProvided",
+                                    "value": "Web Development",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "Great team to work with! They delivered beyond our expectations.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "rating",
+                                    "value": "5",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "linkedin",
+                                    "value": "https://linkedin.com/in/janesmith",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "website",
+                                    "value": "https://techcorp.com",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featured",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "verified",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "avatar",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Testimonial",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "clientName",
+                                    "value": "Jane D. Smith",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "avatar",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials/testimonial-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials",
+                                "testimonial-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Testimonial",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/testimonials/testimonial-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "testimonials",
+                                "testimonial-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Careers",
+            "item": [
+                {
+                    "name": "Get All Careers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/careers?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "careers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Career By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/careers/career-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "careers",
+                                "career-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Career",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Senior Full Stack Developer\",\n    \"department\": \"Engineering\",\n    \"location\": \"Remote / Surat\",\n    \"type\": \"Full-time\",\n    \"experience\": \"3-5 Years\",\n    \"description\": \"We are looking for a skilled developer to join our team...\",\n    \"requirements\": [\"React\", \"Node.js\", \"MongoDB\", \"TypeScript\"],\n    \"responsibilities\": [\"Build scalable web applications\", \"Write clean code\", \"Collaborate with team\"],\n    \"benefits\": [\"Health Insurance\", \"Flexible Hours\", \"Remote Work\"],\n    \"applyLink\": \"https://thefortunetech.com/careers/apply\",\n    \"isActive\": true,\n    \"featured\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/careers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "careers"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Career",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"closed\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/careers/career-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "careers",
+                                "career-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Career",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/careers/career-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "careers",
+                                "career-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "CMS",
+            "item": [
+                {
+                    "name": "Get Published Pages",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/published",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "published"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Page By Slug",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page/about-us",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page",
+                                "about-us"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Pages (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Page By ID (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create CMS Page",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Privacy Policy\",\n    \"content\": \"<h1>Privacy Policy</h1><p>Our policy is...</p>\",\n    \"metaTitle\": \"Privacy Policy | The Fortune Tech\",\n    \"metaDescription\": \"Read our privacy policy\",\n    \"keywords\": \"privacy, policy, legal\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/cms",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update CMS Page",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Updated Privacy Policy\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete CMS Page",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Publish Page",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page-id/publish",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page-id",
+                                "publish"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Unpublish Page",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/cms/page-id/unpublish",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cms",
+                                "page-id",
+                                "unpublish"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "Get All Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/users?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/users/user-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "user-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create User (Admin)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "email",
+                                    "value": "newuser@example.com",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "password",
+                                    "value": "Password123!",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "firstName",
+                                    "value": "John",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "lastName",
+                                    "value": "Doe",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "displayName",
+                                    "value": "John Doe",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "role",
+                                    "value": "admin",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "phone",
+                                    "value": "+91 9988776655",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "location",
+                                    "value": "Surat, India",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "bio",
+                                    "value": "IT Professional at The Fortune Tech",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "avatar",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update User",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "firstName",
+                                    "value": "UpdatedName",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "avatar",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/users/user-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "user-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Change User Password",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"currentPassword\": \"OldPassword123!\",\n    \"newPassword\": \"NewPassword123!\",\n    \"confirmPassword\": \"NewPassword123!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/users/user-id/password",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "user-id",
+                                "password"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/users/user-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "user-id"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Settings",
+            "item": [
+                {
+                    "name": "Get Settings",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/settings",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "settings"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Settings",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "data",
+                                    "value": "{\n    \"site\": {\n        \"name\": \"The Fortune Tech\",\n        \"tagline\": \"Innovating the Future of IT\",\n        \"description\": \"Global IT Consulting & Software Development Company\",\n        \"url\": \"https://thefortunetech.com\"\n    },\n    \"company\": {\n        \"legalName\": \"The Fortune Tech Solutions Pvt Ltd\",\n        \"email\": \"contact@thefortunetech.com\",\n        \"phone\": \"+91 1234567890\",\n        \"address\": {\n            \"street\": \"Technology Park\",\n            \"city\": \"Surat\",\n            \"state\": \"Gujarat\",\n            \"postalCode\": \"395001\",\n            \"country\": \"India\"\n        }\n    },\n    \"social\": {\n        \"linkedin\": \"https://linkedin.com/company/thefortunetech\",\n        \"facebook\": \"https://facebook.com/thefortunetech\",\n        \"twitter\": \"https://twitter.com/thefortunetech\"\n    },\n    \"seo\": {\n        \"title\": \"The Fortune Tech | IT Consulting\",\n        \"description\": \"Top-tier IT consulting and software development services.\",\n        \"keywords\": [\"IT Consulting\", \"Software Development\", \"Digital Transformation\"]\n    },\n    \"features\": {\n        \"maintenanceMode\": false,\n        \"blogEnabled\": true\n    }\n}",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "logo",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "favicon",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/settings",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "settings"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Blogs",
+            "item": [
+                {
+                    "name": "Get Published Blogs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/published?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "published"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Blog By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Related Blogs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id/related",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id",
+                                "related"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Blogs (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Blog",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "My New Blog Post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "This is the content of my new blog post. It's very informative.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "excerpt",
+                                    "value": "A short excerpt about the blog post.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "published",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "author",
+                                    "value": "John Doe",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "Technology",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags[0]",
+                                    "value": "Tech",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags[1]",
+                                    "value": "Innovation",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metaTitle",
+                                    "value": "My New Blog Post - Best Tech Tips",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metaDescription",
+                                    "value": "Read our latest blog post about technology and innovation.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featuredImage",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Blog",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Updated Blog Post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "This is the updated content.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featuredImage",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Blog",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:5000",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}

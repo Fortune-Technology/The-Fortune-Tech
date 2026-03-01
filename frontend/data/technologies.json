@@ -1,0 +1,199 @@
+[
+    {
+        "category": "Frontend",
+        "slug": "frontend",
+        "description": "Modern frontend technologies for fast, responsive, and scalable user interfaces.",
+        "items": [
+            {
+                "name": "Next.js",
+                "icon": "SiNextdotjs",
+                "useCases": [
+                    "SEO-friendly websites",
+                    "SaaS platforms",
+                    "High-performance dashboards"
+                ],
+                "featured": true
+            },
+            {
+                "name": "React",
+                "icon": "FaReact",
+                "useCases": [
+                    "Single Page Applications",
+                    "Admin panels",
+                    "Reusable UI components"
+                ],
+                "featured": true
+            },
+            {
+                "name": "TypeScript",
+                "icon": "SiTypescript",
+                "useCases": [
+                    "Large-scale applications",
+                    "Type-safe APIs",
+                    "Enterprise frontend apps"
+                ],
+                "featured": false
+            },
+            {
+                "name": "HTML5",
+                "icon": "FaHtml5",
+                "useCases": [
+                    "Semantic markup",
+                    "SEO optimization",
+                    "Accessible web pages"
+                ],
+                "featured": false
+            },
+            {
+                "name": "CSS3",
+                "icon": "FaCss3Alt",
+                "useCases": [
+                    "Responsive layouts",
+                    "Custom animations",
+                    "Modern UI designs"
+                ],
+                "featured": false
+            }
+        ]
+    },
+    {
+        "category": "Backend",
+        "slug": "backend",
+        "description": "Robust backend technologies for secure, scalable, and high-performance systems.",
+        "items": [
+            {
+                "name": "Node.js",
+                "icon": "FaNodeJs",
+                "useCases": [
+                    "REST APIs",
+                    "Real-time applications",
+                    "Microservices"
+                ],
+                "featured": true
+            },
+            {
+                "name": "Python",
+                "icon": "FaPython",
+                "useCases": [
+                    "Backend services",
+                    "Data processing",
+                    "AI & automation"
+                ],
+                "featured": false
+            },
+            {
+                "name": "Java",
+                "icon": "FaJava",
+                "useCases": [
+                    "Enterprise applications",
+                    "Backend systems",
+                    "Financial platforms"
+                ],
+                "featured": false
+            },
+            {
+                "name": "Go",
+                "icon": "FaGolang",
+                "useCases": [
+                    "High-performance APIs",
+                    "Microservices",
+                    "Cloud-native systems"
+                ],
+                "featured": false
+            }
+        ]
+    },
+    {
+        "category": "Database",
+        "slug": "database",
+        "description": "Reliable databases designed for performance, scalability, and data integrity.",
+        "items": [
+            {
+                "name": "PostgreSQL",
+                "icon": "SiPostgresql",
+                "useCases": [
+                    "Relational data",
+                    "Financial applications",
+                    "Complex queries"
+                ],
+                "featured": true
+            },
+            {
+                "name": "MongoDB",
+                "icon": "SiMongodb",
+                "useCases": [
+                    "NoSQL applications",
+                    "Scalable web apps",
+                    "Flexible schemas"
+                ],
+                "featured": true
+            },
+            {
+                "name": "MySQL",
+                "icon": "SiMysql",
+                "useCases": [
+                    "CMS systems",
+                    "E-commerce platforms"
+                ],
+                "featured": false
+            },
+            {
+                "name": "Redis",
+                "icon": "SiRedis",
+                "useCases": [
+                    "Caching",
+                    "Session management",
+                    "Real-time data"
+                ],
+                "featured": false
+            }
+        ]
+    },
+    {
+        "category": "Cloud & Tools",
+        "slug": "cloud-tools",
+        "description": "Cloud platforms and DevOps tools to deploy, scale, and maintain applications.",
+        "items": [
+            {
+                "name": "AWS",
+                "icon": "FaAws",
+                "useCases": [
+                    "Cloud hosting",
+                    "Scalable infrastructure",
+                    "Serverless applications"
+                ],
+                "featured": true
+            },
+            {
+                "name": "Docker",
+                "icon": "FaDocker",
+                "useCases": [
+                    "Containerization",
+                    "Consistent deployments",
+                    "Microservices"
+                ],
+                "featured": false
+            },
+            {
+                "name": "Git",
+                "icon": "FaGitAlt",
+                "useCases": [
+                    "Version control",
+                    "Team collaboration",
+                    "CI/CD workflows"
+                ],
+                "featured": false
+            },
+            {
+                "name": "Linux",
+                "icon": "FaLinux",
+                "useCases": [
+                    "Server management",
+                    "Cloud infrastructure",
+                    "DevOps environments"
+                ],
+                "featured": false
+            }
+        ]
+    }
+]

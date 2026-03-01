@@ -1,0 +1,246 @@
+[
+    {
+        "id": "web-dev",
+        "slug": "web-development",
+        "title": "Web Development",
+        "tagline": "Fast, secure, and scalable web solutions",
+        "description": "Custom websites and web applications built using modern technologies focused on performance, security, and scalability.",
+        "overview": "We build high-quality websites and web applications that are optimized for speed, SEO, and conversions. Our solutions are designed to scale with your business and deliver a seamless user experience across all devices.",
+        "icon": "FaCode",
+        "image": "/images/services/web-dev.png",
+        "features": [
+            "Responsive Design (Mobile-first)",
+            "SEO-friendly Architecture",
+            "High Performance & Core Web Vitals",
+            "Secure Authentication & APIs",
+            "Accessibility (WCAG compliant)"
+        ],
+        "deliverables": [
+            "Production-ready website/app",
+            "Reusable component architecture",
+            "Optimized assets & images",
+            "Deployment & hosting setup",
+            "Basic documentation"
+        ],
+        "process": [
+            "Requirement Analysis",
+            "UI Wireframes",
+            "Development & Integration",
+            "Testing & Optimization",
+            "Deployment & Launch"
+        ],
+        "techStack": [
+            "Next.js",
+            "React",
+            "TypeScript",
+            "Node.js",
+            "REST / GraphQL"
+        ],
+        "benefits": [
+            "Increased online visibility",
+            "Better conversion rates",
+            "Clean & semantic markup",
+            "Future-ready architecture"
+        ],
+        "idealFor": [
+            "Startups",
+            "SMEs",
+            "Corporate websites",
+            "SaaS platforms"
+        ],
+        "cta": "Build Your Website",
+        "seo": {
+            "metaTitle": "Professional Web Development Services",
+            "metaDescription": "Custom web development services using React and Next.js for scalable and high-performing websites."
+        },
+        "featured": true
+    },
+    {
+        "id": "mobile-app",
+        "slug": "mobile-app-development",
+        "title": "Mobile App Development",
+        "tagline": "High-performance apps for iOS & Android",
+        "description": "Native and cross-platform mobile applications designed for performance, usability, and scalability.",
+        "overview": "We develop secure and user-friendly mobile apps that help businesses connect directly with their customers. Our apps are optimized for speed, usability, and long-term growth.",
+        "icon": "FaMobileAlt",
+        "image": "/images/services/mobile-app.png",
+        "features": [
+            "Cross-platform development",
+            "Smooth animations & UX",
+            "Offline-first capabilities",
+            "Secure API integration",
+            "App store deployment support"
+        ],
+        "deliverables": [
+            "Android & iOS builds",
+            "Source code repository",
+            "API integration",
+            "App store publishing support"
+        ],
+        "process": [
+            "Idea Validation",
+            "UI/UX Design",
+            "App Development",
+            "Testing & QA",
+            "Store Launch"
+        ],
+        "techStack": [
+            "React Native",
+            "Flutter",
+            "Node.js",
+            "Firebase"
+        ],
+        "benefits": [
+            "Broader audience reach",
+            "Direct user engagement",
+            "Improved customer retention"
+        ],
+        "idealFor": [
+            "E-commerce brands",
+            "Startups",
+            "Service-based businesses"
+        ],
+        "cta": "Build Mobile App",
+        "seo": {
+            "metaTitle": "Mobile App Development Services",
+            "metaDescription": "Cross-platform mobile app development using React Native and Flutter."
+        },
+        "featured": true
+    },
+    {
+        "id": "ui-ux",
+        "slug": "ui-ux-design",
+        "title": "UI/UX Design",
+        "tagline": "Designs that users love",
+        "description": "Human-centered UI/UX design focused on clarity, usability, and engagement.",
+        "overview": "Our UI/UX design process is driven by research and user behavior to ensure intuitive navigation and delightful experiences.",
+        "icon": "FaPaintBrush",
+        "image": "/images/services/ui-ux.png",
+        "features": [
+            "User research & personas",
+            "Wireframing & prototyping",
+            "Design systems",
+            "Interactive mockups"
+        ],
+        "deliverables": [
+            "High-fidelity UI designs",
+            "Design system & components",
+            "Clickable prototypes"
+        ],
+        "process": [
+            "Research & Analysis",
+            "Wireframing",
+            "Visual Design",
+            "Prototype & Feedback"
+        ],
+        "techStack": [
+            "Figma",
+            "Adobe XD",
+            "Framer"
+        ],
+        "benefits": [
+            "Higher user satisfaction",
+            "Lower bounce rate",
+            "Stronger brand identity"
+        ],
+        "idealFor": [
+            "SaaS platforms",
+            "Mobile apps",
+            "Web dashboards"
+        ],
+        "cta": "Design My Product",
+        "featured": false
+    },
+    {
+        "id": "consulting",
+        "slug": "it-consulting",
+        "title": "IT Consulting",
+        "tagline": "Technology aligned with business goals",
+        "description": "Expert guidance to help you make smarter technology decisions.",
+        "overview": "We analyze your current systems and recommend scalable, cost-effective technology solutions aligned with your business vision.",
+        "icon": "FaLightbulb",
+        "image": "/images/services/consulting.png",
+        "features": [
+            "Digital transformation strategy",
+            "Tech stack evaluation",
+            "Architecture planning"
+        ],
+        "deliverables": [
+            "Technology roadmap",
+            "Architecture diagrams",
+            "Cost optimization plan"
+        ],
+        "process": [
+            "Assessment",
+            "Strategy Planning",
+            "Recommendations",
+            "Implementation Support"
+        ],
+        "benefits": [
+            "Reduced operational costs",
+            "Improved efficiency",
+            "Future-proof systems"
+        ],
+        "cta": "Get Expert Advice",
+        "featured": false
+    },
+    {
+        "id": "cloud-devops",
+        "slug": "cloud-devops",
+        "title": "Cloud & DevOps",
+        "tagline": "Reliable infrastructure at scale",
+        "description": "Cloud infrastructure and DevOps automation for high availability and scalability.",
+        "icon": "FaCloud",
+        "image": "/images/services/cloud-devops.png",
+        "features": [
+            "Cloud architecture design",
+            "CI/CD pipelines",
+            "Containerization"
+        ],
+        "deliverables": [
+            "Cloud setup",
+            "Automated deployment pipelines",
+            "Monitoring & alerts"
+        ],
+        "techStack": [
+            "AWS",
+            "Azure",
+            "Docker",
+            "Kubernetes"
+        ],
+        "benefits": [
+            "Scalable systems",
+            "Reduced downtime",
+            "Faster releases"
+        ],
+        "cta": "Scale My Infrastructure",
+        "featured": false
+    },
+    {
+        "id": "maintenance",
+        "slug": "maintenance-support",
+        "title": "Maintenance & Support",
+        "tagline": "We keep your systems running",
+        "description": "Continuous monitoring, updates, and improvements for your applications.",
+        "icon": "FaTools",
+        "image": "/images/services/maintenance.png",
+        "features": [
+            "24/7 monitoring",
+            "Security patches",
+            "Performance optimization"
+        ],
+        "deliverables": [
+            "Monthly health reports",
+            "Bug fixes",
+            "Version upgrades"
+        ],
+        "benefits": [
+            "Peace of mind",
+            "Reduced downtime",
+            "Stable performance"
+        ],
+        "cta": "Maintain My Product",
+        "pricingHint": "",
+        "featured": false
+    }
+]
