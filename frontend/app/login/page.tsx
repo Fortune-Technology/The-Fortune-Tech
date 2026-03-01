@@ -1,11 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaGithub, FaExclamationCircle } from 'react-icons/fa';
+import { useLoginMutation } from '../../lib/store/api/authApi';
+import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
+import { setCredentials, selectIsAuthenticated, selectCurrentUser } from '../../lib/store/slices/authSlice';
+import { showSuccessNotification, showErrorNotification } from '../../lib/store/slices/notificationSlice';
 
 export default function LoginPage() {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const currentUser = useAppSelector(selectCurrentUser);
+
+    // Redirect authenticated users away from login page
+    useEffect(() => {
+        if (isAuthenticated && currentUser) {
+            if (currentUser.role === 'admin' || currentUser.role === 'super_admin') {
+                router.replace('/admin');
+            } else {
+                router.replace('/');
+            }
+        }
+    }, [isAuthenticated, currentUser, router]);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',
@@ -13,7 +33,8 @@ export default function LoginPage() {
         rememberMe: false
     });
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [login, { isLoading: isSubmitting }] = useLoginMutation();
 
     const validateForm = () => {
         const newErrors: { email?: string; password?: string } = {};
@@ -39,12 +60,29 @@ export default function LoginPage() {
 
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
+        try {
+            const result = await login({
+                email: formData.email,
+                password: formData.password
+            }).unwrap();
 
-        console.log('Login submitted:', formData);
+            // Store credentials in Redux
+            dispatch(setCredentials({
+                user: result.data?.user,
+                accessToken: result.data?.accessToken
+            }));
+
+            dispatch(showSuccessNotification('Login successful! Welcome back.'));
+
+            // Role-based redirect: admin users to /admin, others to home page
+            if (result.data?.user?.role === 'admin' || result.data?.user?.role === 'super_admin') {
+                router.push('/admin');
+            } else {
+                router.push('/');
+            }
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Login failed. Please check your credentials.'));
+        }
     };
 
     return (

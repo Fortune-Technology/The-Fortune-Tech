@@ -33,7 +33,7 @@ export default function ContactPage() {
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        console.log('Form Submitted:', formData);
+
         alert('Thank you for reaching out! We\'ll get back to you within 24 hours.');
         setFormData({ name: '', email: '', phone: '', company: '', service: '', budget: '', message: '' });
         setIsSubmitting(false);
@@ -73,21 +73,21 @@ export default function ContactPage() {
                                     <div className="info-icon"><FaMapMarkerAlt /></div>
                                     <div>
                                         <h4 className="item-title">Visit Our Office</h4>
-                                        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{fullAddress}</p>
+                                        <p className="contact-info-text">{fullAddress}</p>
                                     </div>
                                 </div>
                                 <div className="info-item">
                                     <div className="info-icon"><FaEnvelope /></div>
                                     <div>
                                         <h4 className="item-title">Email Us</h4>
-                                        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{company.contact.email}</p>
+                                        <p className="contact-info-text">{company.contact.email}</p>
                                     </div>
                                 </div>
                                 <div className="info-item">
                                     <div className="info-icon"><FaPhone /></div>
                                     <div>
                                         <h4 className="item-title">Call Us</h4>
-                                        <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{company.contact.phone}</p>
+                                        <p className="contact-info-text">{company.contact.phone}</p>
                                     </div>
                                 </div>
                             </div>
@@ -110,7 +110,7 @@ export default function ContactPage() {
                         <div className="contact-form-wrapper">
                             <h3 className="form-title">Send a Message</h3>
                             <form onSubmit={handleSubmit}>
-                                <div className="grid grid-2" style={{ gap: '1rem' }}>
+                                <div className="grid grid-2 contact-form-grid">
                                     <div className="form-group">
                                         <label htmlFor="name" className="form-label">Full Name *</label>
                                         <input
@@ -139,7 +139,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-2" style={{ gap: '1rem' }}>
+                                <div className="grid grid-2 contact-form-grid">
                                     <div className="form-group">
                                         <label htmlFor="phone" className="form-label">Phone Number</label>
                                         <input
@@ -166,7 +166,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-2" style={{ gap: '1rem' }}>
+                                <div className="grid grid-2 contact-form-grid">
                                     <div className="form-group">
                                         <label htmlFor="service" className="form-label">Service Interested In *</label>
                                         <select
@@ -213,8 +213,8 @@ export default function ContactPage() {
                                     ></textarea>
                                 </div>
 
-                                <Button type="submit" variant="primary" className="w-full" style={{ width: '100%' }}>
-                                    {isSubmitting ? 'Sending...' : (<span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FaPaperPlane /> {contact.form.submitButton}</span>)}
+                                <Button type="submit" variant="primary" className="contact-submit-btn">
+                                    {isSubmitting ? 'Sending...' : (<span className="contact-submit-content"><FaPaperPlane /> {contact.form.submitButton}</span>)}
                                 </Button>
                             </form>
                         </div>

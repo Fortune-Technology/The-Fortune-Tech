@@ -30,16 +30,16 @@ export default function AboutPage() {
             {/* Company Overview */}
             <section className="section">
                 <div className="container">
-                    <div className="grid grid-2" style={{ alignItems: 'center', gap: '4rem' }}>
+                    <div className="grid grid-2 about-overview-grid">
                         <div>
                             <span className="section-subtitle">Who We Are</span>
-                            <h2 style={{ marginBottom: '1.5rem' }}>Building Digital Excellence Since 2016</h2>
-                            <p style={{ marginBottom: '1.5rem', fontSize: '1.0625rem' }}>
+                            <h2 className="about-heading">Building Digital Excellence Since 2016</h2>
+                            <p className="about-text">
                                 The Fortune Tech is a premier IT consulting and software development firm serving clients globally.
                                 We specialize in transforming complex business challenges into elegant digital solutions that drive real results.
                             </p>
-                            <p style={{ fontSize: '1.0625rem' }}>
-                                Since our inception, we have partnered with startups and Fortune 500 companies alike to deliver
+                            <p className="about-text">
+                                Since our inception, we have partnered with startups and small, medium, and macro-scale enterprises alike to deliver
                                 innovative products that accelerate growth, improve efficiency, and create lasting competitive advantages.
                             </p>
                         </div>
@@ -49,7 +49,7 @@ export default function AboutPage() {
                                 alt="Our modern office space"
                                 fill
                                 sizes="(max-width: 768px) 100vw, 50vw"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                             />
                         </div>
                     </div>
@@ -68,7 +68,7 @@ export default function AboutPage() {
                         <div className="mv-card">
                             <div className="mv-icon"><FaLightbulb /></div>
                             <h3>Our Vision</h3>
-                            <p>To be the global leader in digital transformation, redefining the future of technology consulting with innovation, integrity, and excellence.</p>
+                            <p>To be a prominent tech solutions service provider in the Northeastern United States and the Eastern region of Canada, known for our innovation, integrity, and excellence.</p>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,8 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Team */}
+            {/* Team - Hidden for now */}
+            {/*
             <section className="section bg-alt">
                 <div className="container">
                     <SectionTitle title="Meet Our Team" subtitle="The Experts" />
@@ -106,7 +107,7 @@ export default function AboutPage() {
                                         alt={member.name}
                                         width={80}
                                         height={80}
-                                        style={{ objectFit: 'cover' }}
+                                        className="img-cover"
                                     />
                                 </div>
                                 <h4 className="team-name">{member.name}</h4>
@@ -117,6 +118,7 @@ export default function AboutPage() {
                     </div>
                 </div>
             </section>
+            */}
         </>
     );
 }

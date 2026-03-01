@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { FaWhatsapp, FaArrowUp } from 'react-icons/fa';
+import { usePathname } from 'next/navigation';
 
 export default function FloatingButtons() {
+    const pathname = usePathname();
     const [showBackToTop, setShowBackToTop] = useState(false);
+
+    // Hide on admin routes
+    const isAdminPage = pathname?.startsWith('/admin');
 
     useEffect(() => {
         const handleScroll = () => {
@@ -40,6 +45,8 @@ export default function FloatingButtons() {
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
         window.open(whatsappUrl, '_blank');
     };
+
+    if (isAdminPage) return null;
 
     return (
         <div className="floating-buttons">

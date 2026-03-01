@@ -3,38 +3,14 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import SectionTitle from '../ui/SectionTitle';
-import testimonialData from '../../data/testimonials.json';
-import { FaQuoteLeft, FaStar, FaLinkedin, FaExternalLinkAlt, FaCheckCircle } from 'react-icons/fa';
-
-interface Testimonial {
-  id: number;
-  slug: string;
-  name: string;
-  role: string;
-  company: string;
-  industry: string;
-  serviceProvided: string;
-  projectType: string;
-  rating: number;
-  content: string;
-  metrics: {
-    [key: string]: string;
-  };
-  avatar: string;
-  linkedin: string | null;
-  website: string | null;
-  verified: boolean;
-  featured: boolean;
-}
+import { useGetFeaturedTestimonialsQuery } from '../../lib/store/api/testimonialsApi';
+import { getImageUrl } from '../../lib/utils';
+import { FaQuoteLeft, FaStar, FaLinkedin, FaExternalLinkAlt, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
 export default function Testimonials() {
-  const testimonials = testimonialData as unknown as Testimonial[];
-
-  const avatarImages: Record<number, string> = {
-    1: '/images/testimonials/sarah.png',
-    2: '/images/testimonials/michael.png',
-    3: '/images/testimonials/emily.png',
-  };
+  // Fetch testimonials from API
+  const { data: testimonialsResponse, isLoading, isError } = useGetFeaturedTestimonialsQuery();
+  const testimonials = testimonialsResponse?.data || [];
 
   // Render star rating
   const renderStars = (rating: number) => {
@@ -42,6 +18,39 @@ export default function Testimonials() {
       <FaStar key={i} className={`star ${i < rating ? 'filled' : 'empty'}`} />
     ));
   };
+
+  // Get image URL - prioritize thumbnail, then avatar, then fallback
+  const getTestimonialImage = (testimonial: { thumbnail?: string; avatar?: string; name: string }) => {
+    if (testimonial.avatar) {
+      return getImageUrl(testimonial.avatar, '/images/placeholder-avatar.jpg');
+    }
+    if (testimonial.thumbnail) {
+      return getImageUrl(testimonial.thumbnail, '/images/placeholder-avatar.jpg');
+    }
+    return '/images/placeholder-avatar.jpg';
+  };
+
+  if (isLoading) {
+    return (
+      <section className="section testimonials-section">
+        <div className="container">
+          <SectionTitle
+            title="What Our Clients Say"
+            subtitle="Testimonials"
+          />
+          <div className="loading-state">
+            <FaSpinner className="spinner" />
+            <p>Loading testimonials...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (isError || testimonials.length === 0) {
+    // Optionally return null or a fallback message if no testimonials
+    return null;
+  }
 
   return (
     <section className="section testimonials-section">
@@ -54,7 +63,7 @@ export default function Testimonials() {
         <div className="testimonials-grid">
           {testimonials.map((testimonial) => (
             <div
-              key={testimonial.id}
+              key={testimonial.id || testimonial._id}
               className={`testimonial-card-new ${testimonial.featured ? 'featured' : ''}`}
             >
               {/* Header */}
@@ -71,42 +80,54 @@ export default function Testimonials() {
 
               {/* Rating */}
               <div className="testimonial-rating">
-                {renderStars(testimonial.rating)}
+                {renderStars(testimonial.rating || 5)}
               </div>
 
               {/* Content */}
               <p className="testimonial-text">&ldquo;{testimonial.content}&rdquo;</p>
 
               {/* Metrics */}
-              <div className="testimonial-metrics">
-                {Object.entries(testimonial.metrics).slice(0, 2).map(([key, value]) => (
-                  <div key={key} className="metric-badge">
-                    <span className="metric-val">{value}</span>
-                    <span className="metric-key">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                  </div>
-                ))}
-              </div>
+              {testimonial.metrics && Object.keys(testimonial.metrics).length > 0 && (
+                <div className="testimonial-metrics">
+                  {Object.entries(testimonial.metrics).slice(0, 2).map(([key, value]) => (
+                    <div key={key} className="metric-badge">
+                      <span className="metric-val">{value}</span>
+                      <span className="metric-key">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Service Tag */}
-              <div className="testimonial-service">
-                <span className="service-label">{testimonial.serviceProvided}</span>
-              </div>
+              {testimonial.serviceProvided && (
+                <div className="testimonial-service">
+                  <span className="service-label">{testimonial.serviceProvided}</span>
+                </div>
+              )}
 
               {/* Author */}
               <div className="testimonial-author-new">
                 <div className="author-avatar-new">
                   <Image
-                    src={avatarImages[testimonial.id] || '/images/testimonials/sarah.png'}
+                    src={getTestimonialImage(testimonial)}
                     alt={testimonial.name}
                     width={56}
                     height={56}
-                    style={{ objectFit: 'cover' }}
+                    unoptimized
+                    className="img-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (!target.src.includes('/images/placeholder-avatar.jpg')) {
+                        target.srcset = '';
+                        target.src = '/images/placeholder-avatar.jpg';
+                      }
+                    }}
                   />
                 </div>
                 <div className="author-details">
                   <h4 className="author-name-new">{testimonial.name}</h4>
-                  <span className="author-title">{testimonial.role}</span>
-                  <span className="author-company">{testimonial.company}</span>
+                  {testimonial.role && <span className="author-title">{testimonial.role}</span>}
+                  {testimonial.company && <span className="author-company">{testimonial.company}</span>}
                 </div>
                 <div className="author-links">
                   {testimonial.linkedin && (
@@ -123,9 +144,11 @@ export default function Testimonials() {
               </div>
 
               {/* Industry Badge */}
-              <div className="testimonial-footer">
-                <span className="industry-badge">{testimonial.industry}</span>
-              </div>
+              {testimonial.industry && (
+                <div className="testimonial-footer">
+                  <span className="industry-badge">{testimonial.industry}</span>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -3,10 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Image optimization configuration
   images: {
-    // Add domains if using external images
-    remotePatterns: [],
+    // Remote patterns for external images from backend
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5000',
+        pathname: '/**',
+      },
+    ],
     // Use modern image formats where supported
     formats: ['image/avif', 'image/webp'],
+    // Allow unoptimized during development for easier debugging
+    unoptimized: process.env.NODE_ENV === 'development',
   },
 
   // Compiler optimizations for production builds

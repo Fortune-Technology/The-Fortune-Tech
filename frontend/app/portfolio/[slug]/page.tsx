@@ -1,70 +1,18 @@
-import { Metadata } from 'next';
+'use client';
+
+import { use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import Button from '../../../components/ui/Button';
-import portfolioData from '../../../data/portfolio.json';
-import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine } from 'react-icons/fa';
+import { getImageUrl } from '../../../lib/utils';
+import { useGetPortfolioByIdQuery, useGetPortfoliosQuery } from '../../../lib/store/api/portfolioApi';
+import { useGetTestimonialsQuery } from '../../../lib/store/api/testimonialsApi';
+import { useGetTechnologiesQuery } from '../../../lib/store/api/technologiesApi';
+import { FaArrowLeft, FaExternalLinkAlt, FaGithub, FaCheck, FaClock, FaMapMarkerAlt, FaIndustry, FaChartLine, FaSpinner, FaFileAlt, FaStar, FaQuoteLeft } from 'react-icons/fa';
 import { SiNextdotjs, SiTypescript, SiPython, SiPostgresql, SiRedis, SiDocker, SiFirebase, SiStripe, SiMongodb, SiFigma } from 'react-icons/si';
 import { FaReact, FaNodeJs, FaAws } from 'react-icons/fa';
-
-// Type definitions based on the new data structure
-interface TechStack {
-    [key: string]: string[];
-}
-
-interface Project {
-    id: number;
-    slug: string;
-    title: string;
-    category: string;
-    industry: string;
-    client: {
-        name: string;
-        location: string;
-    };
-    description: string;
-    keyFeatures: string[];
-    techStack: TechStack;
-    metrics: {
-        [key: string]: string;
-    };
-    timeline: string;
-    status: string;
-    servicesProvided: string[];
-    links: {
-        live: string | null;
-        caseStudy: string | null;
-        github: string | null;
-    };
-    thumbnail: string;
-    featured: boolean;
-}
-
-// Generate Static Params for SSG
-export async function generateStaticParams() {
-    return portfolioData.map((project) => ({
-        slug: project.slug,
-    }));
-}
-
-// Generate Metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-    const { slug } = await params;
-    const project = portfolioData.find((p) => p.slug === slug);
-
-    if (!project) {
-        return {
-            title: 'Project Not Found',
-        };
-    }
-
-    return {
-        title: project.title,
-        description: project.description,
-    };
-}
 
 // Helper to get tech icon
 const getTechIcon = (tech: string) => {
@@ -94,7 +42,7 @@ const getTechIcon = (tech: string) => {
 
 // Status badge color
 const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
         case 'completed':
             return 'status-completed';
         case 'live':
@@ -106,23 +54,102 @@ const getStatusColor = (status: string) => {
     }
 };
 
-export default async function PortfolioDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const project = portfolioData.find((p) => p.slug === slug) as Project | undefined;
+// Helper to check if object has values
+const hasObjectData = (obj: unknown): boolean => {
+    if (!obj || typeof obj !== 'object') return false;
+    return Object.keys(obj).length > 0 && Object.values(obj).some(v => v !== undefined && v !== null && v !== '');
+};
 
-    if (!project) {
+export default function PortfolioDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
+
+    // Fetch portfolio by slug
+    const { data: portfolioResponse, isLoading, isError } = useGetPortfolioByIdQuery(slug);
+    const project = portfolioResponse?.data;
+
+    // Fetch all portfolios for related projects
+    const { data: portfoliosResponse } = useGetPortfoliosQuery();
+    const allProjects = portfoliosResponse?.data || [];
+
+    // Fetch testimonials (must be before any early returns to preserve hooks order)
+    const { data: testimonialsResponse } = useGetTestimonialsQuery();
+
+    // Fetch technologies to resolve exact item names and icons
+    const { data: technologiesResponse } = useGetTechnologiesQuery();
+
+    if (isLoading) {
+        return (
+            <>
+                <PageHeader
+                    title="Loading..."
+                    subtitle="Please wait while we load the project details"
+                />
+                <section className="section">
+                    <div className="container">
+                        <div className="loading-state">
+                            <FaSpinner className="spinner" />
+                            <p>Loading project details...</p>
+                        </div>
+                    </div>
+                </section>
+            </>
+        );
+    }
+
+    if (isError || !project) {
         notFound();
     }
 
+    // Get client info safely - client can be object with name/location
+    const clientData = project.client;
+    const clientName = clientData && typeof clientData === 'object'
+        ? (clientData as { name?: string }).name || 'N/A'
+        : (clientData as string) || 'N/A';
+    const clientLocation = clientData && typeof clientData === 'object'
+        ? (clientData as { location?: string }).location || ''
+        : '';
 
-    // Get all tech items from techStack object
-    const getAllTech = () => {
-        const allTech: string[] = [];
-        Object.values(project.techStack).forEach((techs) => {
-            allTech.push(...techs);
+    // Get links safely - links is an object with live, github, caseStudy
+    const links = project.links || {};
+    const liveLink = typeof links === 'object' ? (links as { live?: string }).live : null;
+    const githubLink = typeof links === 'object' ? (links as { github?: string }).github : null;
+    const caseStudyLink = typeof links === 'object' ? (links as { caseStudy?: string }).caseStudy : null;
+
+    // Find related projects (same category, excluding current)
+    const relatedProjects = allProjects
+        .filter((p) => p.id !== project.id && p.category === project.category)
+        .slice(0, 2);
+
+    // Compute displayed technologies grouped by category from project.technologyStack items
+    const displayTechStack = (() => {
+        if (!project.technologyStack || project.technologyStack.length === 0) return [];
+        const techIds = project.technologyStack.map((t: any) => typeof t === 'object' ? t.id || t._id : t);
+        const cats = technologiesResponse?.data || [];
+        const grouped: any[] = [];
+
+        cats.forEach((cat: any) => {
+            const matchedItems = (cat.items || []).filter((item: any) => techIds.includes(item._id));
+            if (matchedItems.length > 0) {
+                grouped.push({
+                    category: cat.category,
+                    items: matchedItems.map((item: any) => ({ name: item.name, icon: item.icon }))
+                });
+            }
         });
-        return allTech;
-    };
+
+        return grouped;
+    })();
+
+    // Check if metrics has data
+    const hasMetrics = project.metrics && hasObjectData(project.metrics);
+
+    // Get testimonials linked to this portfolio
+    const linkedTestimonials = (testimonialsResponse?.data || []).filter((t: any) =>
+        t.portfolios?.some((p: any) => {
+            const pId = typeof p === 'object' ? (p._id || p.id) : p;
+            return pId === project._id || pId === project.id;
+        })
+    );
 
     return (
         <>
@@ -142,17 +169,20 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                     <div className="project-detail-hero">
                         <div className="project-detail-image">
                             <Image
-                                src={project.thumbnail}
+                                src={getImageUrl(project.thumbnail, '/images/placeholder-project.jpg')}
                                 alt={project.title}
                                 fill
+                                unoptimized
                                 sizes="(max-width: 768px) 100vw, 80vw"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                                 priority
                             />
                             <div className="project-overlay">
-                                <span className={`status-badge ${getStatusColor(project.status)}`}>
-                                    {project.status}
-                                </span>
+                                {project.status && (
+                                    <span className={`status-badge ${getStatusColor(project.status)}`}>
+                                        {project.status}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -162,50 +192,71 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                         {/* Main Content */}
                         <div className="project-main-content">
                             {/* Key Features */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Key Features</h2>
-                                <ul className="feature-list">
-                                    {project.keyFeatures.map((feature, idx) => (
-                                        <li key={idx} className="feature-item">
-                                            <FaCheck className="feature-icon" />
-                                            <span>{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {/* Tech Stack */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Technology Stack</h2>
-                                <div className="tech-stack-grid">
-                                    {Object.entries(project.techStack).map(([category, techs]) => (
-                                        <div key={category} className="tech-stack-category">
-                                            <h4 className="tech-category-label">{category.charAt(0).toUpperCase() + category.slice(1)}</h4>
-                                            <div className="tech-pills">
-                                                {techs.map((tech, idx) => {
-                                                    const Icon = getTechIcon(tech);
-                                                    return (
-                                                        <span key={idx} className="tech-pill">
-                                                            {Icon && <Icon className="tech-pill-icon" />}
-                                                            {tech}
-                                                        </span>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    ))}
+                            {project.keyFeatures && project.keyFeatures.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Key Features</h2>
+                                    <ul className="feature-list">
+                                        {project.keyFeatures.map((feature: string, idx: number) => (
+                                            <li key={`feature-${idx}`} className="feature-item">
+                                                <FaCheck className="feature-icon" />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Long Description */}
+                            {project.longDescription && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Project Overview</h2>
+                                    <div
+                                        className="long-description-content"
+                                        dangerouslySetInnerHTML={{ __html: project.longDescription }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Technology Stack from populated technologyStack */}
+                            {displayTechStack.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Technologies Used</h2>
+                                    <div className="tech-stack-grid">
+                                        {displayTechStack.map((cat: any) => (
+                                            <div key={cat.category} className="tech-stack-category">
+                                                <h4 className="tech-category-label">{cat.category}</h4>
+                                                <div className="tech-pills">
+                                                    {cat.items?.map((item: any, idx: number) => {
+                                                        const HardcodedIcon = getTechIcon(item.name);
+                                                        return (
+                                                            <span key={`ts-${idx}`} className="tech-pill">
+                                                                {item.icon ? (
+                                                                    <img src={getImageUrl(item.icon)} alt={item.name} className="tech-pill-img" />
+                                                                ) : HardcodedIcon && (
+                                                                    <HardcodedIcon className="tech-pill-icon" />
+                                                                )}
+                                                                {item.name}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Services Provided */}
-                            <div className="detail-section">
-                                <h2 className="detail-section-title">Services Provided</h2>
-                                <div className="services-tags">
-                                    {project.servicesProvided.map((service, idx) => (
-                                        <span key={idx} className="service-tag">{service}</span>
-                                    ))}
+                            {project.servicesProvided && project.servicesProvided.length > 0 && (
+                                <div className="detail-section">
+                                    <h2 className="detail-section-title">Services Provided</h2>
+                                    <div className="services-tags">
+                                        {project.servicesProvided.map((service: string, idx: number) => (
+                                            <span key={`service-${idx}`} className="service-tag">{service}</span>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
@@ -214,90 +265,158 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                             <div className="sidebar-card">
                                 <h3 className="sidebar-title">Project Details</h3>
 
-                                <div className="sidebar-item">
-                                    <FaIndustry className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Industry</span>
-                                        <span className="sidebar-value">{project.industry}</span>
+                                {project.category && (
+                                    <div className="sidebar-item">
+                                        <span className="sidebar-icon">📁</span>
+                                        <div>
+                                            <span className="sidebar-label">Category</span>
+                                            <span className="sidebar-value">{project.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <span className="sidebar-icon">🏢</span>
-                                    <div>
-                                        <span className="sidebar-label">Client</span>
-                                        <span className="sidebar-value">{project.client.name}</span>
+                                {project.industry && (
+                                    <div className="sidebar-item">
+                                        <FaIndustry className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Industry</span>
+                                            <span className="sidebar-value">{project.industry}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <FaMapMarkerAlt className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Location</span>
-                                        <span className="sidebar-value">{project.client.location}</span>
+                                {clientName !== 'N/A' && (
+                                    <div className="sidebar-item">
+                                        <span className="sidebar-icon">🏢</span>
+                                        <div>
+                                            <span className="sidebar-label">Client</span>
+                                            <span className="sidebar-value">{clientName}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="sidebar-item">
-                                    <FaClock className="sidebar-icon" />
-                                    <div>
-                                        <span className="sidebar-label">Timeline</span>
-                                        <span className="sidebar-value">{project.timeline}</span>
+                                {clientLocation && (
+                                    <div className="sidebar-item">
+                                        <FaMapMarkerAlt className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Location</span>
+                                            <span className="sidebar-value">{clientLocation}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {project.timeline && (
+                                    <div className="sidebar-item">
+                                        <FaClock className="sidebar-icon" />
+                                        <div>
+                                            <span className="sidebar-label">Timeline</span>
+                                            <span className="sidebar-value">{project.timeline}</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Metrics Card */}
-                            <div className="sidebar-card metrics-card">
-                                <h3 className="sidebar-title">
-                                    <FaChartLine className="title-icon" /> Key Metrics
-                                </h3>
-                                <div className="metrics-grid">
-                                    {Object.entries(project.metrics).map(([key, value]) => (
-                                        <div key={key} className="metric-item">
-                                            <span className="metric-value">{value}</span>
-                                            <span className="metric-label">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                        </div>
-                                    ))}
+                            {hasMetrics && (
+                                <div className="sidebar-card metrics-card">
+                                    <h3 className="sidebar-title">
+                                        <FaChartLine className="title-icon" /> Key Metrics
+                                    </h3>
+                                    <div className="metrics-grid">
+                                        {Object.entries(project.metrics as Record<string, string>).map(([key, value]) => (
+                                            value && (
+                                                <div key={key} className="metric-item">
+                                                    <span className="metric-value">{value}</span>
+                                                    <span className="metric-label">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Action Buttons */}
-                            <div className="sidebar-actions">
-                                {project.links.live && (
-                                    <Button href={project.links.live} variant="primary" target="_blank">
-                                        <FaExternalLinkAlt /> View Live Site
-                                    </Button>
-                                )}
-                                {project.links.github && (
-                                    <Button href={project.links.github} variant="outline" target="_blank">
-                                        <FaGithub /> View Code
-                                    </Button>
-                                )}
-                            </div>
+                            {(liveLink || githubLink || caseStudyLink) && (
+                                <div className="sidebar-actions">
+                                    {liveLink && (
+                                        <Button href={liveLink} variant="primary" target="_blank">
+                                            <FaExternalLinkAlt /> View Live Site
+                                        </Button>
+                                    )}
+                                    {githubLink && (
+                                        <Button href={githubLink} variant="outline" target="_blank">
+                                            <FaGithub /> View Code
+                                        </Button>
+                                    )}
+                                    {caseStudyLink && (
+                                        <Button href={caseStudyLink} variant="outline" target="_blank">
+                                            <FaFileAlt /> Case Study
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
+                    {/* Linked Testimonials */}
+                    {linkedTestimonials.length > 0 && (
+                        <div className="detail-section portfolio-testimonials">
+                            <h2 className="section-title">What Our Clients Say</h2>
+                            <div className="portfolio-testimonials-grid">
+                                {linkedTestimonials.map((t: any) => (
+                                    <div key={t._id || t.id} className="portfolio-testimonial-card">
+                                        <FaQuoteLeft className="portfolio-testimonial-quote" />
+                                        <div className="portfolio-testimonial-stars">
+                                            {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                                                <FaStar key={i} />
+                                            ))}
+                                        </div>
+                                        <p className="portfolio-testimonial-text">
+                                            &ldquo;{t.content}&rdquo;
+                                        </p>
+                                        <div className="portfolio-testimonial-author">
+                                            {(t.avatar || t.thumbnail) && (
+                                                <Image
+                                                    src={getImageUrl(t.avatar || t.thumbnail, '/images/placeholder-avatar.jpg')}
+                                                    alt={t.name}
+                                                    width={44}
+                                                    height={44}
+                                                    unoptimized
+                                                    className="portfolio-testimonial-avatar"
+                                                />
+                                            )}
+                                            <div>
+                                                <div className="portfolio-testimonial-name">{t.name}</div>
+                                                <div className="portfolio-testimonial-role">
+                                                    {[t.role, t.company].filter(Boolean).join(' at ')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Related Projects */}
-                    <div className="related-projects">
-                        <h2 className="section-title">Related Projects</h2>
-                        <div className="related-grid">
-                            {portfolioData
-                                .filter((p) => p.id !== project.id && p.category === project.category)
-                                .slice(0, 2)
-                                .map((relatedProject) => (
+                    {relatedProjects.length > 0 && (
+                        <div className="related-projects">
+                            <h2 className="section-title">Related Projects</h2>
+                            <div className="related-grid">
+                                {relatedProjects.map((relatedProject) => (
                                     <Link
-                                        key={relatedProject.id}
+                                        key={relatedProject.id || relatedProject.slug}
                                         href={`/portfolio/${relatedProject.slug}`}
                                         className="related-card"
                                     >
                                         <div className="related-image">
                                             <Image
-                                                src={relatedProject.thumbnail}
+                                                src={getImageUrl(relatedProject.thumbnail, '/images/placeholder-project.jpg')}
                                                 alt={relatedProject.title}
                                                 fill
+                                                unoptimized
                                                 sizes="(max-width: 768px) 100vw, 50vw"
-                                                style={{ objectFit: 'cover' }}
+                                                className="img-cover"
                                             />
                                         </div>
                                         <div className="related-content">
@@ -306,8 +425,9 @@ export default async function PortfolioDetailPage({ params }: { params: Promise<
                                         </div>
                                     </Link>
                                 ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* CTA Section */}
                     <div className="cta-wrapper">

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { FaLinkedin, FaTwitter, FaGithub, FaDribbble, FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import { FaLinkedin, FaFacebook, FaGithub, FaEnvelope, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
 import websiteConfig from '../../data/website-config.json';
 
 export default function Footer() {
@@ -40,19 +40,14 @@ export default function Footer() {
                   <FaLinkedin />
                 </a>
               )}
-              {social.twitter && (
-                <a href={social.twitter} aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <FaTwitter />
+              {social.facebook && (
+                <a href={social.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                  <FaFacebook />
                 </a>
               )}
               {social.github && (
                 <a href={social.github} aria-label="GitHub" target="_blank" rel="noopener noreferrer">
                   <FaGithub />
-                </a>
-              )}
-              {social.dribbble && (
-                <a href={social.dribbble} aria-label="Dribbble" target="_blank" rel="noopener noreferrer">
-                  <FaDribbble />
                 </a>
               )}
             </div>

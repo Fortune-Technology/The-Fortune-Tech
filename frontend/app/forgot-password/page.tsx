@@ -4,12 +4,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaEnvelope, FaExclamationCircle, FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import { useForgotPasswordMutation } from '../../lib/store/api/authApi';
+import { useAppDispatch } from '../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../lib/store/slices/notificationSlice';
 
 export default function ForgotPasswordPage() {
+    const dispatch = useAppDispatch();
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+
+    const [forgotPassword, { isLoading: isSubmitting }] = useForgotPasswordMutation();
 
     const validateForm = () => {
         if (!email) {
@@ -28,13 +33,13 @@ export default function ForgotPasswordPage() {
 
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setIsSuccess(true);
-
-        console.log('Password reset requested for:', email);
+        try {
+            await forgotPassword({ email }).unwrap();
+            setIsSuccess(true);
+            dispatch(showSuccessNotification('Password reset link sent to your email.'));
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to send reset link. Please try again.'));
+        }
     };
 
     return (
@@ -112,12 +117,12 @@ export default function ForgotPasswordPage() {
                             <Link href="/login" className="btn btn-primary auth-submit-btn">
                                 Back to Login
                             </Link>
-                            <p className="auth-footer" style={{ marginTop: '1.5rem', paddingTop: '1rem' }}>
+                            <p className="auth-footer auth-footer-spaced">
                                 Didn&apos;t receive the email?{' '}
                                 <button
                                     onClick={() => setIsSuccess(false)}
                                     className="forgot-password-link"
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                    className="auth-resend-btn"
                                 >
                                     Try again
                                 </button>

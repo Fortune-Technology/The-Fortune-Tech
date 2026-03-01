@@ -22,13 +22,18 @@ export default function RichTextEditor({
     placeholder,
 }: RichTextEditorProps) {
     return (
-        <div className="rich-text-editor-wrapper" style={{ height }}>
+        <div
+            className="rich-text-editor-wrapper"
+            style={{
+                '--editor-height': `${height}px`,
+                '--editor-content-height': `${height - 42}px`,
+            } as React.CSSProperties}
+        >
             <ReactQuill
                 theme="snow"
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                style={{ height: height - 42 }}
                 modules={{
                     toolbar: [
                         [{ font: [] }, { size: [] }],

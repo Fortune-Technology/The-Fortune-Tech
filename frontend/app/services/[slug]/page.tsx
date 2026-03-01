@@ -1,11 +1,14 @@
-import { Metadata } from 'next';
+'use client';
+
+import { use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import Button from '../../../components/ui/Button';
-import serviceData from '../../../data/services.json';
 import { getIcon } from '../../../lib/icons';
+import { getImageUrl } from '../../../lib/utils';
+import { useGetServiceByIdQuery, useGetServicesQuery } from '../../../lib/store/api/servicesApi';
 import {
     FaArrowLeft,
     FaArrowRight,
@@ -16,81 +19,75 @@ import {
     FaUsers,
     FaRocket,
     FaLightbulb,
-    FaShieldAlt
+    FaShieldAlt,
+    FaSpinner
 } from 'react-icons/fa';
 
-// Type definition for services
-interface Service {
-    id: string;
-    slug: string;
-    title: string;
-    tagline: string;
-    description: string;
-    overview?: string;
-    icon: string;
-    image: string;
-    features: string[];
-    deliverables: string[];
-    process?: string[];
-    techStack?: string[];
-    benefits: string[];
-    idealFor?: string[];
-    cta: string;
-    pricingHint: string;
-    featured: boolean;
-    seo?: {
-        metaTitle: string;
-        metaDescription: string;
-    };
-}
+export default function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+    const { slug } = use(params);
 
-// Generate Static Params for SSG
-export async function generateStaticParams() {
-    return serviceData.map((service) => ({
-        slug: service.slug,
-    }));
-}
+    // Fetch service by slug
+    const { data: serviceResponse, isLoading, isError } = useGetServiceByIdQuery(slug);
+    const service = serviceResponse?.data;
 
-// Generate Metadata for SEO
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-    const { slug } = await params;
-    const service = serviceData.find((s) => s.slug === slug);
+    // Fetch all services for related services
+    const { data: servicesResponse } = useGetServicesQuery();
+    const allServices = servicesResponse?.data || [];
 
-    if (!service) {
-        return {
-            title: 'Service Not Found',
-        };
+    if (isLoading) {
+        return (
+            <>
+                <PageHeader
+                    title="Loading..."
+                    subtitle="Please wait while we load the service details"
+                />
+                <section className="section">
+                    <div className="container">
+                        <div className="loading-state">
+                            <FaSpinner className="spinner" />
+                            <p>Loading service details...</p>
+                        </div>
+                    </div>
+                </section>
+                <style jsx>{`
+                    .loading-state {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 4rem;
+                        gap: 1rem;
+                        color: var(--text-muted);
+                    }
+                    .spinner {
+                        font-size: 2rem;
+                        animation: spin 1s linear infinite;
+                    }
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                `}</style>
+            </>
+        );
     }
 
-    return {
-        title: service.seo?.metaTitle || service.title,
-        description: service.seo?.metaDescription || service.description,
-    };
-}
-
-export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-
-    // Cast to Service[] as in the original file, though better typing would be preferred.
-    const services = serviceData as unknown as Service[];
-    const service = services.find((s) => s.slug === slug);
-
-    if (!service) {
+    if (isError || !service) {
         notFound();
     }
 
-    const Icon = getIcon(service.icon);
+    const Icon = getIcon(service.icon || '');
 
-    // Find related services (same excluding current)
-    const relatedServices = services
-        .filter((s) => s.id !== service.id)
+    // Find related services (excluding current)
+    const relatedServices = allServices
+        .filter((s) => s.id !== service.id && s.slug !== service.slug)
         .slice(0, 3);
 
     return (
         <>
             <PageHeader
                 title={service.title}
-                subtitle={service.tagline}
+                subtitle={service.tagline || service.description}
             />
 
             <section className="section">
@@ -104,11 +101,12 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                     <div className="service-detail-hero">
                         <div className="service-detail-image">
                             <Image
-                                src={service.image}
+                                src={getImageUrl(service.thumbnail || service.image, '/images/placeholder-service.jpg')}
                                 alt={service.title}
                                 fill
+                                unoptimized
                                 sizes="(max-width: 768px) 100vw, 60vw"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                                 priority
                             />
                             {service.featured && (
@@ -122,7 +120,6 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                 {Icon && <Icon />}
                             </div>
                             <div className="service-detail-meta">
-                                <span className="service-detail-price">{service.pricingHint}</span>
                                 {service.idealFor && service.idealFor.length > 0 && (
                                     <div className="service-detail-ideal">
                                         <FaUsers className="ideal-icon" />
@@ -134,7 +131,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                 {service.overview || service.description}
                             </p>
                             <Button href="/contact" variant="primary">
-                                {service.cta} <FaArrowRight />
+                                {service.cta || 'Get Started'} <FaArrowRight />
                             </Button>
                         </div>
                     </div>
@@ -142,57 +139,63 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                     {/* Main Content Grid */}
                     <div className="service-detail-grid">
                         {/* Features Section */}
-                        <div className="service-detail-section">
-                            <div className="section-header-icon">
-                                <FaCheck />
+                        {service.features && service.features.length > 0 && (
+                            <div className="service-detail-section">
+                                <div className="section-header-icon">
+                                    <FaCheck />
+                                </div>
+                                <h2 className="section-heading">Key Features</h2>
+                                <p className="section-description">What&apos;s included in our {service.title.toLowerCase()} service</p>
+                                <ul className="feature-grid">
+                                    {service.features.map((feature: string, idx: number) => (
+                                        <li key={`feature-${idx}`} className="feature-card">
+                                            <div className="feature-check">
+                                                <FaCheck />
+                                            </div>
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <h2 className="section-heading">Key Features</h2>
-                            <p className="section-description">What&apos;s included in our {service.title.toLowerCase()} service</p>
-                            <ul className="feature-grid">
-                                {service.features.map((feature, idx) => (
-                                    <li key={idx} className="feature-card">
-                                        <div className="feature-check">
-                                            <FaCheck />
-                                        </div>
-                                        <span>{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        )}
 
                         {/* Deliverables Section */}
-                        <div className="service-detail-section">
-                            <div className="section-header-icon deliverables">
-                                <FaBoxOpen />
+                        {service.deliverables && service.deliverables.length > 0 && (
+                            <div className="service-detail-section">
+                                <div className="section-header-icon deliverables">
+                                    <FaBoxOpen />
+                                </div>
+                                <h2 className="section-heading">What You&apos;ll Get</h2>
+                                <p className="section-description">Tangible deliverables from your project</p>
+                                <ul className="deliverables-grid">
+                                    {service.deliverables.map((item: string, idx: number) => (
+                                        <li key={`deliverable-${idx}`} className="deliverable-card">
+                                            <div className="deliverable-number">{idx + 1}</div>
+                                            <span>{item}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <h2 className="section-heading">What You&apos;ll Get</h2>
-                            <p className="section-description">Tangible deliverables from your project</p>
-                            <ul className="deliverables-grid">
-                                {service.deliverables.map((item, idx) => (
-                                    <li key={idx} className="deliverable-card">
-                                        <div className="deliverable-number">{idx + 1}</div>
-                                        <span>{item}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        )}
 
                         {/* Benefits Section */}
-                        <div className="service-detail-section">
-                            <div className="section-header-icon benefits">
-                                <FaRocket />
+                        {service.benefits && service.benefits.length > 0 && (
+                            <div className="service-detail-section">
+                                <div className="section-header-icon benefits">
+                                    <FaRocket />
+                                </div>
+                                <h2 className="section-heading">Benefits</h2>
+                                <p className="section-description">How this service helps your business grow</p>
+                                <ul className="benefits-grid">
+                                    {service.benefits.map((benefit: string, idx: number) => (
+                                        <li key={`benefit-${idx}`} className="benefit-card">
+                                            <FaStar className="benefit-icon" />
+                                            <span>{benefit}</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
-                            <h2 className="section-heading">Benefits</h2>
-                            <p className="section-description">How this service helps your business grow</p>
-                            <ul className="benefits-grid">
-                                {service.benefits.map((benefit, idx) => (
-                                    <li key={idx} className="benefit-card">
-                                        <FaStar className="benefit-icon" />
-                                        <span>{benefit}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        )}
 
                         {/* Process Section */}
                         {service.process && service.process.length > 0 && (
@@ -203,13 +206,13 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                 <h2 className="section-heading">Our Process</h2>
                                 <p className="section-description">How we approach your {service.title.toLowerCase()} project</p>
                                 <div className="process-timeline">
-                                    {service.process.map((step, idx) => (
-                                        <div key={idx} className="process-timeline-item">
+                                    {service.process?.map((step: string, idx: number) => (
+                                        <div key={`process-${idx}`} className="process-timeline-item">
                                             <div className="process-timeline-number">{idx + 1}</div>
                                             <div className="process-timeline-content">
                                                 <h4>{step}</h4>
                                             </div>
-                                            {idx < service.process!.length - 1 && (
+                                            {idx < (service.process?.length || 0) - 1 && (
                                                 <div className="process-timeline-connector" />
                                             )}
                                         </div>
@@ -227,8 +230,8 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                 <h2 className="section-heading">Technologies We Use</h2>
                                 <p className="section-description">Industry-leading tools and frameworks for your project</p>
                                 <div className="tech-stack-grid">
-                                    {service.techStack.map((tech, idx) => (
-                                        <div key={idx} className="tech-stack-card">
+                                    {service.techStack.map((tech: string, idx: number) => (
+                                        <div key={`tech-${idx}`} className="tech-stack-card">
                                             <FaShieldAlt className="tech-stack-icon" />
                                             <span>{tech}</span>
                                         </div>
@@ -244,20 +247,21 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                             <h2 className="section-title">Explore Other Services</h2>
                             <div className="related-services-grid">
                                 {relatedServices.map((relatedService) => {
-                                    const RelatedIcon = getIcon(relatedService.icon);
+                                    const RelatedIcon = getIcon(relatedService.icon || '');
                                     return (
                                         <Link
-                                            key={relatedService.id}
+                                            key={relatedService.id || relatedService.slug}
                                             href={`/services/${relatedService.slug}`}
                                             className="related-service-card"
                                         >
                                             <div className="related-service-image">
                                                 <Image
-                                                    src={relatedService.image}
+                                                    src={getImageUrl(relatedService.thumbnail || relatedService.image, '/images/placeholder-service.jpg')}
                                                     alt={relatedService.title}
                                                     fill
+                                                    unoptimized
                                                     sizes="(max-width: 768px) 100vw, 33vw"
-                                                    style={{ objectFit: 'cover' }}
+                                                    className="img-cover"
                                                 />
                                             </div>
                                             <div className="related-service-content">
@@ -265,7 +269,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                                                     {RelatedIcon && <RelatedIcon />}
                                                 </div>
                                                 <h3 className="related-service-title">{relatedService.title}</h3>
-                                                <p className="related-service-tagline">{relatedService.tagline}</p>
+                                                <p className="related-service-tagline">{relatedService.tagline || relatedService.description}</p>
                                             </div>
                                         </Link>
                                     );
@@ -281,7 +285,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                             <p>Contact us today to discuss your project requirements and get a personalized quote.</p>
                             <div className="cta-buttons">
                                 <Button href="/contact" variant="primary">
-                                    {service.cta} <FaArrowRight />
+                                    {service.cta || 'Get Started'} <FaArrowRight />
                                 </Button>
                                 <Button href="/services" variant="outline">
                                     Explore Other Services

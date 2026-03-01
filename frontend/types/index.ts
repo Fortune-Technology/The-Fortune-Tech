@@ -20,11 +20,8 @@ export interface SiteConfig {
 
 export interface SocialMedia {
     linkedin?: string;
-    twitter?: string;
-    github?: string;
-    dribbble?: string;
     facebook?: string;
-    instagram?: string;
+    github?: string;
 }
 
 export interface NavigationLink {
@@ -159,22 +156,36 @@ export interface Career {
 // =============================================================================
 
 export interface User {
-    id: string;
-    name: string;
+    _id?: string; // Backend raw _id (optional)
+    id: string; // Transformed id (required)
+    name?: string; // Flat name field
+    firstName?: string;
+    lastName?: string;
     email: string;
     role: UserRole;
     avatar?: string;
     phone?: string;
-    company?: string;
-    position?: string;
-    bio?: string;
-    status: 'active' | 'inactive' | 'suspended';
+    status: 'active' | 'inactive' | 'suspended' | 'pending';
     createdAt: string;
     updatedAt?: string;
     lastLogin?: string;
+
+    // Nested objects from backend
+    profile?: {
+        bio?: string;
+        phone?: string;
+        location?: string;
+        department?: string;
+        position?: string;
+        company?: string;
+    };
+    security?: {
+        lastLogin?: string;
+        twoFactorEnabled?: boolean;
+    };
 }
 
-export type UserRole = 'admin' | 'user' | 'client' | 'employee';
+export type UserRole = 'super_admin' | 'admin' | 'editor' | 'user' | 'client' | 'employee';
 
 // =============================================================================
 // CMS Types

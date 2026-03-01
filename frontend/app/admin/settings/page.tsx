@@ -1,43 +1,125 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../../components/admin/AdminLayout';
-import { FaSave, FaGlobe, FaBuilding, FaShareAlt, FaSearch, FaCogs } from 'react-icons/fa';
-import websiteConfigRaw from '../../../data/website-config.json';
+import { FaSave, FaGlobe, FaBuilding, FaShareAlt, FaSearch, FaCogs, FaSpinner } from 'react-icons/fa';
+import { useGetSettingsQuery, useUpdateSettingsMutation, Settings } from '../../../lib/store/api/settingsApi';
+import { useAppDispatch } from '../../../lib/store/hooks';
+import { showSuccessNotification, showErrorNotification } from '../../../lib/store/slices/notificationSlice';
+import ImageUpload from '../../../components/ui/ImageUpload';
 
 export default function SettingsPage() {
-    const [config, setConfig] = useState(websiteConfigRaw);
+    const dispatch = useAppDispatch();
     const [activeTab, setActiveTab] = useState('site');
-    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState<Record<string, any>>({});
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [faviconFile, setFaviconFile] = useState<File | null>(null);
+
+    // RTK Query hooks
+    const { data: settingsResponse, isLoading, refetch } = useGetSettingsQuery();
+    const [updateSettings, { isLoading: isSaving }] = useUpdateSettingsMutation();
+
+    useEffect(() => {
+        if (settingsResponse?.data) {
+            const settings = settingsResponse.data;
+            setFormData({
+                site: {
+                    name: settings.site?.name || '',
+                    description: settings.site?.description || '',
+                    logo: settings.site?.logo || '',
+                    favicon: settings.site?.favicon || '',
+                },
+                company: {
+                    email: settings.company?.email || '',
+                    phone: settings.company?.phone || '',
+                    address: typeof settings.company?.address === 'string' ? settings.company.address : '',
+                },
+                social: {
+                    facebook: settings.social?.facebook || '',
+                    linkedin: settings.social?.linkedin || '',
+                    github: settings.social?.github || '',
+                },
+                seo: {
+                    title: settings.seo?.title || '',
+                    description: settings.seo?.description || '',
+                    keywords: settings.seo?.keywords?.join(', ') || '',
+                    ogImage: settings.seo?.ogImage || '',
+                },
+                features: {
+                    maintenanceMode: settings.features?.maintenanceMode || false,
+                    maintenanceMessage: settings.features?.maintenanceMessage || '',
+                    googleAnalytics: settings.features?.googleAnalytics || '',
+                    facebookPixel: settings.features?.facebookPixel || '',
+                },
+            });
+        }
+    }, [settingsResponse]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSaving(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setIsSaving(false);
-        alert('Settings saved successfully (Mock)');
+
+        // Transform form data back to Settings structure
+        const dataToSend: any = { // Using any temporarily to bypass strict typing during migration
+            site: {
+                name: formData.site?.name,
+                description: formData.site?.description,
+                // Logo and favicon handled separately
+            },
+            company: {
+                email: formData.company?.email,
+                phone: formData.company?.phone,
+                address: formData.company?.address, // Simple string address
+            },
+            social: formData.social,
+            seo: {
+                title: formData.seo?.title,
+                description: formData.seo?.description,
+                keywords: typeof formData.seo?.keywords === 'string'
+                    ? formData.seo?.keywords?.split(',').map((k: string) => k.trim()).filter((k: string) => k)
+                    : formData.seo?.keywords,
+                ogImage: formData.seo?.ogImage,
+            },
+            features: {
+                maintenanceMode: formData.features?.maintenanceMode,
+                maintenanceMessage: formData.features?.maintenanceMessage,
+                googleAnalytics: formData.features?.googleAnalytics,
+                facebookPixel: formData.features?.facebookPixel,
+            },
+        };
+
+        try {
+            const submitData = new FormData();
+            submitData.append('data', JSON.stringify(dataToSend));
+
+            // Folder path
+            submitData.append('folder', 'settings');
+
+            if (logoFile) {
+                submitData.append('logo', logoFile);
+            }
+
+            if (faviconFile) {
+                submitData.append('favicon', faviconFile);
+            }
+
+            await updateSettings(submitData as any).unwrap();
+            dispatch(showSuccessNotification('Settings saved successfully'));
+            // Clear file inputs state
+            setLogoFile(null);
+            setFaviconFile(null);
+            // Refetch to get updated URLs
+            refetch();
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Failed to save settings'));
+        }
     };
 
     const handleInputChange = (section: string, field: string, value: any) => {
-        setConfig(prev => ({
+        setFormData(prev => ({
             ...prev,
             [section]: {
-                ...((prev as any)[section]),
+                ...prev[section],
                 [field]: value
-            }
-        }));
-    };
-
-    const handleNestedInputChange = (section: string, subSection: string, field: string, value: any) => {
-        setConfig(prev => ({
-            ...prev,
-            [section]: {
-                ...((prev as any)[section]),
-                [subSection]: {
-                    ...((prev as any)[section][subSection]),
-                    [field]: value
-                }
             }
         }));
     };
@@ -53,16 +135,30 @@ export default function SettingsPage() {
     const renderField = (section: string, key: string, value: any, label: string) => {
         const type = typeof value;
 
-        if (type === 'object' && value !== null && !Array.isArray(value)) {
-            // Nested object - simplified for this demo by only showing top-level fields
-            return null;
+        // Custom render for logo and favicon
+        if (section === 'site' && (key === 'logo' || key === 'favicon')) {
+            const isLogo = key === 'logo';
+            const file = isLogo ? logoFile : faviconFile;
+
+            return (
+                <div key={key} className="form-group">
+                    <ImageUpload
+                        label={label}
+                        value={file || value}
+                        onChange={(f) => isLogo ? setLogoFile(f) : setFaviconFile(f)}
+                        folderPath="uploads/settings"
+                        height={150}
+                        accept={isLogo ? "image/*" : "image/x-icon,image/png,image/svg+xml"}
+                    />
+                </div>
+            );
         }
 
         return (
             <div key={key} className="form-group">
                 <label className="form-label">{label}</label>
                 {type === 'boolean' ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="admin-checkbox-row">
                         <input
                             type="checkbox"
                             checked={value}
@@ -81,6 +177,23 @@ export default function SettingsPage() {
             </div>
         );
     };
+
+    const formatLabel = (key: string) => {
+        return key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase());
+    };
+
+    if (isLoading) {
+        return (
+            <AdminLayout pageTitle="Settings">
+                <div className="admin-loading">
+                    <FaSpinner className="spinner" />
+                    <p>Loading settings...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout pageTitle="Settings">
@@ -105,81 +218,24 @@ export default function SettingsPage() {
                         </h3>
                     </div>
 
-                    <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
+                    <form onSubmit={handleSave} className="admin-form-padded">
                         <div className="admin-form-grid">
-                            {Object.entries((config as any)[activeTab]).map(([key, value]) => {
-                                // Basic dynamic field generation
-                                // Convert camelCase or snake_case to Title Case for labels
-                                const label = key
-                                    .replace(/([A-Z])/g, ' $1')
-                                    .replace(/^./, str => str.toUpperCase());
-
+                            {formData[activeTab] && Object.entries(formData[activeTab]).map(([key, value]) => {
+                                const label = formatLabel(key);
                                 return renderField(activeTab, key, value, label);
                             })}
                         </div>
 
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <div className="admin-form-footer">
                             <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                                <FaSave /> {isSaving ? 'Saving...' : 'Save Settings'}
+                                {isSaving ? <FaSpinner className="spinner" /> : <FaSave />}
+                                {' '}{isSaving ? 'Saving...' : 'Save Settings'}
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <style jsx>{`
-                .settings-container {
-                    display: grid;
-                    grid-template-columns: 1fr;
-                    gap: 1.5rem;
-                }
-                .settings-sidebar {
-                    padding: 0.5rem;
-                    display: flex;
-                    gap: 0.5rem;
-                    overflow-x: auto;
-                    background: var(--glass-bg);
-                    border: 1px solid var(--glass-border);
-                    border-radius: var(--radius-lg);
-                    scrollbar-width: none;
-                }
-                .settings-sidebar::-webkit-scrollbar {
-                    display: none;
-                }
-                .settings-tab-btn {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    padding: 0.75rem 1.25rem;
-                    border: none;
-                    background: none;
-                    color: var(--text-muted);
-                    border-radius: var(--radius-md);
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    font-size: 0.9375rem;
-                    white-space: nowrap;
-                }
-                .settings-tab-btn:hover {
-                    background: var(--glass-hover);
-                    color: var(--text-primary);
-                }
-                .settings-tab-btn.active {
-                    background: var(--accent-gradient);
-                    color: white;
-                    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-                }
-                .form-group {
-                    margin-bottom: 1.25rem;
-                }
-                .form-label {
-                    display: block;
-                    margin-bottom: 0.5rem;
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                    color: var(--text-secondary);
-                }
-            `}</style>
         </AdminLayout>
     );
 }

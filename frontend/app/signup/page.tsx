@@ -1,11 +1,31 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaGithub, FaExclamationCircle, FaUser } from 'react-icons/fa';
+import { useRegisterMutation } from '../../lib/store/api/authApi';
+import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
+import { setCredentials, selectIsAuthenticated, selectCurrentUser } from '../../lib/store/slices/authSlice';
+import { showSuccessNotification, showErrorNotification } from '../../lib/store/slices/notificationSlice';
 
 export default function SignupPage() {
+    const router = useRouter();
+    const dispatch = useAppDispatch();
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const currentUser = useAppSelector(selectCurrentUser);
+
+    // Redirect authenticated users away from signup page
+    useEffect(() => {
+        if (isAuthenticated && currentUser) {
+            if (currentUser.role === 'admin' || currentUser.role === 'super_admin') {
+                router.replace('/admin');
+            } else {
+                router.replace('/');
+            }
+        }
+    }, [isAuthenticated, currentUser, router]);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -17,7 +37,8 @@ export default function SignupPage() {
         agreeTerms: false
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [register, { isLoading: isSubmitting }] = useRegisterMutation();
 
     // Password strength calculation
     const passwordStrength = useMemo(() => {
@@ -86,12 +107,32 @@ export default function SignupPage() {
 
         if (!validateForm()) return;
 
-        setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
+        try {
+            const result = await register({
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+                password: formData.password,
+                confirmPassword: formData.confirmPassword
+            }).unwrap();
 
-        console.log('Signup submitted:', formData);
+            // Store credentials in Redux
+            dispatch(setCredentials({
+                user: result.data?.user,
+                accessToken: result.data?.accessToken
+            }));
+
+            dispatch(showSuccessNotification('Account created successfully! Welcome aboard.'));
+
+            // Role-based redirect: admin users to /admin, others to home page
+            if (result.data?.user?.role === 'admin' || result.data?.user?.role === 'super_admin') {
+                router.push('/admin');
+            } else {
+                router.push('/');
+            }
+        } catch (err: any) {
+            dispatch(showErrorNotification(err?.data?.message || 'Registration failed. Please try again.'));
+        }
     };
 
     return (

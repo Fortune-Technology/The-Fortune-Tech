@@ -1,36 +1,58 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import PageHeader from '../../components/ui/PageHeader';
-import serviceData from '../../data/services.json';
 import Button from '../../components/ui/Button';
 import { getIcon } from '../../lib/icons';
-import { FaCheck, FaStar, FaArrowRight } from 'react-icons/fa';
-
-// Type definition for services
-interface Service {
-  id: string;
-  slug: string;
-  title: string;
-  tagline: string;
-  description: string;
-  overview?: string;
-  icon: string;
-  image: string;
-  features: string[];
-  deliverables: string[];
-  process?: string[];
-  techStack?: string[];
-  benefits: string[];
-  idealFor?: string[];
-  cta: string;
-  pricingHint: string;
-  featured: boolean;
-}
-
-// Pre-cast services data at module level
-const services = serviceData as unknown as Service[];
+import { getImageUrl } from '../../lib/utils';
+import { FaCheck, FaStar, FaArrowRight, FaSpinner } from 'react-icons/fa';
+import { useGetServicesQuery } from '../../lib/store/api/servicesApi';
 
 export default function ServicesPage() {
+  const { data: servicesResponse, isLoading, isError } = useGetServicesQuery({ pageSize: 100 });
+  const services = servicesResponse?.data || [];
+
+
+  if (isLoading) {
+    return (
+      <>
+        <PageHeader
+          title="Our Services"
+          subtitle="Comprehensive technology solutions designed to accelerate your business growth and digital transformation."
+        />
+        <section className="section">
+          <div className="container">
+            <div className="loading-state">
+              <FaSpinner className="spinner" />
+              <p>Loading services...</p>
+            </div>
+          </div>
+        </section>
+
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <PageHeader
+          title="Our Services"
+          subtitle="Comprehensive technology solutions designed to accelerate your business growth and digital transformation."
+        />
+        <section className="section">
+          <div className="container">
+            <div className="error-state">
+              <p>Failed to load services. Please try again later.</p>
+            </div>
+          </div>
+        </section>
+
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -42,12 +64,13 @@ export default function ServicesPage() {
         <div className="container">
           <div className="services-list">
             {services.map((service, index) => {
-              const Icon = getIcon(service.icon);
+              const Icon = getIcon(service.icon || '');
+              const serviceKey = service.id || service._id || service.slug || `service-${index}`;
               return (
                 <div
-                  key={service.id}
+                  key={serviceKey}
                   className={`service-row ${index % 2 !== 0 ? 'reverse' : ''}`}
-                  id={service.id}
+                  id={service.id || service._id}
                 >
                   <div className="service-content">
                     {/* Featured Badge */}
@@ -57,30 +80,43 @@ export default function ServicesPage() {
                       </div>
                     )}
 
-                    <div className="service-icon-wrapper">
-                      {Icon && <Icon />}
+                    <div className="service-header-row">
+                      <div className="service-icon-wrapper">
+                        {service.icon?.startsWith('/') ? (
+                          <Image
+                            src={getImageUrl(service.icon)}
+                            alt={service.title}
+                            width={48}
+                            height={48}
+                            className="service-icon-img img-contain"
+                          />
+                        ) : (
+                          Icon && <Icon />
+                        )}
+                      </div>
+                      <h2 className="service-title-lg">{service.title}</h2>
                     </div>
 
                     {/* Tagline */}
-                    <span className="service-tagline-pill">{service.tagline}</span>
-
-                    <h2 className="service-title-lg">{service.title}</h2>
+                    {service.tagline && (
+                      <span className="service-tagline-pill">{service.tagline}</span>
+                    )}
                     <p className="service-description-lg">{service.description}</p>
 
                     <div className="service-details">
                       <div className="detail-col">
                         <h4 className="detail-title">Key Features</h4>
                         <ul className="detail-list">
-                          {service.features.slice(0, 4).map((feature, idx) => (
-                            <li key={idx}><FaCheck className="check-icon" /> {feature}</li>
+                          {(service.features || []).slice(0, 4).map((feature, idx) => (
+                            <li key={`feature-${idx}`}><FaCheck className="check-icon" /> {feature}</li>
                           ))}
                         </ul>
                       </div>
                       <div className="detail-col">
                         <h4 className="detail-title">Benefits</h4>
                         <ul className="detail-list">
-                          {service.benefits.slice(0, 4).map((benefit, idx) => (
-                            <li key={idx}><FaStar className="star-icon" /> {benefit}</li>
+                          {(service.benefits || []).slice(0, 4).map((benefit, idx) => (
+                            <li key={`benefit-${idx}`}><FaStar className="star-icon" /> {benefit}</li>
                           ))}
                         </ul>
                       </div>
@@ -91,7 +127,7 @@ export default function ServicesPage() {
                       <div className="service-tech-preview">
                         <span className="tech-label">Technologies:</span>
                         {service.techStack.slice(0, 5).map((tech, idx) => (
-                          <span key={idx} className="tech-pill-sm">{tech}</span>
+                          <span key={`tech-${idx}`} className="tech-pill-sm">{tech}</span>
                         ))}
                         {service.techStack.length > 5 && (
                           <span className="tech-pill-sm more">+{service.techStack.length - 5}</span>
@@ -101,20 +137,20 @@ export default function ServicesPage() {
 
                     {/* Actions */}
                     <div className="service-actions">
-                      <Link href={`/services/${service.slug}`} className="btn btn-primary">
+                      <Link href={`/services/${service.slug || service._id}`} className="btn btn-primary">
                         View Full Details <FaArrowRight />
                       </Link>
-                      <span className="service-price-tag">{service.pricingHint}</span>
+
                     </div>
                   </div>
-
                   <div className="service-image-wrapper">
                     <Image
-                      src={service.image}
+                      src={getImageUrl(service.thumbnail || service.image, '/images/placeholder-service.jpg')}
                       alt={service.title}
                       fill
+                      unoptimized
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      style={{ objectFit: 'cover' }}
+                      className="img-cover"
                     />
                   </div>
                 </div>

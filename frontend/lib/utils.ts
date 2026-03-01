@@ -330,3 +330,25 @@ export function sortBy<T>(array: T[], key: keyof T, order: 'asc' | 'desc' = 'asc
         return 0;
     });
 }
+
+/**
+ * Get the full URL for an image, handling both relative and absolute paths
+ * @param path - The image path (can be relative from backend or absolute URL)
+ * @param fallback - Fallback image if path is empty/undefined
+ */
+export function getImageUrl(path: string | undefined | null, fallback?: string): string {
+    if (!path) {
+        return fallback || '/images/placeholder.jpg';
+    }
+    // If it's already an absolute URL, return as-is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+        return path;
+    }
+    // If it starts with /uploads, prepend the backend URL
+    if (path.startsWith('/uploads/')) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        return `${apiUrl}${path}`;
+    }
+    // Local public folder images
+    return path;
+}

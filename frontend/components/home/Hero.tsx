@@ -42,7 +42,7 @@ export default function Hero() {
             fill
             priority
             sizes="(max-width: 768px) 100vw, 50vw"
-            style={{ objectFit: 'cover' }}
+            className="img-cover"
           />
         </div>
       </div>

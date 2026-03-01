@@ -14,19 +14,19 @@
     "company": {
         "legalName": "Fortune Tech Solutions Pvt. Ltd.",
         "address": {
-            "street": "123 Tech Avenue",
-            "city": "Silicon Valley",
-            "state": "CA",
-            "zipCode": "94000",
+            "street": "27 Depot Square",
+            "city": "Mechanic Falls",
+            "state": "Maine",
+            "zipCode": "04256",
             "country": "USA",
             "coordinates": {
-                "lat": 37.4419,
-                "lng": -122.1430
+                "lat": 44.1145,
+                "lng": -70.3917
             }
         },
         "contact": {
-            "phone": "+1 (555) 123-4567",
-            "email": "hello@fortunetech.com",
+            "phone": "207-599-8005",
+            "email": "nishant@thrfortunetech.com",
             "supportEmail": "support@fortunetech.com",
             "salesEmail": "sales@fortunetech.com"
         },
@@ -39,11 +39,8 @@
     },
     "social": {
         "linkedin": "https://linkedin.com/company/fortunetech",
-        "twitter": "https://twitter.com/fortunetech",
-        "github": "https://github.com/fortunetech",
-        "dribbble": "https://dribbble.com/fortunetech",
-        "instagram": null,
-        "facebook": null
+        "facebook": "https://facebook.com/fortunetech",
+        "github": "https://github.com/fortunetech"
     },
     "seo": {
         "defaultTitle": "Fortune Tech - Premium IT Consulting & Development",
@@ -107,6 +104,11 @@
                 "label": "Careers",
                 "href": "/careers",
                 "icon": null
+            },
+            {
+                "label": "Blog",
+                "href": "/blog",
+                "icon": null
             }
         ],
         "footer": {
@@ -130,6 +132,10 @@
                 {
                     "label": "Careers",
                     "href": "/careers"
+                },
+                {
+                    "label": "Blog",
+                    "href": "/blog"
                 },
                 {
                     "label": "Login",
@@ -266,7 +272,7 @@
             "label": "Happy Clients"
         },
         "yearsExperience": {
-            "value": 5,
+            "value": 10,
             "suffix": "+",
             "label": "Years Experience"
         },
@@ -277,10 +283,10 @@
         }
     },
     "cta": {
-        "title": "Ready to Start Your Project?",
-        "description": "Let's discuss how we can help transform your business with cutting-edge technology solutions.",
+        "title": "Get an instant free quote in just 2 minutes.",
+        "description": "Use our latest tools to share your requirements and choose the services you need to receive your quote within seconds.",
         "button": {
-            "label": "Get in Touch",
+            "label": "Get a Free Quote",
             "href": "/contact",
             "icon": "FaArrowRight"
         }
