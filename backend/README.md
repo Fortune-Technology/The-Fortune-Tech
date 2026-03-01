@@ -40,6 +40,7 @@ backend/
 │   │   ├── cms.controller.ts
 │   │   ├── user.controller.ts
 │   │   ├── settings.controller.ts
+│   │   ├── blog.controller.ts
 │   │   └── index.ts          # Controller barrel export
 │   ├── dtos/
 │   │   ├── auth.dto.ts       # Login, register, forgot/reset password schemas
@@ -51,6 +52,7 @@ backend/
 │   │   ├── cms.dto.ts
 │   │   ├── user.dto.ts       # User CRUD + change password schemas
 │   │   ├── settings.dto.ts
+│   │   ├── blog.dto.ts       # Blog CRUD + query schemas
 │   │   └── index.ts          # DTO barrel export
 │   ├── interfaces/
 │   │   └── index.ts          # Shared TypeScript interfaces (IUser, IService, etc.)
@@ -69,6 +71,7 @@ backend/
 │   │   ├── Career.model.ts
 │   │   ├── CMSPage.model.ts
 │   │   ├── WebsiteConfig.model.ts
+│   │   ├── Blog.model.ts     # Blog schema with tags and categories
 │   │   └── index.ts               # Model barrel export
 │   ├── routes/
 │   │   ├── auth.routes.ts
@@ -80,6 +83,7 @@ backend/
 │   │   ├── cms.routes.ts
 │   │   ├── user.routes.ts
 │   │   ├── settings.routes.ts
+│   │   ├── blog.routes.ts
 │   │   └── index.ts               # Route aggregation & health check
 │   ├── services/
 │   │   ├── auth.service.ts
@@ -91,6 +95,7 @@ backend/
 │   │   ├── cms.service.ts
 │   │   ├── user.service.ts
 │   │   ├── settings.service.ts
+│   │   ├── blog.service.ts
 │   │   └── index.ts               # Service barrel export
 │   ├── utils/
 │   │   ├── async-handler.ts       # Express async error wrapper
@@ -111,7 +116,7 @@ backend/
 
 - **JWT Authentication**: Stateless auth with HTTP-only cookies and token refresh mechanism.
 - **RBAC (Role-Based Access Control)**: 4 roles (`super_admin`, `admin`, `editor`, `client`) with granular permission mapping.
-- **Granular Permissions**: 30+ permissions covering Dashboard, Services, Portfolio, Technologies, Testimonials, Careers, CMS, Users, and Settings.
+- **Granular Permissions**: 30+ permissions covering Dashboard, Services, Portfolio, Technologies, Testimonials, Careers, CMS, Users, Settings, and Blogs.
 - **Data Validation**: All inputs validated via Joi schemas (DTOs) before reaching controllers.
 - **Security Headers**: Helmet integration protecting against common web vulnerabilities.
 - **Rate Limiting**: Configurable brute-force protection (default: 100 requests per 15 minutes).
@@ -221,6 +226,17 @@ backend/
 | `GET` | `/` | Public | Get website settings |
 | `PUT` | `/` | Admin (edit_settings) | Update settings (multipart: logo, favicon) |
 
+### Blogs (`/api/blogs`)
+| Method | Endpoint | Access | Description |
+|--------|----------|--------|-------------|
+| `GET` | `/published` | Public | List published blogs |
+| `GET` | `/:id` | Public | Get blog by ID |
+| `GET` | `/:id/related` | Public | Get related blogs |
+| `GET` | `/` | Admin (view_blogs) | List all blogs (paginated) |
+| `POST` | `/` | Admin (create_blogs) | Create blog (multipart: featuredImage) |
+| `PUT` | `/:id` | Admin (edit_blogs) | Update blog |
+| `DELETE` | `/:id` | Admin (delete_blogs) | Delete blog |
+
 ## ⚙️ Getting Started
 
 ### Prerequisites
@@ -305,7 +321,7 @@ Import `the-fortune-tech.postman_collection.json` into Postman to explore and te
 **Collection Features:**
 - **Collection Variables**: `base_url` (`http://localhost:5000`) and `accessToken` (auto-set on login)
 - **Auto-Authentication**: Login endpoint test script automatically captures `accessToken`
-- **Organized Folders**: General, Auth, Services, Portfolio, Technologies, Testimonials, Careers, CMS, Users, Settings
+- **Organized Folders**: General, Auth, Services, Portfolio, Technologies, Testimonials, Careers, CMS, Users, Settings, Blogs
 - **Sample Bodies**: Pre-configured JSON and form-data request bodies for every endpoint
 - **Auth Headers**: `Bearer {{accessToken}}` automatically applied to protected endpoints
 

@@ -56,83 +56,28 @@ export class ErrorBoundary extends Component<Props, State> {
 
             // Default fallback UI
             return (
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '50vh',
-                    padding: '2rem',
-                    textAlign: 'center',
-                }}>
-                    <div style={{
-                        fontSize: '4rem',
-                        marginBottom: '1rem',
-                    }}>
+                <div className="error-boundary-container">
+                    <div className="error-boundary-emoji">
                         ⚠️
                     </div>
-                    <h1 style={{
-                        fontSize: '1.5rem',
-                        fontWeight: 600,
-                        marginBottom: '0.5rem',
-                        color: 'var(--text-primary)',
-                    }}>
+                    <h1 className="error-boundary-title">
                         Oops! Something went wrong
                     </h1>
-                    <p style={{
-                        fontSize: '1rem',
-                        color: 'var(--text-secondary)',
-                        marginBottom: '1.5rem',
-                        maxWidth: '500px',
-                    }}>
+                    <p className="error-boundary-message">
                         We're sorry for the inconvenience. Please try refreshing the page or contact support if the problem persists.
                     </p>
                     <button
                         onClick={() => window.location.reload()}
-                        style={{
-                            padding: '0.75rem 1.5rem',
-                            fontSize: '1rem',
-                            fontWeight: 500,
-                            color: 'white',
-                            background: 'var(--accent-gradient)',
-                            border: 'none',
-                            borderRadius: 'var(--radius-md)',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s',
-                        }}
-                        onMouseOver={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.05)';
-                        }}
-                        onMouseOut={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
-                        }}
+                        className="error-boundary-btn"
                     >
                         Refresh Page
                     </button>
                     {process.env.NODE_ENV === 'development' && this.state.error && (
-                        <details style={{
-                            marginTop: '2rem',
-                            padding: '1rem',
-                            background: 'var(--glass-bg)',
-                            borderRadius: 'var(--radius-md)',
-                            textAlign: 'left',
-                            maxWidth: '600px',
-                            width: '100%',
-                        }}>
-                            <summary style={{
-                                cursor: 'pointer',
-                                fontWeight: 600,
-                                marginBottom: '0.5rem',
-                            }}>
+                        <details className="error-boundary-details">
+                            <summary className="error-boundary-summary">
                                 Error Details (Development Only)
                             </summary>
-                            <pre style={{
-                                fontSize: '0.875rem',
-                                overflow: 'auto',
-                                padding: '1rem',
-                                background: 'rgba(0,0,0,0.05)',
-                                borderRadius: '4px',
-                            }}>
+                            <pre className="error-boundary-pre">
                                 {this.state.error.toString()}
                             </pre>
                         </details>

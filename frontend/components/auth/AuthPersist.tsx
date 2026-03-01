@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useLazyGetCurrentUserQuery } from '../../lib/store/api/authApi';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
-import { selectCurrentUser, selectAccessToken, setUser } from '../../lib/store/slices/authSlice';
+import { selectCurrentUser, selectAccessToken, setUser, setLoading } from '../../lib/store/slices/authSlice';
 
 export default function AuthPersist() {
     const dispatch = useAppDispatch();
@@ -19,31 +19,22 @@ export default function AuthPersist() {
         initialized.current = true;
 
         const checkAuth = async () => {
-            // Even if we have a token in the store (from initial hydration if we had persist),
-            // or if we rely on httpOnly cookies (which baseApi handles),
-            // we should try to fetch the user if they are missing but we think we might be logged in.
-
-            // Note: Since we don't have redux-persist visible here, we rely on finding a way to restore.
-            // If the token is null, we assume we might need to check with the backend 
-            // (e.g. if using httpOnly cookies that are sent automatically).
-
-            // If the user object is missing, try to fetch it.
             if (!user) {
                 try {
-                    // This call will fail with 401 if no valid cookie/token.
-                    // If it triggers 401, baseApi logic will try /refresh.
-                    // If /refresh succeeds, it sets the token.
-                    // Then we need to retry fetching user? 
-                    // Actually, baseApi re-tries the original query after refresh!
-
                     const result = await triggerGetMe().unwrap();
                     if (result.success && result.data) {
                         dispatch(setUser(result.data));
+                    } else {
+                        // No user data returned — auth check complete, not authenticated
+                        dispatch(setLoading(false));
                     }
                 } catch (error) {
-                    // Auth failed, silently fail - user stays logged out
-
+                    // Auth failed — mark loading as complete so pages can render
+                    dispatch(setLoading(false));
                 }
+            } else {
+                // User already exists in store — loading complete
+                dispatch(setLoading(false));
             }
         };
 

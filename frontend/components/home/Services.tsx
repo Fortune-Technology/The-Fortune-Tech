@@ -61,7 +61,6 @@ export default function Services() {
                                                         width={64}
                                                         height={64}
                                                         className="service-icon-img"
-                                                        style={{ objectFit: 'contain' }}
                                                     />
                                                 ) : (
                                                     Icon && <Icon />
@@ -109,7 +108,7 @@ export default function Services() {
                             })}
                         </div>
 
-                        <div className="flex justify-center" style={{ marginTop: '3rem' }}>
+                        <div className="services-view-all">
                             <Button href="/services" variant="outline">
                                 View All Services
                             </Button>

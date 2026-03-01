@@ -1,18 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaGithub, FaExclamationCircle } from 'react-icons/fa';
 import { useLoginMutation } from '../../lib/store/api/authApi';
-import { useAppDispatch } from '../../lib/store/hooks';
-import { setCredentials } from '../../lib/store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
+import { setCredentials, selectIsAuthenticated, selectCurrentUser } from '../../lib/store/slices/authSlice';
 import { showSuccessNotification, showErrorNotification } from '../../lib/store/slices/notificationSlice';
 
 export default function LoginPage() {
     const router = useRouter();
     const dispatch = useAppDispatch();
+    const isAuthenticated = useAppSelector(selectIsAuthenticated);
+    const currentUser = useAppSelector(selectCurrentUser);
+
+    // Redirect authenticated users away from login page
+    useEffect(() => {
+        if (isAuthenticated && currentUser) {
+            if (currentUser.role === 'admin' || currentUser.role === 'super_admin') {
+                router.replace('/admin');
+            } else {
+                router.replace('/');
+            }
+        }
+    }, [isAuthenticated, currentUser, router]);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: '',

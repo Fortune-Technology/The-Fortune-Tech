@@ -13,6 +13,7 @@ import FloatingButtons from "../components/layout/FloatingButtons";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { StoreProvider } from "../lib/store/StoreProvider";
 import ToastContainer from "../components/ui/ToastContainer";
+import AuthPersist from "../components/auth/AuthPersist";
 
 // Optimized font loading using next/font
 // This automaticallysubsets the font and serves it from your domain
@@ -68,8 +69,9 @@ export default function RootLayout({
                         <SmoothScroll />
                         <FloatingButtons />
                         <ToastContainer />
+                        <AuthPersist />
                         <Navbar />
-                        <main style={{ minHeight: '100vh' }}>
+                        <main className="main-content">
                             {children}
                         </main>
                         <Footer />

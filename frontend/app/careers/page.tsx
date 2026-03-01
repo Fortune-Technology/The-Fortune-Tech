@@ -8,7 +8,7 @@ import { useGetCareersQuery } from '../../lib/store/api/careersApi';
 
 export default function CareersPage() {
     const { data: careersResponse, isLoading, isError } = useGetCareersQuery();
-    const jobs = careersResponse?.data?.filter(job => job.isActive) || [];
+    const jobs = careersResponse?.data?.filter(job => job.isActive !== false) || [];
 
     if (isLoading) {
         return (
@@ -25,25 +25,7 @@ export default function CareersPage() {
                         </div>
                     </div>
                 </section>
-                <style jsx>{`
-                    .loading-state {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 4rem;
-                        gap: 1rem;
-                        color: var(--text-muted);
-                    }
-                    .spinner {
-                        font-size: 2rem;
-                        animation: spin 1s linear infinite;
-                    }
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                `}</style>
+
             </>
         );
     }
@@ -62,13 +44,7 @@ export default function CareersPage() {
                         </div>
                     </div>
                 </section>
-                <style jsx>{`
-                    .error-state {
-                        text-align: center;
-                        padding: 4rem;
-                        color: var(--text-muted);
-                    }
-                `}</style>
+
             </>
         );
     }
@@ -102,7 +78,7 @@ export default function CareersPage() {
                         </div>
                     </div>
 
-                    <div className="section-header" style={{ marginTop: '5rem' }}>
+                    <div className="section-header careers-positions-header">
                         <span className="section-subtitle">Open Positions</span>
                         <h2 className="section-title">Explore Opportunities</h2>
                     </div>
@@ -178,15 +154,6 @@ export default function CareersPage() {
                 </div>
             </section>
 
-            <style jsx>{`
-                .no-jobs {
-                    text-align: center;
-                    padding: 3rem;
-                    color: var(--text-muted);
-                    background: var(--glass-bg);
-                    border-radius: var(--radius-lg);
-                }
-            `}</style>
         </>
     );
 }

@@ -14,6 +14,7 @@ import cmsRoutes from './cms.routes';
 import userRoutes from './user.routes';
 import settingsRoutes from './settings.routes';
 import blogRoutes from './blog.routes';
+import profileRoutes from './profile.routes';
 
 const router = Router();
 
@@ -40,5 +41,6 @@ router.use('/cms', cmsRoutes);
 router.use('/users', userRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/blogs', blogRoutes);
+router.use('/profile', profileRoutes);
 
 export default router;

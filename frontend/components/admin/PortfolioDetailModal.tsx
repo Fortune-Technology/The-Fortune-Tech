@@ -78,10 +78,10 @@ export default function PortfolioDetailModal({ isOpen, onClose, project }: Portf
                                         />
                                     )}
                                 </div>
-                                <div className="modal-title-section" style={{ padding: '3rem 2rem 1.5rem' }}>
+                                <div className="modal-title-section modal-title-centered">
                                     <h2 className="modal-user-name">{project.title}</h2>
                                     <p className="modal-user-subtitle">{project.category?.replace('-', ' ').toUpperCase()} • {project.industry || 'General'}</p>
-                                    <div className="modal-meta-row" style={{ justifyContent: 'center' }}>
+                                    <div className="modal-meta-row modal-meta-centered">
                                         <span className={`status-badge ${project.status?.toLowerCase().replace(' ', '-') || 'completed'}`}>
                                             {project.status || 'Completed'}
                                         </span>
@@ -195,7 +195,7 @@ export default function PortfolioDetailModal({ isOpen, onClose, project }: Portf
                                             <FaGithub /> View Source
                                         </a>
                                     )}
-                                    {project.featured && <span className="status-badge featured" style={{ marginLeft: 'auto' }}>Featured Project</span>}
+                                    {project.featured && <span className="status-badge featured status-badge-ml-auto">Featured Project</span>}
                                 </div>
                             </div>
                         </motion.div>

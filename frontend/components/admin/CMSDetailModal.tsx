@@ -62,10 +62,10 @@ export default function CMSDetailModal({ isOpen, onClose, page }: CMSDetailModal
 
                             <div className="modal-header-profile no-avatar">
                                 <div className="modal-cover-bg cms-cover"></div>
-                                <div className="modal-title-section" style={{ padding: '3rem 2rem 1.5rem' }}>
+                                <div className="modal-title-section modal-title-centered">
                                     <h2 className="modal-user-name">{page.title}</h2>
                                     <p className="modal-user-subtitle">/{page.slug}</p>
-                                    <div className="modal-meta-row" style={{ justifyContent: 'center' }}>
+                                    <div className="modal-meta-row modal-meta-centered">
                                         <span className={`status-badge ${page.status}`}>
                                             {page.status?.toUpperCase()}
                                         </span>
@@ -122,7 +122,7 @@ export default function CMSDetailModal({ isOpen, onClose, page }: CMSDetailModal
                                             <div className="seo-url">fortunetech.co/{page.slug}</div>
                                             <div className="seo-desc">{page.seo.metaDescription || page.excerpt || 'No description provided.'}</div>
                                             {page.seo.keywords?.length > 0 && (
-                                                <div className="tech-pills" style={{ marginTop: '1rem' }}>
+                                                <div className="tech-pills tech-pills-mt">
                                                     {page.seo.keywords.map((k: string, i: number) => (
                                                         <span key={i} className="tech-pill">{k}</span>
                                                     ))}
@@ -137,7 +137,7 @@ export default function CMSDetailModal({ isOpen, onClose, page }: CMSDetailModal
                                         <FaEye /> View Live Page
                                     </a>
                                     {page.status !== 'published' && (
-                                        <div className="status-badge pending" style={{ marginLeft: 'auto' }}>
+                                        <div className="status-badge pending status-badge-ml-auto">
                                             Draft Mode
                                         </div>
                                     )}

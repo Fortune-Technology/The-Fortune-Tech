@@ -158,7 +158,7 @@ export default function SettingsPage() {
             <div key={key} className="form-group">
                 <label className="form-label">{label}</label>
                 {type === 'boolean' ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="admin-checkbox-row">
                         <input
                             type="checkbox"
                             checked={value}
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                         </h3>
                     </div>
 
-                    <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
+                    <form onSubmit={handleSave} className="admin-form-padded">
                         <div className="admin-form-grid">
                             {formData[activeTab] && Object.entries(formData[activeTab]).map(([key, value]) => {
                                 const label = formatLabel(key);
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                             })}
                         </div>
 
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                        <div className="admin-form-footer">
                             <button type="submit" className="btn btn-primary" disabled={isSaving}>
                                 {isSaving ? <FaSpinner className="spinner" /> : <FaSave />}
                                 {' '}{isSaving ? 'Saving...' : 'Save Settings'}

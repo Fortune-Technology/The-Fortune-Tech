@@ -42,25 +42,6 @@ export default function Testimonials() {
             <FaSpinner className="spinner" />
             <p>Loading testimonials...</p>
           </div>
-          <style jsx>{`
-            .loading-state {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              padding: 4rem;
-              gap: 1rem;
-              color: var(--text-muted);
-            }
-            .spinner {
-              font-size: 2rem;
-              animation: spin 1s linear infinite;
-            }
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
-          `}</style>
         </div>
       </section>
     );
@@ -133,7 +114,7 @@ export default function Testimonials() {
                     width={56}
                     height={56}
                     unoptimized
-                    style={{ objectFit: 'cover' }}
+                    className="img-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       if (!target.src.includes('/images/placeholder-avatar.jpg')) {

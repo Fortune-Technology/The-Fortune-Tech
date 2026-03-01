@@ -3035,3 +3035,176 @@
 .form-input.has-toggle {
     padding-right: 2.75rem;
 }
+
+/* ===== EXTRACTED FROM INLINE STYLES ===== */
+
+/* Admin filter/search bar */
+.admin-filter-bar {
+    margin-bottom: 1.5rem;
+}
+
+.admin-filter-bar-inner {
+    padding: 1rem 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.admin-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+    max-width: 400px;
+}
+
+.admin-search-input {
+    padding-left: 2.5rem;
+}
+
+.admin-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.admin-role-filter {
+    width: auto;
+    min-width: 130px;
+}
+
+.admin-add-btn {
+    margin-left: auto;
+}
+
+/* Admin form inside modals/cards */
+.admin-form-padded {
+    padding: 1.5rem;
+}
+
+.admin-form-footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* User table cells */
+.admin-table-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-table-user-cell .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admin-table-user-name {
+    font-weight: 500;
+}
+
+.admin-table-email-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-table-email-icon {
+    color: var(--text-muted);
+}
+
+.admin-table-empty-row {
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Password field */
+.admin-password-wrapper {
+    position: relative;
+}
+
+.admin-password-input {
+    padding-right: 2.5rem;
+}
+
+/* Admin form span 2 cols */
+.admin-form-span-2 {
+    grid-column: span 2;
+}
+
+.admin-form-textarea {
+    resize: vertical;
+}
+
+/* Admin view all button */
+.admin-view-all-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Modal title centered overrides */
+.modal-title-centered {
+    padding: 3rem 2rem 1.5rem;
+}
+
+.modal-meta-centered {
+    justify-content: center;
+}
+
+/* Status badge margin-left auto */
+.status-badge-ml-auto {
+    margin-left: auto;
+}
+
+/* Tech pills with margin top */
+.tech-pills-mt {
+    margin-top: 1rem;
+}
+
+/* Star rating icons */
+.star-rating-icon {
+    font-size: 1rem;
+}
+
+.star-rating-icon.filled {
+    color: #f59e0b;
+}
+
+.star-rating-icon.empty {
+    color: var(--text-muted);
+}
+
+/* Checkbox toggle */
+.admin-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Text center loading utility */
+.text-center-loading {
+    text-align: center;
+}
+
+/* CMS loading spinner */
+.cms-loading-spinner {
+    font-size: 2rem;
+}
+
+.cms-loading-section {
+    min-height: 60vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cms-not-found-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+}

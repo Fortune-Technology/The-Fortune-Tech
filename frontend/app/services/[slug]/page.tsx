@@ -106,7 +106,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ slug: 
                                 fill
                                 unoptimized
                                 sizes="(max-width: 768px) 100vw, 60vw"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                                 priority
                             />
                             {service.featured && (
@@ -261,7 +261,7 @@ export default function ServiceDetailPage({ params }: { params: Promise<{ slug: 
                                                     fill
                                                     unoptimized
                                                     sizes="(max-width: 768px) 100vw, 33vw"
-                                                    style={{ objectFit: 'cover' }}
+                                                    className="img-cover"
                                                 />
                                             </div>
                                             <div className="related-service-content">

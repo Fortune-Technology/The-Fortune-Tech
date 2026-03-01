@@ -94,7 +94,7 @@ export default function BlogDetailClient({ slug }: BlogDetailClientProps) {
                 <section className="section">
                     <div className="container">
                         <div className="blog-loading">
-                            <FaSpinner className="spinner" style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }} />
+                            <FaSpinner className="spinner cms-loading-spinner" />
                             <p>Loading article...</p>
                         </div>
                     </div>
@@ -114,8 +114,8 @@ export default function BlogDetailClient({ slug }: BlogDetailClientProps) {
             <>
                 <PageHeader title="Blog Post Not Found" subtitle="The article you're looking for doesn't exist or has been removed." />
                 <section className="section">
-                    <div className="container" style={{ textAlign: 'center' }}>
-                        <Link href="/blog" className="btn btn-primary" style={{ display: 'inline-flex' }}>
+                    <div className="container text-center-loading">
+                        <Link href="/blog" className="btn btn-primary">
                             <FaArrowLeft /> Back to Blog
                         </Link>
                     </div>
@@ -183,7 +183,7 @@ export default function BlogDetailClient({ slug }: BlogDetailClientProps) {
                                 unoptimized
                                 priority
                                 sizes="(max-width: 768px) 100vw, 800px"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                             />
                         </div>
                     )}
@@ -259,11 +259,11 @@ export default function BlogDetailClient({ slug }: BlogDetailClientProps) {
                                                 fill
                                                 unoptimized
                                                 sizes="(max-width: 768px) 100vw, 33vw"
-                                                style={{ objectFit: 'cover' }}
+                                                className="img-cover"
                                             />
                                         ) : (
                                             <div className="blog-card-placeholder">
-                                                <FaTags style={{ fontSize: '1.5rem' }} />
+                                                <FaTags className="blog-card-placeholder-icon" />
                                             </div>
                                         )}
                                     </div>

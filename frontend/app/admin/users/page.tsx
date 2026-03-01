@@ -240,31 +240,24 @@ export default function UsersPage() {
     return (
         <AdminLayout pageTitle="Users">
             {/* Header Actions */}
-            <div className="admin-card" style={{ marginBottom: '1.5rem' }}>
-                <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: '1', minWidth: '200px', maxWidth: '400px' }}>
+            <div className="admin-card admin-filter-bar">
+                <div className="admin-filter-bar-inner">
+                    <div className="admin-search-wrapper">
                         <input
                             type="text"
-                            className="form-input"
+                            className="form-input admin-search-input"
                             placeholder="Search users..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{ paddingLeft: '2.5rem' }}
                         />
-                        <FaSearch style={{
-                            position: 'absolute',
-                            left: '1rem',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: 'var(--text-muted)'
-                        }} />
+                        <FaSearch className="admin-search-icon" />
                     </div>
 
                     <select
-                        className="form-input"
+
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
-                        style={{ width: 'auto', minWidth: '130px' }}
+                        className="form-input admin-role-filter"
                     >
                         <option value="">All Roles</option>
                         {roles.map(role => (
@@ -272,7 +265,7 @@ export default function UsersPage() {
                         ))}
                     </select>
 
-                    <button className="btn btn-primary" onClick={() => handleOpenModal()} style={{ marginLeft: 'auto' }}>
+                    <button className="btn btn-primary admin-add-btn" onClick={() => handleOpenModal()}>
                         <FaPlus /> Add User
                     </button>
                 </div>
@@ -299,24 +292,24 @@ export default function UsersPage() {
                             {filteredUsers.map((user, index) => (
                                 <tr key={user.id || `user-${index}`}>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                        <div className="admin-table-user-cell">
                                             <div className="user-avatar">
                                                 {user.avatar ? (
                                                     <img
                                                         src={getImageUrl(user.avatar)}
                                                         alt={user.name}
-                                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+
                                                     />
                                                 ) : (
                                                     user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2) : '?'
                                                 )}
                                             </div>
-                                            <span style={{ fontWeight: 500 }}>{user.name || 'Unknown'}</span>
+                                            <span className="admin-table-user-name">{user.name || 'Unknown'}</span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <FaEnvelope size={12} style={{ color: 'var(--text-muted)' }} />
+                                        <div className="admin-table-email-cell">
+                                            <FaEnvelope size={12} className="admin-table-email-icon" />
                                             {user.email}
                                         </div>
                                     </td>
@@ -353,7 +346,7 @@ export default function UsersPage() {
                             ))}
                             {filteredUsers.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem' }}>
+                                    <td colSpan={6} className="admin-table-empty-row">
                                         No users found
                                     </td>
                                 </tr>
@@ -371,7 +364,7 @@ export default function UsersPage() {
                             <h3 className="admin-card-title">{editingUserId ? 'Edit User' : 'Add User'}</h3>
                             <button className="table-action-btn" onClick={handleCloseModals}><FaTimes /></button>
                         </div>
-                        <form onSubmit={handleSave} style={{ padding: '1.5rem' }}>
+                        <form onSubmit={handleSave} className="admin-form-padded">
                             <div className="admin-grid-2">
                                 <div className="form-group">
                                     <label className="form-label">First Name</label>
@@ -387,29 +380,20 @@ export default function UsersPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{editingUserId ? 'New Password (leave blank to keep)' : 'Password'}</label>
-                                    <div style={{ position: 'relative' }}>
+                                    <div className="admin-password-wrapper">
                                         <input
                                             name="password"
                                             type={showPassword ? "text" : "password"}
-                                            className="form-input"
+
                                             value={formData.password}
                                             onChange={handleInputChange}
                                             required={!editingUserId}
-                                            style={{ paddingRight: '2.5rem' }}
+                                            className="form-input admin-password-input"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            style={{
-                                                position: 'absolute',
-                                                right: '0.75rem',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'none',
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                color: 'var(--text-muted)'
-                                            }}
+                                            className="password-toggle-btn"
                                         >
                                             <FaEye />
                                         </button>
@@ -435,9 +419,9 @@ export default function UsersPage() {
                                     <label className="form-label">Position</label>
                                     <input name="position" className="form-input" value={formData.position} onChange={handleInputChange} />
                                 </div>
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <div className="form-group admin-form-span-2">
                                     <label className="form-label">Bio</label>
-                                    <textarea name="bio" className="form-input" value={formData.bio} onChange={handleInputChange as any} rows={3} style={{ resize: 'vertical' }} />
+                                    <textarea name="bio" className="form-input admin-form-textarea" value={formData.bio} onChange={handleInputChange as any} rows={3} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">Role</label>
@@ -455,7 +439,7 @@ export default function UsersPage() {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <div className="form-group admin-form-span-2">
                                     <ImageUpload
                                         label="Avatar"
                                         value={avatarFile || existingAvatarUrl}
@@ -467,7 +451,7 @@ export default function UsersPage() {
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <div className="admin-form-footer">
                                 <button type="button" className="btn btn-outline" onClick={handleCloseModals}>Cancel</button>
                                 <button type="submit" className="btn btn-primary" disabled={isCreating || isUpdating}>
                                     {(isCreating || isUpdating) ? <div className="spinner-sm"></div> : <FaSave />}

@@ -117,12 +117,12 @@ export default function ForgotPasswordPage() {
                             <Link href="/login" className="btn btn-primary auth-submit-btn">
                                 Back to Login
                             </Link>
-                            <p className="auth-footer" style={{ marginTop: '1.5rem', paddingTop: '1rem' }}>
+                            <p className="auth-footer auth-footer-spaced">
                                 Didn&apos;t receive the email?{' '}
                                 <button
                                     onClick={() => setIsSuccess(false)}
                                     className="forgot-password-link"
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                                    className="auth-resend-btn"
                                 >
                                     Try again
                                 </button>

@@ -29,25 +29,7 @@ export default function ServicesPage() {
             </div>
           </div>
         </section>
-        <style jsx>{`
-                    .loading-state {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 4rem;
-                        gap: 1rem;
-                        color: var(--text-muted);
-                    }
-                    .spinner {
-                        font-size: 2rem;
-                        animation: spin 1s linear infinite;
-                    }
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                `}</style>
+
       </>
     );
   }
@@ -66,13 +48,7 @@ export default function ServicesPage() {
             </div>
           </div>
         </section>
-        <style jsx>{`
-                    .error-state {
-                        text-align: center;
-                        padding: 4rem;
-                        color: var(--text-muted);
-                    }
-                `}</style>
+
       </>
     );
   }
@@ -112,8 +88,7 @@ export default function ServicesPage() {
                             alt={service.title}
                             width={48}
                             height={48}
-                            className="service-icon-img"
-                            style={{ objectFit: 'contain' }}
+                            className="service-icon-img img-contain"
                           />
                         ) : (
                           Icon && <Icon />
@@ -175,7 +150,7 @@ export default function ServicesPage() {
                       fill
                       unoptimized
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      style={{ objectFit: 'cover' }}
+                      className="img-cover"
                     />
                   </div>
                 </div>

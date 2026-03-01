@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                 <div className="admin-card-header">
                     <h3 className="admin-card-title">Recent Users</h3>
                     <div className="admin-card-actions">
-                        <Link href="/admin/users" className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                        <Link href="/admin/users" className="btn btn-outline admin-view-all-btn">
                             View All
                         </Link>
                     </div>

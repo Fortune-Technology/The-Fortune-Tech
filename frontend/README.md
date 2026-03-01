@@ -49,6 +49,7 @@ frontend/
 │       ├── careers/page.tsx    # Careers CRUD
 │       ├── cms/page.tsx        # CMS page management
 │       ├── users/page.tsx      # User management
+│       ├── blog/page.tsx       # Blog management
 │       └── settings/page.tsx   # Website settings & SEO
 ├── components/
 │   ├── ErrorBoundary.tsx       # Error boundary for production resilience
@@ -112,6 +113,7 @@ frontend/
 │   │   │   ├── careersApi.ts   # Careers CRUD endpoints
 │   │   │   ├── cmsApi.ts       # CMS CRUD endpoints
 │   │   │   ├── usersApi.ts     # Users CRUD endpoints
+│   │   │   ├── blogApi.ts      # Blog CRUD endpoints
 │   │   │   ├── settingsApi.ts  # Settings endpoints
 │   │   │   └── index.ts        # API barrel export
 │   │   └── slices/
@@ -247,6 +249,7 @@ npm start
 | **Testimonials** | `/admin/testimonials` | Testimonials CRUD management |
 | **Careers** | `/admin/careers` | Job postings CRUD management |
 | **CMS** | `/admin/cms` | CMS page creation, editing, publish/unpublish |
+| **Blog** | `/admin/blog` | Blog post management |
 | **Users** | `/admin/users` | User management, roles, permissions |
 | **Settings** | `/admin/settings` | Website config, SEO metadata, branding |
 
@@ -322,7 +325,7 @@ Reusable React hooks for common patterns including delete confirmations and type
 - [x] Admin profile management
 - [x] Toast notification system
 - [x] Dynamic legal pages (Privacy, Terms via CMS)
-- [ ] Blog section (Integrated via CMS)
+- [x] Blog section (Integrated via CMS)
 - [ ] Case study detailed deep-dives
 - [ ] Analytics integration (Google/PostHog)
 - [ ] Unit & E2E Testing suite

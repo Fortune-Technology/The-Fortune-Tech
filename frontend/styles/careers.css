@@ -223,3 +223,22 @@
     font-size: 1.75rem;
   }
 }
+
+/* Extracted from style jsx */
+.careers-positions-header {
+  margin-top: 5rem;
+}
+
+.error-state {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-muted);
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+}

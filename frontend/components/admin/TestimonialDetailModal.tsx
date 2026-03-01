@@ -38,7 +38,7 @@ export default function TestimonialDetailModal({ isOpen, onClose, testimonial }:
 
     const renderStars = (rating: number) => {
         return Array(5).fill(0).map((_, i) => (
-            <FaStar key={i} style={{ color: i < rating ? '#f59e0b' : 'var(--text-muted)', fontSize: '1rem' }} />
+            <FaStar key={i} className={`star-rating-icon ${i < rating ? 'filled' : 'empty'}`} />
         ));
     };
 

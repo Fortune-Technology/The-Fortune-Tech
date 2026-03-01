@@ -2157,6 +2157,261 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Blogs",
+            "item": [
+                {
+                    "name": "Get Published Blogs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/published?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "published"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Blog By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Related Blogs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id/related",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id",
+                                "related"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Blogs (Admin)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Blog",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "My New Blog Post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "This is the content of my new blog post. It's very informative.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "excerpt",
+                                    "value": "A short excerpt about the blog post.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "published",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "author",
+                                    "value": "John Doe",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "Technology",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags[0]",
+                                    "value": "Tech",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "tags[1]",
+                                    "value": "Innovation",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metaTitle",
+                                    "value": "My New Blog Post - Best Tech Tips",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "metaDescription",
+                                    "value": "Read our latest blog post about technology and innovation.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featuredImage",
+                                    "type": "file",
+                                    "src": []
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Blog",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Updated Blog Post",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "content",
+                                    "value": "This is the updated content.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "featuredImage",
+                                    "type": "file",
+                                    "src": [],
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Blog",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/blogs/blog-id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "blogs",
+                                "blog-id"
+                            ]
+                        }
+                    }
+                }
+            ]
         }
     ],
     "variable": [

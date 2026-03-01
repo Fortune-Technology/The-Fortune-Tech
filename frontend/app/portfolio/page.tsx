@@ -127,7 +127,7 @@ export default function PortfolioPage() {
                       fill
                       unoptimized
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      style={{ objectFit: 'cover' }}
+                      className="img-cover"
                     />
                     <div className="project-image-overlay">
                       <span className="view-project">

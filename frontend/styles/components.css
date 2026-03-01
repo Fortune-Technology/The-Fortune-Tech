@@ -5335,3 +5335,477 @@
   overflow-x: auto;
 }
 
+/* ===== EXTRACTED INLINE STYLES ===== */
+
+/* --- Image Upload Component --- */
+.image-upload-area {
+  border: 2px dashed var(--glass-border, #ccc);
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  background-color: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  position: relative;
+  transition: all 0.3s ease;
+  min-height: var(--upload-height, 250px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.image-upload-area.has-preview {
+  border-color: var(--primary, #3b82f6);
+}
+
+.image-upload-area .preview-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.image-upload-area .preview-container img {
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+.image-upload-area .preview-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  gap: 1rem;
+}
+
+.image-upload-area:hover .preview-overlay {
+  opacity: 1;
+}
+
+.preview-overlay-text {
+  color: white;
+  font-weight: 600;
+}
+
+.preview-remove-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: var(--danger, #ef4444);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.image-upload-area:hover .preview-remove-btn {
+  opacity: 1;
+}
+
+.upload-placeholder {
+  color: var(--text-muted, #999);
+  padding: 2rem;
+}
+
+.upload-placeholder .upload-icon {
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.upload-placeholder .upload-title {
+  margin: 0;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.upload-placeholder .upload-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.upload-storage-info {
+  font-size: 0.75rem;
+  color: var(--text-muted, #999);
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.sr-only {
+  display: none;
+}
+
+/* --- Error Boundary Component --- */
+.error-boundary-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-boundary-emoji {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-boundary-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.error-boundary-message {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+}
+
+.error-boundary-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.error-boundary-btn:hover {
+  transform: scale(1.05);
+}
+
+.error-boundary-details {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  text-align: left;
+  max-width: 600px;
+  width: 100%;
+}
+
+.error-boundary-summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.error-boundary-pre {
+  font-size: 0.875rem;
+  overflow: auto;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+/* --- Rich Text Editor --- */
+.rich-text-editor-wrapper {
+  height: var(--editor-height, 300px);
+}
+
+.rich-text-editor-wrapper .quill {
+  height: var(--editor-content-height, 258px);
+}
+
+/* --- Next.js Image object-fit utilities --- */
+.img-cover {
+  object-fit: cover;
+}
+
+.img-contain {
+  object-fit: contain;
+}
+
+/* --- Loading / Spinner States --- */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  gap: 1rem;
+  color: var(--text-muted);
+}
+
+.loading-state .spinner {
+  font-size: 2rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Service Icon Image --- */
+.service-icon-img {
+  object-fit: contain;
+}
+
+/* --- Services Footer --- */
+.services-view-all {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+/* --- About Page --- */
+.about-overview-grid {
+  align-items: center;
+  gap: 4rem;
+}
+
+.about-heading {
+  margin-bottom: 1.5rem;
+}
+
+.about-text {
+  margin-bottom: 1.5rem;
+  font-size: 1.0625rem;
+}
+
+.about-text:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Generic Content Utilities --- */
+.text-center-loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.text-capitalize {
+  text-transform: capitalize;
+}
+
+/* --- Portfolio Detail Page --- */
+.long-description-content {
+  line-height: 1.8;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.tech-pill-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  margin-right: 0.25rem;
+}
+
+.portfolio-testimonials {
+  margin-top: 3rem;
+}
+
+.portfolio-testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .portfolio-testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.portfolio-testimonial-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  position: relative;
+}
+
+.portfolio-testimonial-quote {
+  font-size: 1.5rem;
+  color: var(--accent-start);
+  opacity: 0.3;
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+}
+
+.portfolio-testimonial-stars {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.portfolio-testimonial-stars svg {
+  color: #f59e0b;
+  font-size: 0.875rem;
+}
+
+.portfolio-testimonial-text {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
+.portfolio-testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portfolio-testimonial-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.portfolio-testimonial-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.portfolio-testimonial-role {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* --- CMS / Dynamic Page Styles --- */
+.cms-loading-section {
+  min-height: 60vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cms-loading-spinner {
+  font-size: 2rem;
+}
+
+.cms-not-found-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+
+.cms-content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cms-meta-footer {
+  max-width: 800px;
+  margin: 3rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- Admin Table Utilities --- */
+.table-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.table-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 600;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* --- Star Rating (Admin) --- */
+.star-rating-icon {
+  font-size: 1rem;
+}
+
+.star-rating-icon.filled {
+  color: #f59e0b;
+}
+
+.star-rating-icon.empty {
+  color: var(--text-muted);
+}
+
+/* --- Modal Overrides --- */
+.modal-title-centered {
+  padding: 3rem 2rem 1.5rem;
+}
+
+.modal-meta-centered {
+  justify-content: center;
+}
+
+.status-badge-ml-auto {
+  margin-left: auto;
+}
+
+.tech-pills-mt {
+  margin-top: 1rem;
+}
+
+/* --- Form Label Block --- */
+.form-label-block {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* --- Contact Page --- */
+.contact-info-text {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.contact-form-grid {
+  gap: 1rem;
+}
+
+.contact-submit-btn {
+  width: 100%;
+}
+
+.contact-submit-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* --- Main Layout --- */
+.main-content {
+  min-height: 100vh;
+}
+
+/* --- Blog Card Placeholder --- */
+.blog-card-placeholder-icon {
+  font-size: 1.5rem;
+}
+

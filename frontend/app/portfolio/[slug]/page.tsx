@@ -92,25 +92,6 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                         </div>
                     </div>
                 </section>
-                <style jsx>{`
-                    .loading-state {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 4rem;
-                        gap: 1rem;
-                        color: var(--text-muted);
-                    }
-                    .spinner {
-                        font-size: 2rem;
-                        animation: spin 1s linear infinite;
-                    }
-                    @keyframes spin {
-                        from { transform: rotate(0deg); }
-                        to { transform: rotate(360deg); }
-                    }
-                `}</style>
             </>
         );
     }
@@ -193,7 +174,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                 fill
                                 unoptimized
                                 sizes="(max-width: 768px) 100vw, 80vw"
-                                style={{ objectFit: 'cover' }}
+                                className="img-cover"
                                 priority
                             />
                             <div className="project-overlay">
@@ -231,7 +212,6 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                     <h2 className="detail-section-title">Project Overview</h2>
                                     <div
                                         className="long-description-content"
-                                        style={{ lineHeight: 1.8, color: 'var(--text-secondary)', fontSize: '1rem' }}
                                         dangerouslySetInnerHTML={{ __html: project.longDescription }}
                                     />
                                 </div>
@@ -251,7 +231,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                                         return (
                                                             <span key={`ts-${idx}`} className="tech-pill">
                                                                 {item.icon ? (
-                                                                    <img src={getImageUrl(item.icon)} alt={item.name} style={{ width: '16px', height: '16px', objectFit: 'contain', marginRight: '0.25rem' }} />
+                                                                    <img src={getImageUrl(item.icon)} alt={item.name} className="tech-pill-img" />
                                                                 ) : HardcodedIcon && (
                                                                     <HardcodedIcon className="tech-pill-icon" />
                                                                 )}
@@ -380,24 +360,21 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
 
                     {/* Linked Testimonials */}
                     {linkedTestimonials.length > 0 && (
-                        <div className="detail-section" style={{ marginTop: '3rem' }}>
+                        <div className="detail-section portfolio-testimonials">
                             <h2 className="section-title">What Our Clients Say</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
+                            <div className="portfolio-testimonials-grid">
                                 {linkedTestimonials.map((t: any) => (
-                                    <div key={t._id || t.id} style={{
-                                        background: 'var(--glass-bg)', border: '1px solid var(--border-primary)',
-                                        borderRadius: '16px', padding: '2rem', position: 'relative'
-                                    }}>
-                                        <FaQuoteLeft style={{ fontSize: '1.5rem', color: 'var(--accent-start)', opacity: 0.3, position: 'absolute', top: '1rem', right: '1.5rem' }} />
-                                        <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem' }}>
+                                    <div key={t._id || t.id} className="portfolio-testimonial-card">
+                                        <FaQuoteLeft className="portfolio-testimonial-quote" />
+                                        <div className="portfolio-testimonial-stars">
                                             {Array.from({ length: t.rating || 5 }).map((_, i) => (
-                                                <FaStar key={i} style={{ color: '#f59e0b', fontSize: '0.875rem' }} />
+                                                <FaStar key={i} />
                                             ))}
                                         </div>
-                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '1.5rem', fontStyle: 'italic' }}>
+                                        <p className="portfolio-testimonial-text">
                                             &ldquo;{t.content}&rdquo;
                                         </p>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                        <div className="portfolio-testimonial-author">
                                             {(t.avatar || t.thumbnail) && (
                                                 <Image
                                                     src={getImageUrl(t.avatar || t.thumbnail, '/images/placeholder-avatar.jpg')}
@@ -405,12 +382,12 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                                     width={44}
                                                     height={44}
                                                     unoptimized
-                                                    style={{ borderRadius: '50%', objectFit: 'cover' }}
+                                                    className="portfolio-testimonial-avatar"
                                                 />
                                             )}
                                             <div>
-                                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{t.name}</div>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                                <div className="portfolio-testimonial-name">{t.name}</div>
+                                                <div className="portfolio-testimonial-role">
                                                     {[t.role, t.company].filter(Boolean).join(' at ')}
                                                 </div>
                                             </div>
@@ -439,7 +416,7 @@ export default function PortfolioDetailPage({ params }: { params: Promise<{ slug
                                                 fill
                                                 unoptimized
                                                 sizes="(max-width: 768px) 100vw, 50vw"
-                                                style={{ objectFit: 'cover' }}
+                                                className="img-cover"
                                             />
                                         </div>
                                         <div className="related-content">

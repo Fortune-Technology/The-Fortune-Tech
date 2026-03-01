@@ -46,7 +46,7 @@ export default function BlogListingClient() {
                 <section className="section">
                     <div className="container">
                         <div className="blog-loading">
-                            <FaSpinner className="spinner" style={{ fontSize: '2rem', animation: 'spin 1s linear infinite' }} />
+                            <FaSpinner className="spinner cms-loading-spinner" />
                             <p>Loading articles...</p>
                         </div>
                     </div>
@@ -138,11 +138,11 @@ export default function BlogListingClient() {
                                                     fill
                                                     unoptimized
                                                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                    style={{ objectFit: 'cover' }}
+                                                    className="img-cover"
                                                 />
                                             ) : (
                                                 <div className="blog-card-placeholder">
-                                                    <FaTags style={{ fontSize: '2rem' }} />
+                                                    <FaTags className="cms-loading-spinner" />
                                                 </div>
                                             )}
                                             <span className="blog-card-category">{blog.category}</span>
